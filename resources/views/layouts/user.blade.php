@@ -260,8 +260,9 @@
                 
                         </ul>
                         
-                        <!-- User dropdown -->
+                        <!-- User dropdown / Auth buttons -->
                         <div class="ms-auto">
+                            @auth
                             <div class="dropdown user-dropdown">
                                 <a class="btn dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-user-circle me-1"></i> {{ Auth::user()->name }}
@@ -277,6 +278,12 @@
                                     </li>
                                 </ul>
                             </div>
+                            @else
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-sign-in-alt me-1"></i> دخول</a>
+                                <a href="{{ route('register') }}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-1"></i> تسجيل</a>
+                            </div>
+                            @endauth
                         </div>
                     </div>
                 </div>

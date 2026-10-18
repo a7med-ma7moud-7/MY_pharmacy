@@ -173,10 +173,42 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <div class="navbar-nav">
-                    <a href="{{ route('login') }}" class="btn btn-outline-primary btn-auth">تسجيل الدخول</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary btn-auth">إنشاء حساب</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url('/') }}"><i class="fas fa-home me-1"></i> الرئيسية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('webdoctor.index') }}"><i class="fas fa-user-md me-1"></i> الأطباء</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('webmedicien.index') }}"><i class="fas fa-capsules me-1"></i> الأدوية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('appointments.index') }}"><i class="fas fa-calendar-check me-1"></i> حجز موعد</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('ai.chat') }}"><i class="fas fa-robot me-1"></i> الصيدلي الذكي (AI)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('rate.index') }}"><i class="fas fa-star me-1"></i> التقييمات</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav align-items-center">
+                    @auth
+                        @if(Auth::user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-success btn-auth me-2">لوحة الإدارة</a>
+                        @else
+                            <a href="{{ route('dashboard') }}" class="btn btn-outline-success btn-auth me-2">حسابي</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger btn-auth">خروج</button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="btn btn-outline-primary btn-auth">تسجيل الدخول</a>
+                        <a href="{{ route('register') }}" class="btn btn-primary btn-auth">إنشاء حساب</a>
+                    @endauth
                 </div>
             </div>
         </div>
