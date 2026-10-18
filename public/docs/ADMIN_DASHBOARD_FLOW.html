@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مخطط تدفق لوحة التحكم الإدارية - صيدليتي</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'neutral',
+            fontFamily: 'Cairo, sans-serif',
+            securityLevel: 'loose'
+        });
+    </script>
+    <style>
+        :root {
+            --primary: #0f6848;
+            --primary-light: #e8f5ef;
+            --primary-hover: #0c5339;
+            --secondary: #10ac84;
+            --dark: #1e293b;
+            --text-main: #334155;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', 'Almarai', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.8;
+            padding-bottom: 60px;
+        }
+
+        /* Top Action Bar */
+        .top-bar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .header-card {
+            background: linear-gradient(135deg, #0f6848 0%, #10ac84 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(15, 104, 72, 0.15);
+            text-align: center;
+        }
+
+        .header-card h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .header-card p {
+            font-size: 1.15rem;
+            opacity: 0.92;
+            max-width: 750px;
+            margin: 0 auto;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .diagram-container {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.01);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px;
+            border-right: 4px solid var(--primary);
+        }
+
+        .info-card h4 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #dcfce7; color: #15803d; }
+        .badge-warning { background: #fef9c3; color: #a16207; }
+        .badge-danger { background: #fee2e2; color: #b91c1c; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
+
+        @media print {
+            .top-bar { display: none; }
+            body { background: white; padding: 0; }
+            .section-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .diagram-container { border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Action Bar -->
+    <div class="top-bar">
+        <div class="brand">
+            <i class="fas fa-clinic-medical"></i>
+            <span>صيدليتي - مخططات لوحة التحكم</span>
+        </div>
+        <div class="actions">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> طباعة / حفظ كـ PDF
+            </button>
+            <a href="http://127.0.0.1:8000/admin/dashboard" target="_blank" class="btn btn-outline">
+                <i class="fas fa-external-link-alt"></i> فتح لوحة الإدارة
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header-card">
+            <h1><i class="fas fa-chart-line me-2"></i> دليل ومخطط تدفق لوحة التحكم الإدارية</h1>
+            <p>شرح مرئي شامل وتفصيلي لكافة مسارات وعمليات لوحة تحكم إدارة صيدليتي: من إدارة الحجوزات الطبية والمبيعات والمخزون، إلى التقارير والإحصائيات.</p>
+        </div>
+
+        <!-- 1. Architecture -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-sitemap"></i>
+                <h2>1. المخطط العام لمعمارية لوحة التحكم (Architecture Overview)</h2>
+            </div>
+            <p>يوضح هذا المخطط تسلسل تسجيل دخول المشرف وفحص صلاحيات المدير (Role: Admin)، ثم التفرع لكافة أقسام إدارة النظام:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TD
+    Admin([مدير النظام / Admin]) --> Auth{تسجيل الدخول /login}
+    Auth -->|بيانات خاطئة| AuthFail[رسالة خطأ وإعادة المحاولة]
+    Auth -->|بيانات صحيحة| CheckRole{فحص الصلاحية Role == admin}
+    CheckRole -->|مستخدم عادي| UserDash[لوحة العميل /home]
+    CheckRole -->|مدير معتمد| Dashboard[لوحة التحكم الرئيسية /admin/dashboard]
+
+    Dashboard --> Appointments[إدارة الحجوزات الطبية /admin/appointments]
+    Dashboard --> Orders[إدارة طلبات الأدوية /admin/orders]
+    Dashboard --> Doctors[إدارة الكوادر الطبية /doctor]
+    Dashboard --> Medicines[إدارة أصناف الأدوية /medicien]
+    Dashboard --> Users[إدارة المستخدمين /users]
+    Dashboard --> Reports[التقارير والإحصائيات /admin/reports]
+                </pre>
+            </div>
+        </div>
+
+        <!-- 2. Appointments Flow -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-calendar-check"></i>
+                <h2>2. دورة حياة الحجز الطبي (Appointment Lifecycle Flow)</h2>
+            </div>
+            <p>تدرج الحجز الطبي عبر الحالات المختلفة منذ تسجيل المريض له وحتى إتمام الكشف في العيادة:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Pending: حجز جديد من المريض (قيد الانتظار)
+    Pending --> Confirmed: تأكيد الموعد والتواصل من الإدارة
+    Pending --> Cancelled: اعتذار أو رفض الحجز
+    Confirmed --> Completed: حضور المريض وإتمام الكشف الطبي
+    Confirmed --> Cancelled: إلغاء الموعد لظرف طارئ
+    Completed --> [*]
+    Cancelled --> [*]
+                </pre>
+            </div>
+
+            <h3 style="margin: 25px 0 15px; color: var(--primary);"><i class="fas fa-bell me-2"></i> تسلسل إشعارات وتأكيد الحجز:</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Patient as المريض / الزائر
+    participant System as نظام صيدليتي
+    actor Admin as مدير النظام
+    participant Doctor as الطبيب المعالج
+
+    Patient->>System: تعبئة نموذج حجز موعد (طبيب، تاريخ، وقت، هاتف)
+    System->>System: التحقق من عدم وجود تعارض زمني
+    System->>Admin: إرسال إشعار فوري بحجز جديد (Notification)
+    System-->>Patient: إرسال بريد إلكتروني بتفاصيل الحجز المبدئي
+    Admin->>System: فتح لوحة الحجوزات وتغيير الحالة إلى (مؤكد Confirmed)
+    System-->>Patient: تأكيد الموعد والتواصل الهاتفي
+    Admin->>System: بعد الموعد تغيير الحالة إلى (مكتمل Completed)
+                </pre>
+            </div>
+        </div>
+
+        <!-- 3. Orders Flow -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-box-open"></i>
+                <h2>3. مخطط معالجة طلبات الأدوية (Order Processing Flowchart)</h2>
+            </div>
+            <p>خطوات مراجعة الطلب الجديد، فحص المخزون، وتوجيهه للتوصيل أو الاستلام من الفرع:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    NewOrder([وصول طلب شراء جديد]) --> ViewOrder[عرض تفاصيل الطلب والأدوية المطلوبة]
+    ViewOrder --> CheckStock{التحقق من توافر الكميات بالمخزن}
+    
+    CheckStock -->|غير متوفر| CancelOrder[تغيير الحالة إلى ملغي Cancelled]
+    CancelOrder --> ContactCustCancel[التواصل مع العميل وإبلاغه]
+    
+    CheckStock -->|متوفر| ProcessOrder[تغيير الحالة إلى قيد التجهيز Processing]
+    ProcessOrder --> PickPack[تجهيز الأدوية من الرفوف وتغليفها]
+    
+    PickPack --> DeliveryType{نوع الاستلام؟}
+    DeliveryType -->|توصيل للمنزل Delivery| DispatchCourier[تسليم الطلب لمندوب التوصيل]
+    DeliveryType -->|استلام من الصيدلية Pickup| ReadyAtBranch[الطلب جاهز بالفرع للاستلام]
+    
+    DispatchCourier --> CompleteOrder[تغيير الحالة إلى مكتمل Completed]
+    ReadyAtBranch --> CompleteOrder
+    CompleteOrder --> ExportExcel[إمكانية تصدير البيانات إلى Excel بنقرة واحدة]
+                </pre>
+            </div>
+        </div>
+
+        <!-- 4. Management Sections -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-cogs"></i>
+                <h2>4. وحدات الإدارة الشاملة (CRUD Operations)</h2>
+            </div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4><i class="fas fa-user-md me-1"></i> إدارة الأطباء (/doctor)</h4>
+                    <p>إضافة أطباء جدد مع تحديد التخصص، وسعر الكشف، والهاتف، والمحافظة، وصور العيادة، مع إمكانية تعديل البيانات أو الحذف.</p>
+                </div>
+                <div class="info-card">
+                    <h4><i class="fas fa-pills me-1"></i> إدارة الأدوية (/medicien)</h4>
+                    <p>إدارة مخزون الصيدلية، تحديد نوع الدواء (أقراص/شراب/فوار)، والأسعار، ودواعي الاستعمال، والكميات المتوفرة وتنبيهات النواقص.</p>
+                </div>
+                <div class="info-card">
+                    <h4><i class="fas fa-users-cog me-1"></i> إدارة المستخدمين (/users)</h4>
+                    <p>الاطلاع على جميع المسجلين، تعيين الأدوار والصلاحيات (مدير / عميل)، وتعديل الحسابات وتأكيد العناوين.</p>
+                </div>
+                <div class="info-card">
+                    <h4><i class="fas fa-file-excel me-1"></i> تصدير البيانات (Excel Export)</h4>
+                    <p>استخراج تقارير المبيعات وجداول الطلبات بتنسيق Excel فوري بضغطة زر لمتابعة الحسابات والأرباح.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Reports -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-chart-pie"></i>
+                <h2>5. مؤشرات وتقارير الأداء الرئيسية (Analytics & Reports)</h2>
+            </div>
+            <div class="diagram-container">
+                <pre class="mermaid">
+pie title توزيع مصادر تقارير الأداء في المنصة
+    "إحصائيات الزوار والجلسات النشطة" : 25
+    "حجم مبيعات الأدوية والإيرادات" : 35
+    "تحليلات الحجوزات ونسب الإلغاء" : 25
+    "أداء ونشاط الأطباء المسجلين" : 15
+                </pre>
+            </div>
+        </div>
+
+        <!-- 6. Sitemap Table -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-table"></i>
+                <h2>6. جدول خريطة مسارات لوحة التحكم (Admin Sitemap)</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>الصفحة</th>
+                        <th>المسار (Route)</th>
+                        <th>الوظيفة والتحكم</th>
+                        <th>الصلاحية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>الرئيسية</td>
+                        <td><code>/admin/dashboard</code></td>
+                        <td>الإحصائيات العامة وأحدث العمليات والتنبيهات</td>
+                        <td><span class="badge badge-success">مدير النظام</span></td>
+                    </tr>
+                    <tr>
+                        <td>الحجوزات</td>
+                        <td><code>/admin/appointments</code></td>
+                        <td>استعراض الحجوزات وتغيير الحالات (مؤكد/ملغي)</td>
+                        <td><span class="badge badge-success">مدير النظام</span></td>
+                    </tr>
+                    <tr>
+                        <td>الطلبات</td>
+                        <td><code>/admin/orders</code></td>
+                        <td>إدارة طلبيات الأدوية وتتبع الشحن والتجهيز</td>
+                        <td><span class="badge badge-success">مدير النظام</span></td>
+                    </tr>
+                    <tr>
+                        <td>تصدير الطلبات</td>
+                        <td><code>/admin/orders-export</code></td>
+                        <td>تنزيل ملف Excel يحتوي على بيانات الطلبات والمبيعات</td>
+                        <td><span class="badge badge-info">تحميل ملف</span></td>
+                    </tr>
+                    <tr>
+                        <td>التقارير</td>
+                        <td><code>/admin/reports</code></td>
+                        <td>رسوم بيانية وإيرادات المبيعات ونشاط الزوار</td>
+                        <td><span class="badge badge-success">مدير النظام</span></td>
+                    </tr>
+                    <tr>
+                        <td>الأطباء</td>
+                        <td><code>/doctor</code></td>
+                        <td>إضافة وتعديل وحذف بيانات الأطباء والعيادات</td>
+                        <td><span class="badge badge-success">مدير النظام</span></td>
+                    </tr>
+                    <tr>
+                        <td>الأدوية</td>
+                        <td><code>/medicien</code></td>
+                        <td>إضافة أصناف الأدوية وتحديث الأسعار والكميات</td>
+                        <td><span class="badge badge-success">مدير النظام</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
