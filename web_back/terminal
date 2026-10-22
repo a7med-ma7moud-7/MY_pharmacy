@@ -1,0 +1,4 @@
+php artisan tinker
+echo config('services.google.redirect');
+echo config('services.facebook.redirect');
+

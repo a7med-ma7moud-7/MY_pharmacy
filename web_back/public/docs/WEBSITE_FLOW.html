@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مخطط تدفق الموقع الإلكتروني وتجربة المستخدم - صيدليتي</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'neutral',
+            fontFamily: 'Cairo, sans-serif',
+            securityLevel: 'loose'
+        });
+    </script>
+    <style>
+        :root {
+            --primary: #0f6848;
+            --primary-light: #e8f5ef;
+            --primary-hover: #0c5339;
+            --secondary: #10ac84;
+            --dark: #1e293b;
+            --text-main: #334155;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', 'Almarai', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.8;
+            padding-bottom: 60px;
+        }
+
+        /* Top Action Bar */
+        .top-bar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .header-card {
+            background: linear-gradient(135deg, #10ac84 0%, #0f6848 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(16, 172, 132, 0.15);
+            text-align: center;
+        }
+
+        .header-card h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .header-card p {
+            font-size: 1.15rem;
+            opacity: 0.92;
+            max-width: 750px;
+            margin: 0 auto;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .diagram-container {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.01);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px;
+            border-right: 4px solid var(--secondary);
+        }
+
+        .info-card h4 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #dcfce7; color: #15803d; }
+        .badge-warning { background: #fef9c3; color: #a16207; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
+
+        @media print {
+            .top-bar { display: none; }
+            body { background: white; padding: 0; }
+            .section-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .diagram-container { border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Action Bar -->
+    <div class="top-bar">
+        <div class="brand">
+            <i class="fas fa-capsules"></i>
+            <span>صيدليتي - مخططات تجربة الموقع</span>
+        </div>
+        <div class="actions">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> طباعة / حفظ كـ PDF
+            </button>
+            <a href="http://127.0.0.1:8000" target="_blank" class="btn btn-outline">
+                <i class="fas fa-external-link-alt"></i> زيارة الموقع الإلكتروني
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header-card">
+            <h1><i class="fas fa-globe me-2"></i> دليل ومخطط تدفق الموقع الإلكتروني (Website Flow)</h1>
+            <p>خريطة بصرية تفاعلية توضح رحلة المريض والعميل: من تصفح الصفحة الرئيسية، واختيار الأطباء وحجز المواعيد، إلى الشراء عبر السلة وتتبع الطلبات واستشارة الذكاء الاصطناعي.</p>
+        </div>
+
+        <!-- 1. User Journey -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-route"></i>
+                <h2>1. خريطة رحلة العميل العامة (Customer Journey Map)</h2>
+            </div>
+            <p>توضح هذه الخريطة كيف يبدأ الزائر رحلته من الصفحة الرئيسية والخيارات المتنوعة المتاحة له:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TD
+    Visitor([الزائر / المريض]) --> Home[الصفحة الرئيسية /]
+
+    Home --> DoctorsSection[دليل الأطباء /doctors]
+    Home --> MedicinesSection[متجر الأدوية /medicines]
+    Home --> BookingSection[حجز موعد كشف /appointments]
+    Home --> AIChatSection[الصيدلي الذكي /ai-chat]
+    Home --> ReviewsSection[تقييمات وآراء العملاء /rate]
+    Home --> AuthSection[تسجيل الدخول / حساب جديد /login]
+
+    DoctorsSection --> DoctorProfile[الملف الشخصي للطبيب]
+    DoctorProfile --> BookingSection
+    DoctorProfile --> AddRating[كتابة تقييم للطبيب]
+
+    MedicinesSection --> MedDetail[تفاصيل الدواء والجرعات]
+    MedDetail --> Cart[سلة المشتريات Cart]
+    Cart --> Checkout[إتمام الطلب Checkout]
+    Checkout --> TrackOrder[تتبع حالة الطلب /orders/status]
+                </pre>
+            </div>
+        </div>
+
+        <!-- 2. Doctor Booking -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-user-md"></i>
+                <h2>2. رحلة تصفح وحجز الأطباء (Doctor Search & Booking Flow)</h2>
+            </div>
+            <p>تسلسل خطوات البحث والفلترة وتأكيد الحجز البرمجي بدون تعارض في المواعيد:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Patient as المريض / الزائر
+    participant Web as صفحة الأطباء /doctors
+    participant Form as نموذج الحجز /appointments
+    participant DB as قاعدة البيانات
+    participant Mail as خدمة البريد الإلكتروني
+
+    Patient->>Web: استخدام الفلاتر (التخصص، المحافظة، المدينة)
+    Web-->>Patient: استعراض بطاقات الأطباء والأسعار والتقييمات
+    Patient->>Form: الضغط على "حجز موعد"
+    Form-->>Patient: فتح نموذج الحجز (اختيار التاريخ والوقت)
+    Patient->>Form: إدخال الاسم، الهاتف، والإيميل والضغط على "تأكيد الحجز"
+    Form->>DB: فحص عدم تعارض الموعد مع حجز آخر لنفس الطبيب
+    alt الموعد محجوز مسبقاً
+        DB-->>Patient: تنبيه: الموعد محجوز بالفعل، اختر وقتاً آخر
+    else الموعد شاغر ومتاح
+        DB->>DB: حفظ الحجز بحالة (قيد الانتظار Pending)
+        DB->>Mail: إرسال بريد تأكيدي للمريض
+        DB-->>Patient: التحويل إلى صفحة النجاح برقم الحجز المرجعي
+    end
+                </pre>
+            </div>
+        </div>
+
+        <!-- 3. Medicines & Cart -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-shopping-cart"></i>
+                <h2>3. متجر الأدوية وسلة المشتريات (Medicine Store & Cart Flow)</h2>
+            </div>
+            <p>تدفق عملية الشراء الذكية، إدارة السلة في المتصفح، وإرسال بيانات التوصيل:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    Browse[تصفح قائمة الأدوية /medicines] --> FilterType[تصفية حسب نوع الدواء: أقراص، فوار، شراب...]
+    FilterType --> SearchMed[البحث باسم الدواء أو دواعي الاستعمال]
+    SearchMed --> ViewDetails[عرض تفاصيل الدواء والسعر والكميات]
+    
+    ViewDetails --> AddToCart[الضغط على إضافة إلى السلة]
+    AddToCart --> LocalStorage[(تحديث السلة في المتصفح LocalStorage)]
+    
+    LocalStorage --> OpenCartModal[فتح نافذة سلة المشتريات]
+    OpenCartModal --> AdjustQty[تعديل الكميات أو حذف أصناف]
+    AdjustQty --> CheckoutClick[الضغط على إتمام الطلب Checkout]
+    
+    CheckoutClick --> FillOrderForm[تعبئة بيانات الشحن والتوصيل]
+    FillOrderForm --> FormFields["الاسم - الهاتف - العنوان - طريقة الاستلام (توصيل/استلام فرع)"]
+    
+    FormFields --> SubmitOrder[إرسال الطلب POST /orders]
+    SubmitOrder --> SaveDB[(حفظ الطلب وعناصره في قاعدة البيانات)]
+    SaveDB --> ClearCart[تفريغ سلة المشتريات تلقائياً]
+    ClearCart --> ShowOrderCode[إظهار رقم الطلب ورابط التتبع الفوري]
+                </pre>
+            </div>
+        </div>
+
+        <!-- 4. Order Tracking -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-truck"></i>
+                <h2>4. تتبع حالة الطلب (Order Status Tracking)</h2>
+            </div>
+            <p>يستطيع العميل في أي وقت معرفة حالة شحن وتجهيز أدويته برقم الهاتف ورقم الطلب:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph LR
+    EnterCode[إدخال رقم الطلب ورقم الهاتف] --> VerifyOrder{التحقق من البيانات}
+    VerifyOrder -->|بيانات غير متطابقة| ErrMsg[رسالة: لم يتم العثور على الطلب]
+    VerifyOrder -->|بيانات صحيحة| StatusDisplay[عرض بطاقة تفاصيل الطلب والحالة]
+
+    StatusDisplay --> S1[قيد الانتظار Pending ⏳]
+    StatusDisplay --> S2[قيد التجهيز Processing 📦]
+    StatusDisplay --> S3[مكتمل وجاهز Completed ✅]
+    StatusDisplay --> S4[ملغي Cancelled ❌]
+                </pre>
+            </div>
+        </div>
+
+        <!-- 5. AI Pharmacist -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-robot"></i>
+                <h2>5. الصيدلي الذكي (AI Pharmacist Assistant Flow)</h2>
+            </div>
+            <p>معمارية التوجيه الذكي لاستفسارات المرضى مع التحويل التلقائي والاحتياطي (Fallback) لضمان استمرارية الخدمة:</p>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    UserQ([المريض يطرح سؤالاً صيدلانياً]) --> FrontendReq[إرسال السؤال إلى POST /ask-ai]
+    FrontendReq --> Backend[AIChatController]
+
+    Backend --> CheckRouterKey{هل مفتاح OpenRouter متوفر؟}
+    
+    CheckRouterKey -->|نعم| TryOpenRouter[تجربة نماذج OpenRouter المجانية: LLaMA / Gemma]
+    TryOpenRouter -->|نجح النموذج| ReturnAnswer[إرجاع الإجابة الصيدلية المنسقة]
+    
+    TryOpenRouter -->|فشل أو انتهاء الباقة| FallbackGemini[التحويل التلقائي لمفتاح Google Gemini 2.0]
+    CheckRouterKey -->|لا| FallbackGemini
+    
+    FallbackGemini -->|نجاح Gemini| ReturnAnswer
+    FallbackGemini -->|فشل كلي| ErrorSafe[رسالة اعتذار آمنة: الخدمة غير متاحة مؤقتاً]
+    
+    ReturnAnswer --> DisplayChat[عرض الإجابة الفورية داخل واجهة الشات للمريض]
+                </pre>
+            </div>
+        </div>
+
+        <!-- 6. Website Sitemap Table -->
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-list-alt"></i>
+                <h2>6. جدول خريطة صفحات الموقع (Website Sitemap)</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم الصفحة</th>
+                        <th>الرابط (Route)</th>
+                        <th>الهدف والمحتوى</th>
+                        <th>إمكانية الوصول</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>الرئيسية</td>
+                        <td><code>/</code></td>
+                        <td>بوابة المنصة، مميزات الصيدلية، وروابط الوصول السريع</td>
+                        <td><span class="badge badge-success">عام للجميع</span></td>
+                    </tr>
+                    <tr>
+                        <td>دليل الأطباء</td>
+                        <td><code>/doctors</code></td>
+                        <td>قائمة الأطباء والفلترة بالتخصص والمدينة وسعر الكشف</td>
+                        <td><span class="badge badge-success">عام للجميع</span></td>
+                    </tr>
+                    <tr>
+                        <td>صيدلية الأدوية</td>
+                        <td><code>/medicines</code></td>
+                        <td>كتالوج الأدوية والمستحضرات وسلة المشتريات والطلب</td>
+                        <td><span class="badge badge-success">عام للجميع</span></td>
+                    </tr>
+                    <tr>
+                        <td>حجز موعد</td>
+                        <td><code>/appointments</code></td>
+                        <td>نموذج حجز استشارة أو كشف لدى طبيب معتمد</td>
+                        <td><span class="badge badge-success">عام للجميع</span></td>
+                    </tr>
+                    <tr>
+                        <td>تتبع الطلب</td>
+                        <td><code>/orders/status</code></td>
+                        <td>الاستعلام عن حالة الطلب وتجهيز الأدوية ومندوب التوصيل</td>
+                        <td><span class="badge badge-success">عام للجميع</span></td>
+                    </tr>
+                    <tr>
+                        <td>الصيدلي الذكي (AI)</td>
+                        <td><code>/ai-chat</code></td>
+                        <td>مساعد صيدلي بالذكاء الاصطناعي للإجابة عن دواعي الاستعمال</td>
+                        <td><span class="badge badge-success">عام للجميع</span></td>
+                    </tr>
+                    <tr>
+                        <td>التقييمات</td>
+                        <td><code>/rate</code></td>
+                        <td>تقييم الأطباء وكتابة المراجعات بالنجوم</td>
+                        <td><span class="badge badge-warning">يتطلب حساب</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
