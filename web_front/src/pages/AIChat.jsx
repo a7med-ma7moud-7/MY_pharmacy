@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Send, AlertCircle, Sparkles, HelpCircle, Check, Copy, Loader2 } from 'lucide-react';
+import { Bot, Send, AlertCircle, Sparkles, HelpCircle, Check, Copy, Loader2, ArrowRight } from 'lucide-react';
 import { askAi } from '../services/api';
 
 export default function AIChat() {
@@ -52,41 +52,41 @@ export default function AIChat() {
   };
 
   return (
-    <div className="py-12 bg-gray-50 min-h-screen">
+    <div className="py-12 bg-slate-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex p-3 bg-gradient-to-r from-[#0f6848] to-[#10ac84] text-white rounded-2xl mb-3 shadow-md">
+          <div className="inline-flex p-3.5 bg-gradient-to-br from-[#0f6848] via-[#10ac84] to-[#0d9488] text-white rounded-3xl mb-4 shadow-xl">
             <Bot className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-extrabold font-almarai text-gray-900 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-extrabold font-almarai text-gray-900 mb-2">
             مساعد الصيدلي الذكي (AI)
           </h1>
-          <p className="text-gray-500 text-sm max-w-lg mx-auto">
-            اطرح أي استفسار طبي أو دوائي وسيقوم مساعدنا الذكي بتقديم إجابات وإرشادات صيدلانية فورية
+          <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto leading-relaxed m-0">
+            اطرح أي استفسار طبي أو دوائي وسيقوم مساعدنا الذكي بتقديم إرشادات ومعلومات صيدلانية فورية
           </p>
         </div>
 
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-          {/* Search/Query Bar */}
-          <div className="p-6 bg-emerald-50/40 border-b border-gray-100">
-            <form onSubmit={(e) => handleSubmit(e)} className="flex items-center gap-2">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8 transition-all">
+          {/* Query Bar */}
+          <div className="p-6 bg-gradient-to-r from-emerald-50/60 to-teal-50/40 border-b border-gray-100">
+            <form onSubmit={(e) => handleSubmit(e)} className="flex items-center gap-2.5">
               <div className="relative flex-1">
                 <input
                   type="text"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="اسأل عن أي شيء طبي، مثل: جرعات الأدوية، التفاعلات، أو الأعراض..."
+                  placeholder="اسأل عن أي شيء طبي: الجرعات، التفاعلات، الأعراض، أو البدائل..."
                   required
                   disabled={loading}
-                  className="w-full pr-4 pl-4 py-3.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none shadow-sm transition-all"
+                  className="w-full pr-4 pl-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none shadow-sm transition-all"
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading || !question.trim()}
-                className="btn-main px-6 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md disabled:opacity-50 shrink-0"
+                className="btn-main px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md disabled:opacity-40 active:scale-95 transition-all shrink-0"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -101,8 +101,8 @@ export default function AIChat() {
 
             {/* Suggested Prompts */}
             <div className="mt-4 pt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-gray-400 font-semibold flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5 text-main" />
+              <span className="text-gray-400 font-bold flex items-center gap-1">
+                <HelpCircle className="w-3.5 h-3.5 text-emerald-600" />
                 <span>أسئلة شائعة:</span>
               </span>
               {suggestedQuestions.map((q, idx) => (
@@ -110,7 +110,7 @@ export default function AIChat() {
                   key={idx}
                   type="button"
                   onClick={() => handleSubmit(null, q)}
-                  className="bg-white hover:bg-emerald-50 hover:text-main text-gray-600 px-3 py-1.5 rounded-full border border-gray-200 transition-all text-xs"
+                  className="bg-white hover:bg-emerald-100/70 hover:text-emerald-900 text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200 shadow-2xs transition-all text-xs font-medium hover:scale-102"
                 >
                   {q}
                 </button>
@@ -121,65 +121,73 @@ export default function AIChat() {
           {/* Results Area */}
           <div className="p-6 sm:p-8">
             {loading && (
-              <div className="py-12 text-center text-gray-500">
-                <div className="w-12 h-12 bg-emerald-100 text-main rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
-                  <Sparkles className="w-6 h-6 text-emerald-600" />
+              <div className="py-14 text-center text-gray-500 animate-fadeIn">
+                <div className="w-14 h-14 bg-emerald-100 text-[#0f6848] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce shadow-inner">
+                  <Sparkles className="w-7 h-7 text-emerald-600" />
                 </div>
-                <p className="font-bold text-gray-800 text-base mb-1">جاري تحليل سؤالك وصياغة الرد الطبي...</p>
-                <p className="text-xs text-gray-400">يقوم الذكاء الاصطناعي بمراجعة المصادر الصيدلانية المعتمدة</p>
+                <h4 className="font-extrabold text-gray-800 text-lg mb-1">
+                  جاري تحليل استفسارك وصياغة الرد الطبي...
+                </h4>
+                <p className="text-xs text-gray-400 max-w-sm mx-auto m-0">
+                  يقوم المساعد الذكي بمراجعة البيانات الصيدلانية الموثقة لتوفير أفضل إرشاد ممكن.
+                </p>
               </div>
             )}
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 shrink-0" />
+              <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm flex items-center gap-2.5 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
                 <span>{error}</span>
               </div>
             )}
 
             {answer && !loading && (
-              <div className="bg-emerald-50/30 rounded-2xl border border-emerald-100 p-6 animate-fadeIn">
-                <div className="flex items-center justify-between pb-4 border-b border-emerald-100/60 mb-4">
-                  <div className="flex items-center gap-2 text-main font-bold text-sm">
-                    <Sparkles className="w-5 h-5 text-emerald-600" />
-                    <span>إجابة الصيدلي الذكي</span>
+              <div className="bg-gradient-to-br from-emerald-50/40 via-white to-teal-50/20 rounded-2xl border border-emerald-100 p-6 sm:p-7 shadow-sm animate-scaleIn">
+                <div className="flex items-center justify-between pb-4 border-b border-emerald-100/80 mb-5">
+                  <div className="flex items-center gap-2.5 text-[#0f6848] font-bold text-sm">
+                    <div className="p-1.5 bg-emerald-100 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-emerald-700" />
+                    </div>
+                    <span className="text-base font-extrabold font-almarai">إجابة الصيدلي الذكي</span>
                   </div>
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-main bg-white px-3 py-1 rounded-lg border border-gray-200 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-emerald-700 bg-white px-3.5 py-1.5 rounded-xl border border-gray-200 shadow-2xs hover:border-emerald-300 transition-all active:scale-95"
                   >
                     {copied ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600 font-semibold">تم النسخ</span>
+                        <span className="text-emerald-700 font-bold">تم النسخ</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-3.5 h-3.5 text-gray-400" />
                         <span>نسخ الرد</span>
                       </>
                     )}
                   </button>
                 </div>
 
-                <div className="text-gray-800 text-sm md:text-base leading-relaxed whitespace-pre-line font-normal">
+                <div className="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line font-normal">
                   {answer}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-emerald-100/60 text-xs text-gray-500 flex items-start gap-2 bg-white/60 p-3 rounded-xl">
+                <div className="mt-6 pt-4 border-t border-emerald-100/60 text-xs text-gray-500 flex items-start gap-2.5 bg-white/80 p-3.5 rounded-2xl border border-gray-100">
                   <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>تنبيه طبي:</strong> إجابات المساعد الذكي للأغراض التثقيفية والإرشادية فقط، ولا تغني عن الاستشارة المباشرة للطبيب المعالج أو الصيدلي المتخصص.
+                  <span className="leading-relaxed">
+                    <strong>تنبيه طبي وقانوني:</strong> إجابات المساعد الذكي للأغراض التثقيفية والإرشادية فقط، ولا تغني مطلقاً عن الاستشارة المباشرة للطبيب المعالج أو الصيدلي المتخصص.
                   </span>
                 </div>
               </div>
             )}
 
             {!answer && !loading && !error && (
-              <div className="py-14 text-center">
-                <Bot className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-gray-700 mb-1">ابدأ المحادثة الآن</h3>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              <div className="py-16 text-center">
+                <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+                  <Bot className="w-10 h-10" />
+                </div>
+                <h3 className="text-base font-bold text-gray-700 mb-1">ابدأ استشارتك الآن</h3>
+                <p className="text-xs text-gray-400 max-w-sm mx-auto m-0">
                   اكتب سؤالك في الحقل أعلاه أو اضغط على أحد الأسئلة المقترحة للحصول على رد فوري
                 </p>
               </div>

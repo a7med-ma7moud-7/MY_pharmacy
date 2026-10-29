@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   AlertCircle,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { adminApi } from '../services/api';
 import { StatCard } from '../components/dashboard/StatCard';
@@ -48,7 +49,7 @@ export const Dashboard = () => {
   if (loading) {
     return (
       <div style={{ padding: '60px 0', display: 'flex', justifyContent: 'center' }}>
-        <LoadingSpinner text="جاري تحديث بيانات لوحة التحكم..." size={40} />
+        <LoadingSpinner text="جاري تحديث بيانات لوحة التحكم..." size={42} variant="dots" />
       </div>
     );
   }
@@ -57,33 +58,43 @@ export const Dashboard = () => {
     return (
       <div
         style={{
-          padding: '40px',
+          padding: '48px 40px',
           textAlign: 'center',
           backgroundColor: '#ffffff',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--slate-200)',
+          boxShadow: 'var(--shadow-sm)',
+          animation: 'fadeInScale 0.4s ease-out',
+          maxWidth: '500px',
+          margin: '40px auto',
         }}
       >
-        <AlertCircle size={48} style={{ color: 'var(--danger-color)', margin: '0 auto 16px' }} />
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
+        <div style={{
+          width: '72px',
+          height: '72px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 20px',
+          animation: 'float 3s ease-in-out infinite',
+        }}>
+          <AlertCircle size={36} style={{ color: '#ef4444' }} />
+        </div>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--slate-800)', marginBottom: '8px' }}>
           {error}
         </h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
+        <p style={{ color: 'var(--slate-500)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.7 }}>
           يرجى التحقق من تشغيل خادم الواجهة الخلفية على المنفذ 8080 ثم إعادة المحاولة.
         </p>
         <button
           onClick={fetchDashboardData}
-          style={{
-            padding: '10px 24px',
-            backgroundColor: 'var(--primary-color)',
-            color: '#ffffff',
-            borderRadius: 'var(--radius-md)',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="btn btn-primary"
+          style={{ gap: '8px' }}
         >
-          إعادة المحاولة
+          <RefreshCw size={16} />
+          <span>إعادة المحاولة</span>
         </button>
       </div>
     );
@@ -96,43 +107,69 @@ export const Dashboard = () => {
       {/* Welcome Banner */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
           borderRadius: 'var(--radius-xl)',
-          padding: '28px 32px',
+          padding: '32px 36px',
           color: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '20px',
-          boxShadow: 'var(--shadow-md)',
+          boxShadow: '0 10px 40px rgba(15, 23, 42, 0.2)',
           position: 'relative',
           overflow: 'hidden',
+          animation: 'fadeInUp 0.4s ease-out',
         }}
       >
+        {/* Decorative animated circles */}
+        <div style={{
+          position: 'absolute',
+          top: '-40%',
+          right: '-10%',
+          width: '300px',
+          height: '300px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(13, 148, 136, 0.12) 0%, transparent 70%)',
+          animation: 'breathe 4s ease-in-out infinite',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '-60%',
+          left: '-5%',
+          width: '250px',
+          height: '250px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
+          animation: 'breathe 5s ease-in-out infinite 1s',
+          pointerEvents: 'none',
+        }} />
+
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span
               style={{
-                backgroundColor: 'rgba(20, 184, 166, 0.2)',
+                backgroundColor: 'rgba(20, 184, 166, 0.15)',
                 color: '#2dd4bf',
-                padding: '4px 10px',
+                padding: '5px 12px',
                 borderRadius: 'var(--radius-full)',
                 fontSize: '0.75rem',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '6px',
+                border: '1px solid rgba(45, 212, 191, 0.2)',
               }}
             >
-              <Sparkles size={13} />
+              <Sparkles size={13} style={{ animation: 'float 2s ease-in-out infinite' }} />
               مركز المراقبة والتحكم
             </span>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 6px' }}>
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
             مرحباً بك مجدداً، {admin?.name || 'مدير النظام'} 👋
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.88rem', margin: 0, maxWidth: '600px' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, maxWidth: '600px', lineHeight: 1.7 }}>
             إليك نظرة عامة على نشاط الصيدلية والعيادات الطبية وحركة المبيعات والحجوزات الحالية.
           </p>
         </div>
@@ -248,7 +285,7 @@ export const Dashboard = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))',
           gap: '24px',
         }}
       >

@@ -10,8 +10,7 @@ import {
   CheckCircle2, 
   ArrowLeft, 
   ArrowRight,
-  Package,
-  Truck
+  Package
 } from 'lucide-react';
 
 const CartModal = () => {

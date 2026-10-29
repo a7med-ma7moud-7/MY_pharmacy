@@ -74,8 +74,20 @@ const DoctorDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-main" />
+      <div className="py-12 bg-slate-50 min-h-screen">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm animate-pulse flex flex-col items-center">
+            <div className="w-28 h-28 rounded-full bg-slate-200 mb-4"></div>
+            <div className="h-6 bg-slate-300 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-slate-200 rounded w-32 mb-6"></div>
+            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="h-20 bg-slate-100 rounded-2xl"></div>
+              <div className="h-20 bg-slate-100 rounded-2xl"></div>
+              <div className="h-20 bg-slate-100 rounded-2xl"></div>
+            </div>
+            <div className="h-12 bg-slate-200 rounded-xl w-48"></div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -187,9 +187,7 @@ export const UserList = () => {
       {/* Main Users Table */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: '60px 0' }}>
-            <LoadingSpinner text="جاري استرجاع سجلات المستخدمين..." />
-          </div>
+          <LoadingSpinner variant="skeleton-table" />
         ) : users.length === 0 ? (
           <EmptyState
             title="لا يوجد مستخدمون مطابقون"

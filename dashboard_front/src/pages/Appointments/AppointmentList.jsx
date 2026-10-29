@@ -184,9 +184,7 @@ export const AppointmentList = () => {
       {/* Main Table */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: '60px 0' }}>
-            <LoadingSpinner text="جاري استرجاع سجلات الحجوزات الطبية..." />
-          </div>
+          <LoadingSpinner variant="skeleton-table" />
         ) : appointments.length === 0 ? (
           <EmptyState
             title="لا توجد حجوزات مطابقة"

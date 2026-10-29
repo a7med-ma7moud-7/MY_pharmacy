@@ -35,8 +35,8 @@ export const ReportsView = () => {
 
   if (loading) {
     return (
-      <div style={{ padding: '60px 0' }}>
-        <LoadingSpinner text="جاري تجميع الإحصائيات ومعالجة الرسوم البيانية..." size={40} />
+      <div className="card" style={{ padding: '24px' }}>
+        <LoadingSpinner variant="skeleton" />
       </div>
     );
   }

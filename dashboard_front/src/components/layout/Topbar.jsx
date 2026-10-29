@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Menu,
   ExternalLink,
   ChevronDown,
   LogOut,
-  Clock,
+  Clock
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState('');
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -34,6 +35,19 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDropdown]);
+
   const handleLogout = async () => {
     setShowDropdown(false);
     await logout();
@@ -46,18 +60,20 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
         position: 'sticky',
         top: 0,
         height: 'var(--topbar-height)',
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid var(--border-color)',
+        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--slate-200)',
         padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         zIndex: 1020,
-        boxShadow: 'var(--shadow-sm)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
       }}
     >
-      {/* Left side (in RTL, Right side visually): Toggle and Breadcrumb / Clock */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* Left side: Toggle and Clock */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Mobile Toggle */}
         <button
           onClick={onToggleMobile}
@@ -68,9 +84,9 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
             border: 'none',
             cursor: 'pointer',
             padding: '8px',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--text-main)',
-            display: 'none', // Overridden in CSS for mobile
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--slate-700)',
+            transition: 'all 0.2s ease',
           }}
         >
           <Menu size={22} />
@@ -87,20 +103,22 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
             border: 'none',
             cursor: 'pointer',
             padding: '8px',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--text-muted)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--slate-500)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'color 0.2s, background-color 0.2s',
+            transition: 'all 0.2s ease',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--primary-color)';
-            e.currentTarget.style.backgroundColor = 'var(--bg-main)';
+            e.currentTarget.style.color = 'var(--primary-600)';
+            e.currentTarget.style.backgroundColor = 'var(--slate-100)';
+            e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--text-muted)';
+            e.currentTarget.style.color = 'var(--slate-500)';
             e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.transform = 'scale(1)';
           }}
         >
           <Menu size={20} />
@@ -108,52 +126,64 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
 
         {/* Current Date & Time Display */}
         <div
+          className="desktop-only"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            fontSize: '0.85rem',
-            color: 'var(--text-muted)',
-            backgroundColor: 'var(--bg-main)',
-            padding: '6px 12px',
+            fontSize: '0.83rem',
+            color: 'var(--slate-500)',
+            backgroundColor: 'var(--slate-50)',
+            padding: '6px 14px',
             borderRadius: 'var(--radius-full)',
+            border: '1px solid var(--slate-200)',
           }}
         >
-          <Clock size={15} style={{ color: 'var(--primary-color)' }} />
+          <Clock size={14} style={{ color: 'var(--primary-600)' }} />
           <span>{currentDateTime}</span>
         </div>
       </div>
 
-      {/* Right side (in RTL, Left side visually): Website link & Admin Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* Right side: Website link & Admin Profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Link to public website */}
         <a
           href="http://localhost:5173"
           target="_blank"
           rel="noopener noreferrer"
           title="فتح المتجر الإلكتروني للمستخدمين"
+          className="desktop-only"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            fontSize: '0.85rem',
+            fontSize: '0.83rem',
             fontWeight: 600,
-            color: 'var(--primary-color)',
-            backgroundColor: 'rgba(13, 148, 136, 0.08)',
+            color: 'var(--primary-600)',
+            backgroundColor: 'rgba(13, 148, 136, 0.06)',
             padding: '6px 14px',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--radius-full)',
             textDecoration: 'none',
-            transition: 'background-color 0.2s',
+            border: '1px solid rgba(13, 148, 136, 0.12)',
+            transition: 'all 0.25s ease',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(13, 148, 136, 0.16)')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(13, 148, 136, 0.08)')}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(13, 148, 136, 0.12)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(13, 148, 136, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(13, 148, 136, 0.06)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
         >
           <span>الموقع العام</span>
-          <ExternalLink size={14} />
+          <ExternalLink size={13} />
         </a>
 
         {/* Admin User Profile Dropdown */}
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
             style={{
@@ -161,38 +191,57 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
               alignItems: 'center',
               gap: '10px',
               background: 'none',
-              border: '1px solid var(--border-color)',
-              padding: '5px 12px',
+              border: '1px solid var(--slate-200)',
+              padding: '5px 14px 5px 10px',
               borderRadius: 'var(--radius-full)',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--primary-500)';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.08)';
+            }}
+            onMouseLeave={(e) => {
+              if (!showDropdown) {
+                e.currentTarget.style.borderColor = 'var(--slate-200)';
+                e.currentTarget.style.boxShadow = 'none';
+              }
             }}
           >
             <div
               style={{
-                width: '32px',
-                height: '32px',
+                width: '34px',
+                height: '34px',
                 borderRadius: '50%',
-                backgroundColor: 'var(--primary-color)',
+                background: 'linear-gradient(135deg, var(--primary-600), var(--primary-500))',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
                 fontSize: '0.9rem',
+                boxShadow: '0 0 8px rgba(13, 148, 136, 0.2)',
               }}
             >
               {admin?.name ? admin.name.charAt(0).toUpperCase() : 'A'}
             </div>
-            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.2 }}>
+            <div className="desktop-only" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.83rem', fontWeight: 600, color: 'var(--slate-800)', lineHeight: 1.2 }}>
                 {admin?.name || 'مدير النظام'}
               </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--primary-color)', fontWeight: 500 }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--primary-600)', fontWeight: 500 }}>
                 مسؤول رئيسي
               </span>
             </div>
-            <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />
+            <ChevronDown
+              size={14}
+              className="desktop-only"
+              style={{
+                color: 'var(--slate-400)',
+                transition: 'transform 0.2s ease',
+                transform: showDropdown ? 'rotate(180deg)' : 'rotate(0)',
+              }}
+            />
           </button>
 
           {/* Dropdown Menu */}
@@ -200,29 +249,29 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
             <div
               style={{
                 position: 'absolute',
-                top: '110%',
+                top: 'calc(100% + 8px)',
                 left: 0,
-                width: '210px',
+                width: '220px',
                 backgroundColor: '#ffffff',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)',
-                border: '1px solid var(--border-color)',
+                boxShadow: 'var(--shadow-xl)',
+                border: '1px solid var(--slate-200)',
                 padding: '8px',
                 zIndex: 1050,
-                animation: 'fadeIn 0.15s ease-out',
+                animation: 'fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               <div
                 style={{
-                  padding: '8px 12px',
-                  borderBottom: '1px solid var(--border-color)',
+                  padding: '10px 12px',
+                  borderBottom: '1px solid var(--slate-100)',
                   marginBottom: '6px',
                 }}
               >
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--slate-800)' }}>
                   {admin?.name}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--slate-400)', marginTop: '2px' }}>
                   {admin?.email}
                 </div>
               </div>
@@ -237,15 +286,21 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                   padding: '8px 12px',
                   border: 'none',
                   background: 'none',
-                  color: 'var(--danger-color)',
+                  color: '#ef4444',
                   cursor: 'pointer',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '0.85rem',
                   fontWeight: 600,
-                  transition: 'background-color 0.2s',
+                  transition: 'all 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.06)';
+                  e.currentTarget.style.transform = 'translateX(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}
               >
                 <LogOut size={16} />
                 <span>تسجيل الخروج</span>

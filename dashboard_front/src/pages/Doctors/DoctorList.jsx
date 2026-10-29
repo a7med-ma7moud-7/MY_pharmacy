@@ -194,9 +194,7 @@ export const DoctorList = () => {
       {/* Main Table Card */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: '60px 0' }}>
-            <LoadingSpinner text="جاري تحميل سجلات الأطباء..." />
-          </div>
+          <LoadingSpinner variant="skeleton-table" />
         ) : doctors.length === 0 ? (
           <EmptyState
             title="لا يوجد أطباء مطابقين"

@@ -17,28 +17,33 @@ export const EmptyState = ({
       padding: '48px 24px',
       textAlign: 'center',
       color: 'var(--slate-500)',
+      animation: 'fadeInUp 0.5s ease-out',
     }}>
       <div style={{
-        width: '64px',
-        height: '64px',
+        width: '80px',
+        height: '80px',
         borderRadius: '50%',
-        background: 'var(--slate-100)',
+        background: 'linear-gradient(135deg, var(--slate-100), var(--slate-50))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: '16px',
+        marginBottom: '20px',
         color: 'var(--slate-400)',
+        animation: 'float 3s ease-in-out infinite',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.04)',
       }}>
-        <Icon size={32} />
+        <Icon size={36} />
       </div>
-      <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--slate-700)', marginBottom: '6px' }}>
+      <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--slate-700)', marginBottom: '8px' }}>
         {title}
       </h4>
-      <p style={{ fontSize: '0.875rem', maxWidth: '360px', marginBottom: actionText ? '20px' : '0' }}>
+      <p style={{ fontSize: '0.875rem', maxWidth: '360px', marginBottom: actionText ? '24px' : '0', lineHeight: 1.6 }}>
         {description}
       </p>
       {actionText && onAction && (
-        <button onClick={onAction} className="btn btn-primary btn-sm">
+        <button onClick={onAction} className="btn btn-primary btn-sm" style={{
+          animation: 'fadeIn 0.3s ease-out 0.2s both',
+        }}>
           {actionText}
         </button>
       )}

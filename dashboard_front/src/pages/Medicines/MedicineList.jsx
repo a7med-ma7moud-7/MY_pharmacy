@@ -219,9 +219,7 @@ export const MedicineList = () => {
       {/* Main Medicines Table */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: '60px 0' }}>
-            <LoadingSpinner text="جاري فحص وتحديث قائمة الأدوية..." />
-          </div>
+          <LoadingSpinner variant="skeleton-table" />
         ) : medicines.length === 0 ? (
           <EmptyState
             title="لا توجد أدوية مطابقة"

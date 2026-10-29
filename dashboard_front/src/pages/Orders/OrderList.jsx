@@ -196,9 +196,7 @@ export const OrderList = () => {
       {/* Main Table */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: '60px 0' }}>
-            <LoadingSpinner text="جاري استرجاع سجلات الطلبات..." />
-          </div>
+          <LoadingSpinner variant="skeleton-table" />
         ) : orders.length === 0 ? (
           <EmptyState
             title="لا توجد طلبات مطابقة"
