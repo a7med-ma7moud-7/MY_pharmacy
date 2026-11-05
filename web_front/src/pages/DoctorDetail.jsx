@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doctorService, ratingService } from '../services/api';
-import { 
-  MapPin, 
-  Phone, 
-  Calendar, 
-  Star, 
-  CheckCircle2, 
+import {
+  MapPin,
+  Phone,
+  Calendar,
+  Star,
+  CheckCircle2,
   ArrowRight,
   MessageSquare,
   Send,
-  Loader2
+  AlertCircle,
 } from 'lucide-react';
 
 const DoctorDetail = () => {
@@ -23,9 +23,11 @@ const DoctorDetail = () => {
 
   // Rating form
   const [ratingVal, setRatingVal] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
   const [ratingSuccess, setRatingSuccess] = useState(false);
+  const [ratingError, setRatingError] = useState('');
 
   const fetchDoctor = async () => {
     setLoading(true);
@@ -49,15 +51,15 @@ const DoctorDetail = () => {
     fetchDoctor();
   }, [id]);
 
-
   const handleRatingSubmit = async (e) => {
     e.preventDefault();
     setSubmittingRating(true);
+    setRatingError('');
     try {
       const res = await ratingService.submitRating({
         doctor_id: id,
         rating: ratingVal,
-        comment: comment,
+        comment: comment.trim(),
       });
       if (res.data?.success) {
         setRatingSuccess(true);
@@ -66,7 +68,9 @@ const DoctorDetail = () => {
         setTimeout(() => setRatingSuccess(false), 4000);
       }
     } catch (err) {
-      console.error('Failed submitting rating:', err);
+      setRatingError(
+        err.response?.data?.message || 'حدث خطأ أثناء إرسال التقييم، يرجى المحاولة لاحقاً.'
+      );
     } finally {
       setSubmittingRating(false);
     }
@@ -97,27 +101,34 @@ const DoctorDetail = () => {
       <div className="max-w-3xl mx-auto py-20 text-center px-4">
         <h2 className="text-2xl font-bold font-almarai text-gray-800 mb-2">الطبيب غير موجود</h2>
         <p className="text-gray-500 mb-6">ربما تم حذف هذا الطبيب أو أن الرابط غير صحيح.</p>
-        <Link to="/doctors" className="btn-main">العودة لقائمة الأطباء</Link>
+        <Link to="/doctors" className="btn-main">
+          العودة لقائمة الأطباء
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="py-10 bg-gray-50 min-h-screen">
+    <div className="py-10 bg-slate-50 min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
-        <Link to="/doctors" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-main mb-6 font-semibold">
+        <Link
+          to="/doctors"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-main mb-6 font-semibold"
+        >
           <ArrowRight className="w-4 h-4" />
           <span>العودة لقائمة الأطباء</span>
         </Link>
 
         {/* Doctor Header Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8 animate-fadeIn">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <img
               src={doctor.image_url || '/asset/1.png'}
               alt={doctor.name}
-              onError={(e) => { e.target.src = '/asset/1.png'; }}
+              onError={(e) => {
+                e.currentTarget.src = '/asset/1.png';
+              }}
               className="w-32 h-32 rounded-2xl object-cover border-4 border-emerald-50 shadow-md bg-white"
             />
 
@@ -127,7 +138,7 @@ const DoctorDetail = () => {
                   {doctor.specialty}
                 </span>
                 <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-                  معتمد وموثق
+                  طبيب معتمد وموثق
                 </span>
               </div>
 
@@ -140,22 +151,29 @@ const DoctorDetail = () => {
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`w-4 h-4 ${star <= Math.round(averageRating) ? 'fill-yellow-400' : 'text-gray-200'}`}
+                    className={`w-4 h-4 ${
+                      star <= Math.round(averageRating) ? 'fill-yellow-400' : 'text-gray-200'
+                    }`}
                   />
                 ))}
-                <span className="text-sm font-bold text-gray-800 mr-1.5">{averageRating}</span>
+                <span className="text-sm font-bold text-gray-800 mr-1.5">
+                  {Number(averageRating).toFixed(1)}
+                </span>
                 <span className="text-xs text-gray-400">({ratingsCount} تقييمات المرضى)</span>
               </div>
 
               {/* Info grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600 bg-slate-50 p-4 rounded-2xl border border-gray-100 mb-6">
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400">سعر الكشف:</span>
                   <span className="font-bold text-main text-base">{doctor.price} ج.م</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{doctor.location || 'القاهرة'} {doctor.tow_location ? ` - ${doctor.tow_location}` : ''}</span>
+                  <span>
+                    {doctor.location || 'القاهرة'}{' '}
+                    {doctor.tow_location ? ` - ${doctor.tow_location}` : ''}
+                  </span>
                 </div>
                 {doctor.number && (
                   <div className="flex items-center gap-2" dir="ltr">
@@ -179,41 +197,61 @@ const DoctorDetail = () => {
         {/* Rating Submission & Reviews Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Submit Review */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-bold font-almarai text-gray-900 mb-4 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
               <span>أضف تقييمك ورأيك للطبيب</span>
             </h3>
 
             {ratingSuccess && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm flex items-center gap-2 animate-fadeIn">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
                 <span>تم إرسال تقييمك بنجاح، شكراً لمشاركتك!</span>
+              </div>
+            )}
+
+            {ratingError && (
+              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm flex items-center gap-2 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <span>{ratingError}</span>
               </div>
             )}
 
             <form onSubmit={handleRatingSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-2">اختر عدد النجوم:</label>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  اختر عدد النجوم:
+                </label>
                 <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setRatingVal(s)}
-                      className="p-1 hover:scale-110 transition-transform"
-                    >
-                      <Star
-                        className={`w-7 h-7 ${s <= ratingVal ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                      />
-                    </button>
-                  ))}
-                  <span className="text-sm font-bold text-gray-700 mr-2">({ratingVal} من 5)</span>
+                  {[1, 2, 3, 4, 5].map((s) => {
+                    const active = (hoverRating || ratingVal) >= s;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onMouseEnter={() => setHoverRating(s)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRatingVal(s)}
+                        className="p-1 hover:scale-125 transition-transform cursor-pointer"
+                      >
+                        <Star
+                          className={`w-7 h-7 transition-colors ${
+                            active ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                  <span className="text-sm font-bold text-gray-700 mr-2">
+                    ({hoverRating || ratingVal} من 5)
+                  </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">اكتب تعليقك وتجربتك:</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  اكتب تعليقك وتجربتك:
+                </label>
                 <textarea
                   rows="3"
                   value={comment}
@@ -235,18 +273,23 @@ const DoctorDetail = () => {
           </div>
 
           {/* Past Reviews List */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-bold font-almarai text-gray-900 mb-4 flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-emerald-600" />
               <span>تقييمات وتجارب المرضى ({ratings.length})</span>
             </h3>
 
             {ratings.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-10">لا توجد تقييمات سابقة بعد. كن أول من يكتب تقييماً!</p>
+              <p className="text-gray-400 text-sm text-center py-10">
+                لا توجد تقييمات سابقة بعد. كن أول من يكتب تقييماً!
+              </p>
             ) : (
               <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
                 {ratings.map((r, idx) => (
-                  <div key={idx} className="p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+                  <div
+                    key={idx}
+                    className="p-3.5 bg-slate-50 rounded-2xl border border-gray-100"
+                  >
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="font-bold text-sm text-gray-800">
                         {r.user?.name || 'مريض معتمد'}
@@ -255,13 +298,15 @@ const DoctorDetail = () => {
                         {[1, 2, 3, 4, 5].map((st) => (
                           <Star
                             key={st}
-                            className={`w-3.5 h-3.5 ${st <= r.rating ? 'fill-yellow-400' : 'text-gray-200'}`}
+                            className={`w-3.5 h-3.5 ${
+                              st <= r.rating ? 'fill-yellow-400' : 'text-gray-200'
+                            }`}
                           />
                         ))}
                       </div>
                     </div>
                     {r.comment && (
-                      <p className="text-xs text-gray-600 leading-relaxed">{r.comment}</p>
+                      <p className="text-xs text-gray-600 leading-relaxed m-0">{r.comment}</p>
                     )}
                   </div>
                 ))}

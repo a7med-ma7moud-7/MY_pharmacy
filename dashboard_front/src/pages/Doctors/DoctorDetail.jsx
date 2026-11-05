@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveImageUrl } from '../../services/api';
 import {
   Star,
   Phone,
@@ -72,13 +72,7 @@ export const DoctorDetail = ({ isOpen, onClose, doctorId }) => {
               }}
             >
               <img
-                src={
-                  doctor.image
-                    ? doctor.image.startsWith('http')
-                      ? doctor.image
-                      : `http://localhost:8080/storage/${doctor.image}`
-                    : '/placeholder-doctor.png'
-                }
+                src={resolveImageUrl(doctor.image) || '/placeholder-doctor.png'}
                 alt={doctor.name}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => {
@@ -173,7 +167,7 @@ export const DoctorDetail = ({ isOpen, onClose, doctorId }) => {
                 .map((imgSrc, idx) => (
                   <a
                     key={idx}
-                    href={imgSrc.startsWith('http') ? imgSrc : `http://localhost:8080/storage/${imgSrc}`}
+                    href={resolveImageUrl(imgSrc)}
                     target="_blank"
                     rel="noreferrer"
                     style={{
@@ -186,7 +180,7 @@ export const DoctorDetail = ({ isOpen, onClose, doctorId }) => {
                     }}
                   >
                     <img
-                      src={imgSrc.startsWith('http') ? imgSrc : `http://localhost:8080/storage/${imgSrc}`}
+                      src={resolveImageUrl(imgSrc)}
                       alt={`عيادة ${idx + 1}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />

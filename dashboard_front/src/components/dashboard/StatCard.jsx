@@ -86,7 +86,9 @@ export const StatCard = ({
         position: 'relative',
         overflow: 'hidden',
         transform: isVisible
-          ? (isHovered ? 'translateY(-4px)' : 'translateY(0)')
+          ? isHovered
+            ? 'translateY(-4px)'
+            : 'translateY(0)'
           : 'translateY(20px)',
         opacity: isVisible ? 1 : 0,
       }}
@@ -105,31 +107,42 @@ export const StatCard = ({
       />
 
       {/* Decorative background circles */}
-      <div style={{
-        position: 'absolute',
-        top: '-20px',
-        left: '-20px',
-        width: '100px',
-        height: '100px',
-        borderRadius: '50%',
-        background: scheme.bg,
-        opacity: isHovered ? 0.6 : 0,
-        transition: 'opacity 0.4s ease',
-        pointerEvents: 'none',
-      }} />
+      <div
+        style={{
+          position: 'absolute',
+          top: '-20px',
+          left: '-20px',
+          width: '100px',
+          height: '100px',
+          borderRadius: '50%',
+          background: scheme.bg,
+          opacity: isHovered ? 0.6 : 0,
+          transition: 'opacity 0.4s ease',
+          pointerEvents: 'none',
+        }}
+      />
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: '16px',
+        }}
+      >
         <div>
           <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--slate-500)' }}>
             {title}
           </span>
-          <div style={{
-            fontSize: '1.9rem',
-            fontWeight: 800,
-            color: 'var(--slate-800)',
-            marginTop: '4px',
-            transition: 'color 0.3s ease',
-          }}>
+          <div
+            style={{
+              fontSize: '1.85rem',
+              fontWeight: 800,
+              color: 'var(--slate-800)',
+              marginTop: '4px',
+              transition: 'color 0.3s ease',
+            }}
+          >
             {value}
           </div>
         </div>
@@ -166,7 +179,15 @@ export const StatCard = ({
         }}
       >
         {subtext && (
-          <span style={{ fontSize: '0.78rem', color: 'var(--slate-400)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span
+            style={{
+              fontSize: '0.78rem',
+              color: 'var(--slate-400)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
             <TrendingUp size={12} style={{ color: scheme.text }} />
             {subtext}
           </span>
@@ -186,8 +207,12 @@ export const StatCard = ({
               marginRight: 'auto',
               transition: 'gap 0.2s ease',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.gap = '8px'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.gap = '4px'; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.gap = '8px';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.gap = '4px';
+            }}
           >
             <span>{linkText}</span>
             <ArrowLeft size={14} />

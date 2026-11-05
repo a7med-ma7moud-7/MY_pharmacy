@@ -7,6 +7,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Badge } from '../../components/common/Badge';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -25,6 +26,7 @@ export const OrderList = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Modals
   const [detailOrderId, setDetailOrderId] = useState(null);
@@ -36,7 +38,7 @@ export const OrderList = () => {
       const params = {
         page,
         per_page: 10,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter || undefined,
       };
       const res = await adminApi.getOrders(params);
@@ -46,7 +48,7 @@ export const OrderList = () => {
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
       }
-    } catch (err) {
+    } catch {
       showNotification('فشل تحميل قائمة الطلبات', 'error');
     } finally {
       setLoading(false);
@@ -55,7 +57,7 @@ export const OrderList = () => {
 
   useEffect(() => {
     fetchOrders(1);
-  }, [searchTerm, statusFilter]);
+  }, [debouncedSearch, statusFilter]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -86,7 +88,7 @@ export const OrderList = () => {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
       showNotification('تم تصدير ملف إكسل بنجاح', 'success');
-    } catch (err) {
+    } catch {
       showNotification('تعذر تصدير تقرير الطلبات حالياً', 'error');
     } finally {
       setExporting(false);

@@ -10,7 +10,8 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveImageUrl } from '../../services/api';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Badge } from '../../components/common/Badge';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -31,6 +32,7 @@ export const MedicineList = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -50,7 +52,7 @@ export const MedicineList = () => {
       const params = {
         page,
         per_page: 10,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         type: typeFilter || undefined,
       };
       const res = await adminApi.getMedicines(params);
@@ -60,7 +62,7 @@ export const MedicineList = () => {
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
       }
-    } catch (err) {
+    } catch {
       showNotification('فشل تحميل قائمة الأدوية', 'error');
     } finally {
       setLoading(false);
@@ -69,7 +71,7 @@ export const MedicineList = () => {
 
   useEffect(() => {
     fetchMedicines(1);
-  }, [searchTerm, typeFilter]);
+  }, [debouncedSearch, typeFilter]);
 
   const handleOpenAdd = () => {
     setSelectedMedicineForEdit(null);
@@ -261,13 +263,7 @@ export const MedicineList = () => {
                           }}
                         >
                           <img
-                            src={
-                              med.image
-                                ? med.image.startsWith('http')
-                                  ? med.image
-                                  : `http://localhost:8080/storage/${med.image}`
-                                : '/placeholder-medicine.png'
-                            }
+                            src={resolveImageUrl(med, '/placeholder-medicine.png')}
                             alt={med.name}
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                             onError={(e) => {

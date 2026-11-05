@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Star, CheckCircle2, AlertCircle, User, ArrowRight, Loader2, Send } from 'lucide-react';
 import { getDoctors, submitRating } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Ratings() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const queryDoctorId = searchParams.get('doctor_id') || '';
@@ -21,12 +20,14 @@ export default function Ratings() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getDoctors()
+    getDoctors({ per_page: 100 })
       .then((res) => {
-        const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        // Safely extract array whether paginated or direct
+        const rawData = res.data?.data?.data || res.data?.data || res.data || [];
+        const list = Array.isArray(rawData) ? rawData : [];
         setDoctors(list);
         if (!selectedDoctorId && list.length > 0 && !queryDoctorId) {
-          setSelectedDoctorId(list[0].id);
+          setSelectedDoctorId(String(list[0].id));
         }
       })
       .catch((err) => {
@@ -73,7 +74,7 @@ export default function Ratings() {
   };
 
   return (
-    <div className="py-12 bg-gray-50 min-h-screen flex items-center justify-center px-4">
+    <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center px-4">
       <div className="max-w-xl w-full">
         {/* Back Link */}
         <Link
@@ -84,7 +85,7 @@ export default function Ratings() {
           <span>العودة لقائمة الأطباء</span>
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden animate-fadeIn">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#0f6848] to-[#10ac84] p-6 text-center text-white relative">
             <div className="w-14 h-14 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-2.5 shadow-inner">
@@ -93,7 +94,7 @@ export default function Ratings() {
             <h2 className="text-2xl font-extrabold font-almarai text-white mb-1">
               إضافة تقييم للطبيب
             </h2>
-            <p className="text-white/80 text-xs">
+            <p className="text-white/80 text-xs m-0">
               رأيك يساعدنا ويساعد المرضى الآخرين في الحصول على أفضل رعاية صحية
             </p>
           </div>
@@ -101,15 +102,15 @@ export default function Ratings() {
           {/* Body */}
           <div className="p-6 sm:p-8">
             {success && (
-              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm flex items-center gap-2 animate-fadeIn">
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-sm flex items-center gap-2 animate-fadeIn">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                 <span>{success}</span>
               </div>
             )}
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-2 animate-fadeIn">
-                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm flex items-center gap-2 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
@@ -118,14 +119,14 @@ export default function Ratings() {
               {/* Doctor Select */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  اختر الطبيب المراد تقييمه <span className="text-red-500">*</span>
+                  اختر الطبيب المراد تقييمه <span className="text-rose-500">*</span>
                 </label>
                 <select
                   id="doctorSelect"
                   value={selectedDoctorId}
                   onChange={(e) => setSelectedDoctorId(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 >
                   <option value="">-- اضغط لاختيار الطبيب --</option>
                   {doctors.map((doc) => (
@@ -138,21 +139,35 @@ export default function Ratings() {
 
               {/* Doctor Preview Card */}
               {selectedDoctor && (
-                <div className="p-3.5 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center gap-3 animate-fadeIn">
-                  <div className="w-12 h-12 rounded-xl bg-main text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
-                    <User className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-800 text-sm mb-0.5">د. {selectedDoctor.name}</h4>
+                <div className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-100 flex items-center gap-3 animate-fadeIn">
+                  {selectedDoctor.image_url ? (
+                    <img
+                      src={selectedDoctor.image_url}
+                      alt={selectedDoctor.name}
+                      onError={(e) => {
+                        e.currentTarget.src = '/asset/1.png';
+                      }}
+                      className="w-12 h-12 rounded-xl object-cover border border-white shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-main text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
+                      <User className="w-6 h-6" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-gray-800 text-sm mb-0.5 truncate">
+                      د. {selectedDoctor.name}
+                    </h4>
                     <span className="text-xs text-gray-500">
-                      {selectedDoctor.specialty || 'طبيب استشاري'} {selectedDoctor.address ? `• ${selectedDoctor.address}` : ''}
+                      {selectedDoctor.specialty || 'طبيب استشاري'}{' '}
+                      {selectedDoctor.location ? `• ${selectedDoctor.location}` : ''}
                     </span>
                   </div>
                 </div>
               )}
 
               {/* Star Rating Section */}
-              <div className="p-4 bg-gray-50/60 rounded-xl border border-gray-100 text-center">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-gray-100 text-center">
                 <label className="block text-xs font-bold text-gray-700 mb-2">
                   درجة التقييم
                 </label>
@@ -166,7 +181,7 @@ export default function Ratings() {
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
                         onClick={() => setRating(star)}
-                        className="p-1 hover:scale-125 transition-transform"
+                        className="p-1 hover:scale-125 transition-transform cursor-pointer"
                       >
                         <Star
                           className={`w-8 h-8 transition-colors ${
@@ -195,7 +210,7 @@ export default function Ratings() {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="اكتب ملاحظاتك حول تجربتك مع الطبيب والخدمة الطبية..."
-                  className="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                  className="w-full p-3 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 ></textarea>
                 <div className="text-left text-xs text-gray-400 mt-1 font-mono">
                   {comment.length}/255 حرف

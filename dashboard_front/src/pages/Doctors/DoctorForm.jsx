@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 
@@ -39,13 +39,13 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
         subscription: doctor.subscription || 'subscribed',
       });
       if (doctor.image) {
-        setMainImagePreview(doctor.image.startsWith('http') ? doctor.image : `http://localhost:8080/storage/${doctor.image}`);
+        setMainImagePreview(resolveImageUrl(doctor.image));
       }
       const existingPreviews = {};
       for (let i = 1; i <= 5; i++) {
         const field = `image-${i}`;
         if (doctor[field]) {
-          existingPreviews[field] = doctor[field].startsWith('http') ? doctor[field] : `http://localhost:8080/storage/${doctor[field]}`;
+          existingPreviews[field] = resolveImageUrl(doctor[field]);
         }
       }
       setGalleryPreviews(existingPreviews);

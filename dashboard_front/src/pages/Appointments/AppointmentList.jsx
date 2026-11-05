@@ -7,6 +7,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -26,6 +27,7 @@ export const AppointmentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Modals
   const [detailAppointmentId, setDetailAppointmentId] = useState(null);
@@ -38,7 +40,7 @@ export const AppointmentList = () => {
       const params = {
         page,
         per_page: 10,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter || undefined,
         date: dateFilter || undefined,
       };
@@ -49,7 +51,7 @@ export const AppointmentList = () => {
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
       }
-    } catch (err) {
+    } catch {
       showNotification('فشل تحميل قائمة الحجوزات الطبية', 'error');
     } finally {
       setLoading(false);
@@ -58,7 +60,7 @@ export const AppointmentList = () => {
 
   useEffect(() => {
     fetchAppointments(1);
-  }, [searchTerm, statusFilter, dateFilter]);
+  }, [debouncedSearch, statusFilter, dateFilter]);
 
   const handleStatusChange = async (appointmentId, newStatus) => {
     try {

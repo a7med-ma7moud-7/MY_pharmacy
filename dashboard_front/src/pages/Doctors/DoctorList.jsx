@@ -8,7 +8,8 @@ import {
   RefreshCw,
   AlertTriangle,
 } from 'lucide-react';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveImageUrl } from '../../services/api';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Badge } from '../../components/common/Badge';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -30,6 +31,8 @@ export const DoctorList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [specialtyFilter, setSpecialtyFilter] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSpecialty = useDebounce(specialtyFilter, 300);
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,9 +47,9 @@ export const DoctorList = () => {
       const params = {
         page,
         per_page: 10,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter || undefined,
-        specialty: specialtyFilter || undefined,
+        specialty: debouncedSpecialty || undefined,
       };
       const res = await adminApi.getDoctors(params);
       if (res.data.success) {
@@ -55,7 +58,7 @@ export const DoctorList = () => {
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
       }
-    } catch (err) {
+    } catch {
       showNotification('فشل تحميل قائمة الأطباء', 'error');
     } finally {
       setLoading(false);
@@ -64,7 +67,7 @@ export const DoctorList = () => {
 
   useEffect(() => {
     fetchDoctors(1);
-  }, [searchTerm, statusFilter, specialtyFilter]);
+  }, [debouncedSearch, statusFilter, debouncedSpecialty]);
 
   const handleOpenAdd = () => {
     setSelectedDoctorForEdit(null);
@@ -234,13 +237,7 @@ export const DoctorList = () => {
                           }}
                         >
                           <img
-                            src={
-                              doc.image
-                                ? doc.image.startsWith('http')
-                                  ? doc.image
-                                  : `http://localhost:8080/storage/${doc.image}`
-                                : '/placeholder-doctor.png'
-                            }
+                            src={resolveImageUrl(doc, '/placeholder-doctor.png')}
                             alt={doc.name}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {

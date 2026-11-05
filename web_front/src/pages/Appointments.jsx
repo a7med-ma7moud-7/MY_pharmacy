@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { appointmentService, doctorService } from '../services/api';
-import { 
-  Calendar, 
-  User, 
-  Phone, 
-  Mail, 
-  CheckCircle2, 
+import { useAuth } from '../context/AuthContext';
+import {
+  Calendar,
+  User,
+  Phone,
+  Mail,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   Clock,
-  MapPin,
-  Sparkles,
-  Stethoscope
+  Stethoscope,
 } from 'lucide-react';
+
+const QUICK_TIMES = ['12:00', '14:00', '16:00', '18:00', '20:00', '21:30'];
 
 export const Appointments = () => {
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const preselectedDoctorId = searchParams.get('doctor_id') || '';
 
   const [doctors, setDoctors] = useState([]);
@@ -25,27 +27,36 @@ export const Appointments = () => {
   const [confirmedAppointment, setConfirmedAppointment] = useState(null);
 
   const [formData, setFormData] = useState({
-    patient_name: '',
+    patient_name: user?.name || '',
     phone: '',
-    email: '',
+    email: user?.email || '',
     doctor_id: preselectedDoctorId,
-    appointment_date: '',
+    appointment_date: new Date().toISOString().split('T')[0],
     appointment_time: '18:00',
     notes: '',
   });
 
-  const fetchDoctorsList = async () => {
-    try {
-      const res = await doctorService.getDoctors({ per_page: 100 });
-      if (res.data?.success) {
-        setDoctors(res.data.data?.data || []);
-      }
-    } catch (err) {
-      console.error('Failed to load doctors list', err);
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        patient_name: prev.patient_name || user.name || '',
+        email: prev.email || user.email || '',
+      }));
     }
-  };
+  }, [user]);
 
   useEffect(() => {
+    const fetchDoctorsList = async () => {
+      try {
+        const res = await doctorService.getDoctors({ per_page: 100 });
+        if (res.data?.success) {
+          setDoctors(res.data.data?.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load doctors list', err);
+      }
+    };
     fetchDoctorsList();
   }, []);
 
@@ -60,7 +71,9 @@ export const Appointments = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const selectedDoctor = doctors.find((d) => String(d.id) === String(formData.doctor_id));
+  const selectedDoctor = doctors.find(
+    (d) => String(d.id) === String(formData.doctor_id)
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,7 +89,8 @@ export const Appointments = () => {
       }
     } catch (err) {
       setErrorMessage(
-        err.response?.data?.message || 'حدث خطأ أثناء حجز الموعد، يرجى المحاولة مرة أخرى.'
+        err.response?.data?.message ||
+          'حدث خطأ أثناء حجز الموعد، يرجى المحاولة مرة أخرى.'
       );
     } finally {
       setSubmitting(false);
@@ -115,24 +129,33 @@ export const Appointments = () => {
             <div className="bg-slate-50 rounded-2xl p-6 border border-gray-100 text-right space-y-3 text-sm mb-8">
               <div className="flex justify-between border-b border-gray-200/60 pb-2.5">
                 <span className="text-gray-500">رقم الحجز التأكيدي:</span>
-                <span className="font-bold text-[#0f6848] font-mono text-base">#{confirmedAppointment.appointment_id || confirmedAppointment.id}</span>
+                <span className="font-bold text-[#0f6848] font-mono text-base">
+                  #{confirmedAppointment.appointment_id || confirmedAppointment.id}
+                </span>
               </div>
               <div className="flex justify-between border-b border-gray-200/60 pb-2.5">
                 <span className="text-gray-500">اسم المريض:</span>
-                <span className="font-semibold text-gray-800">{confirmedAppointment.patient_name}</span>
+                <span className="font-semibold text-gray-800">
+                  {confirmedAppointment.patient_name}
+                </span>
               </div>
               <div className="flex justify-between border-b border-gray-200/60 pb-2.5">
                 <span className="text-gray-500">تاريخ الموعد:</span>
-                <span className="font-semibold text-gray-800">{confirmedAppointment.appointment_date}</span>
+                <span className="font-semibold text-gray-800">
+                  {confirmedAppointment.appointment_date}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">وقت الموعد:</span>
-                <span className="font-bold text-emerald-700">{confirmedAppointment.appointment_time}</span>
+                <span className="font-bold text-emerald-700">
+                  {confirmedAppointment.appointment_time}
+                </span>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
               <button
+                type="button"
                 onClick={() => setConfirmedAppointment(null)}
                 className="btn-main px-8 py-3 rounded-xl font-bold shadow-md"
               >
@@ -145,7 +168,7 @@ export const Appointments = () => {
           </div>
         ) : (
           /* Booking Form */
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-10">
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-10 animate-fadeIn">
             {errorMessage && (
               <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm flex items-center gap-2.5 animate-fadeIn">
                 <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
@@ -155,20 +178,28 @@ export const Appointments = () => {
 
             {/* Doctor Selected Banner */}
             {selectedDoctor && (
-              <div className="mb-6 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 flex items-center gap-4 animate-fadeIn">
+              <div className="mb-6 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-4 animate-fadeIn">
                 <img
                   src={selectedDoctor.image_url || '/asset/1.png'}
                   alt={selectedDoctor.name}
-                  onError={(e) => { e.target.src = '/asset/1.png'; }}
+                  onError={(e) => {
+                    e.currentTarget.src = '/asset/1.png';
+                  }}
                   className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-sm bg-white"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
                     <Stethoscope className="w-4 h-4 text-emerald-600" />
-                    <h4 className="font-bold text-gray-900 text-sm m-0">د. {selectedDoctor.name}</h4>
+                    <h4 className="font-bold text-gray-900 text-sm m-0">
+                      د. {selectedDoctor.name}
+                    </h4>
                   </div>
-                  <p className="text-xs text-gray-600 m-0 mt-0.5">{selectedDoctor.specialty}</p>
-                  <p className="text-xs text-emerald-800 font-bold m-0 mt-0.5">قيمة الكشف: {selectedDoctor.price} ج.م</p>
+                  <p className="text-xs text-gray-600 m-0 mt-0.5">
+                    {selectedDoctor.specialty}
+                  </p>
+                  <p className="text-xs text-emerald-800 font-bold m-0 mt-0.5">
+                    قيمة الكشف: {selectedDoctor.price} ج.م
+                  </p>
                 </div>
               </div>
             )}
@@ -279,6 +310,30 @@ export const Appointments = () => {
                     onChange={handleInputChange}
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                   />
+                </div>
+              </div>
+
+              {/* Quick Time Slots */}
+              <div>
+                <span className="text-xs font-bold text-gray-500 flex items-center gap-1.5 mb-2">
+                  <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>أوقات الكشف السريعة المتاحة:</span>
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_TIMES.map((timeVal) => (
+                    <button
+                      key={timeVal}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, appointment_time: timeVal }))
+                      }
+                      className={`filter-pill ${
+                        formData.appointment_time === timeVal ? 'active' : ''
+                      }`}
+                    >
+                      {timeVal}
+                    </button>
+                  ))}
                 </div>
               </div>
 

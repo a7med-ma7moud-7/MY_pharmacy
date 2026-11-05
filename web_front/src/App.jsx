@@ -1,12 +1,15 @@
 import React from 'react';
-import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CartProvider } from './context/CartContext';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { Compass, Home as HomeIcon } from 'lucide-react';
+
+// Layout & Modals
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import CartModal from './components/cart/CartModal';
 import FloatingAIChat from './components/chat/FloatingAIChat';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Pages
 import Home from './pages/Home';
@@ -21,85 +24,62 @@ import Ratings from './pages/Ratings';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
-// 404 Not Found Component
-const NotFound = () => (
-  <div className="container py-5 text-center" style={{ minHeight: '60vh' }}>
-    <div className="py-5">
-      <h1 className="display-1 fw-bold text-success mb-3">404</h1>
-      <h3 className="fw-bold text-secondary mb-3">الصفحة المطلوبة غير موجودة</h3>
-      <p className="text-muted mb-4">
-        عذراً، الصفحة التي تبحث عنها قد تم نقلها أو حذفها أو أنها غير متاحة حالياً.
+function NotFound() {
+  return (
+    <div className="py-20 px-4 text-center bg-slate-50 min-h-[70vh] flex flex-col items-center justify-center animate-fadeIn">
+      <div className="w-24 h-24 rounded-3xl bg-emerald-100 text-[#0f6848] flex items-center justify-center mb-6 shadow-inner animate-float">
+        <Compass className="w-12 h-12" />
+      </div>
+      <span className="text-5xl font-extrabold font-almarai gradient-text mb-2">404</span>
+      <h2 className="text-2xl font-extrabold font-almarai text-gray-900 mb-2">
+        عذراً، الصفحة غير موجودة
+      </h2>
+      <p className="text-gray-500 text-sm max-w-md mx-auto mb-8 leading-relaxed">
+        الصفحة التي تبحث عنها ربما تم نقلها أو حذفها أو أن الرابط الذي أدخلته غير صحيح.
       </p>
-      <a
-        href="/"
-        className="btn text-white px-4 py-2 rounded-pill shadow-sm"
-        style={{ backgroundColor: 'var(--main-color, #0f6848)' }}
+      <Link
+        to="/"
+        className="btn-main px-8 py-3 rounded-2xl font-bold text-sm inline-flex items-center gap-2 shadow-lg"
       >
-        العودة إلى الصفحة الرئيسية
-      </a>
+        <HomeIcon className="w-4 h-4" />
+        <span>العودة إلى الصفحة الرئيسية</span>
+      </Link>
     </div>
-  </div>
-);
+  );
+}
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <Router>
-          <div className="d-flex flex-column min-vh-100 bg-light text-dark font-cairo">
-            {/* Top Navigation */}
+          <ScrollToTop />
+          <div className="flex flex-col min-h-screen bg-slate-50">
             <Navbar />
 
-            {/* Shopping Cart Drawer / Modal */}
-            <CartModal />
-
-            {/* Floating AI Assistant Widget */}
-            <FloatingAIChat />
-
-            {/* Main Application Content */}
-            <main className="flex-grow-1">
+            <main className="flex-1">
               <Routes>
-                {/* Home */}
                 <Route path="/" element={<Home />} />
-
-                {/* Doctors */}
                 <Route path="/doctors" element={<Doctors />} />
                 <Route path="/doctors/:id" element={<DoctorDetail />} />
-
-                {/* Medicines */}
                 <Route path="/medicines" element={<Medicines />} />
                 <Route path="/medicines/:id" element={<MedicineDetail />} />
-
-                {/* Appointments */}
                 <Route path="/appointments" element={<Appointments />} />
-                <Route path="/appointments/create/:doctorId" element={<Appointments />} />
-
-                {/* Orders / Tracking */}
-                <Route path="/track-order" element={<TrackOrder />} />
-                <Route path="/orders/status" element={<Navigate to="/track-order" replace />} />
-
-                {/* AI Chat */}
+                <Route path="/orders/track" element={<TrackOrder />} />
                 <Route path="/ai-chat" element={<AIChat />} />
-
-                {/* Reviews / Ratings */}
-                <Route path="/rate" element={<Ratings />} />
-
-                {/* Authentication */}
+                <Route path="/ratings" element={<Ratings />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-
-                {/* Fallback */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
 
-            {/* Footer */}
             <Footer />
+            <CartModal />
+            <FloatingAIChat />
           </div>
         </Router>
       </CartProvider>
     </AuthProvider>
   );
 }
-
-export default App;

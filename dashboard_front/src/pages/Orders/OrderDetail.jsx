@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveImageUrl } from '../../services/api';
 import {
   User,
   Truck,
@@ -192,11 +192,7 @@ export const OrderDetail = ({ isOpen, onClose, orderId, onStatusChange }) => {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             {item.medicine?.image && (
                               <img
-                                src={
-                                  item.medicine.image.startsWith('http')
-                                    ? item.medicine.image
-                                    : `http://localhost:8080/storage/${item.medicine.image}`
-                                }
+                                src={resolveImageUrl(item.medicine.image)}
                                 alt={item.medicine.name}
                                 style={{
                                   width: '34px',

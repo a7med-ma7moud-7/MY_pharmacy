@@ -8,6 +8,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Badge } from '../../components/common/Badge';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -29,6 +30,7 @@ export const UserList = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -42,7 +44,7 @@ export const UserList = () => {
       const params = {
         page,
         per_page: 10,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         role: roleFilter || undefined,
       };
       const res = await adminApi.getUsers(params);
@@ -52,7 +54,7 @@ export const UserList = () => {
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
       }
-    } catch (err) {
+    } catch {
       showNotification('فشل تحميل قائمة المستخدمين', 'error');
     } finally {
       setLoading(false);
@@ -61,7 +63,7 @@ export const UserList = () => {
 
   useEffect(() => {
     fetchUsers(1);
-  }, [searchTerm, roleFilter]);
+  }, [debouncedSearch, roleFilter]);
 
   const handleOpenAdd = () => {
     setSelectedUserForEdit(null);

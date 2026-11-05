@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 
@@ -31,11 +31,7 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
         count: medicine.count !== undefined ? medicine.count : '',
       });
       if (medicine.image) {
-        setImagePreview(
-          medicine.image.startsWith('http')
-            ? medicine.image
-            : `http://localhost:8080/storage/${medicine.image}`
-        );
+        setImagePreview(resolveImageUrl(medicine.image));
       }
     } else {
       setFormData({

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { adminApi, resolveImageUrl } from '../../services/api';
 import { DollarSign, Package, FileText } from 'lucide-react';
 
 export const MedicineDetail = ({ isOpen, onClose, medicineId }) => {
@@ -66,13 +67,7 @@ export const MedicineDetail = ({ isOpen, onClose, medicineId }) => {
               }}
             >
               <img
-                src={
-                  medicine.image
-                    ? medicine.image.startsWith('http')
-                      ? medicine.image
-                      : `http://localhost:8080/storage/${medicine.image}`
-                    : '/placeholder-medicine.png'
-                }
+                src={resolveImageUrl(medicine, '/placeholder-medicine.png')}
                 alt={medicine.name}
                 style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
                 onError={(e) => {
@@ -83,7 +78,7 @@ export const MedicineDetail = ({ isOpen, onClose, medicineId }) => {
             </div>
 
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
                   {medicine.name}
                 </h3>
@@ -122,7 +117,7 @@ export const MedicineDetail = ({ isOpen, onClose, medicineId }) => {
                 <div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>السعر للجمهور</span>
                   <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)' }}>
-                    {medicine.price} ر.س
+                    {medicine.price} ج.م
                   </div>
                 </div>
               </div>

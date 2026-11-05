@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, User, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,20 @@ export default function Register() {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const passwordStrength = useMemo(() => {
+    if (!password) return { score: 0, label: '', color: 'bg-gray-200' };
+    let score = 0;
+    if (password.length >= 8) score += 1;
+    if (/[A-Z]/.test(password) || /[a-z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password) || password.length >= 12) score += 1;
+
+    if (score <= 1) return { score: 25, label: 'ضعيفة', color: 'bg-rose-500' };
+    if (score === 2) return { score: 50, label: 'متوسطة', color: 'bg-amber-500' };
+    if (score === 3) return { score: 75, label: 'جيدة', color: 'bg-emerald-500' };
+    return { score: 100, label: 'قوية جداً', color: 'bg-[#0f6848]' };
+  }, [password]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,9 +62,9 @@ export default function Register() {
   };
 
   return (
-    <div className="py-12 bg-gray-50 min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+    <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center px-4">
+      <div className="max-w-md w-full animate-fadeIn">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#0f6848] to-[#10ac84] p-8 text-center text-white relative">
             <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
@@ -59,7 +73,7 @@ export default function Register() {
             <h2 className="text-2xl font-extrabold font-almarai text-white mb-1">
               إنشاء حساب جديد
             </h2>
-            <p className="text-white/80 text-sm">
+            <p className="text-white/80 text-sm m-0">
               انضم إلينا واستمتع بخدمات صيدليتي المتكاملة
             </p>
           </div>
@@ -67,8 +81,8 @@ export default function Register() {
           {/* Form Body */}
           <div className="p-6 sm:p-8">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-2 animate-fadeIn">
-                <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+              <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm flex items-center gap-2 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
                 <span>{error}</span>
               </div>
             )}
@@ -77,7 +91,7 @@ export default function Register() {
               {/* Full Name */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  الاسم بالكامل <span className="text-red-500">*</span>
+                  الاسم بالكامل <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
@@ -88,7 +102,7 @@ export default function Register() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="محمد أحمد"
-                    className="w-full pr-10 pl-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -96,7 +110,7 @@ export default function Register() {
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  البريد الإلكتروني <span className="text-red-500">*</span>
+                  البريد الإلكتروني <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
@@ -106,7 +120,7 @@ export default function Register() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full pr-10 pl-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -114,7 +128,7 @@ export default function Register() {
               {/* Password */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  كلمة المرور <span className="text-red-500">*</span>
+                  كلمة المرور <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
@@ -124,7 +138,7 @@ export default function Register() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pr-10 pl-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full pr-10 pl-10 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                   />
                   <button
                     type="button"
@@ -134,12 +148,28 @@ export default function Register() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator */}
+                {password && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-gray-400">قوة كلمة المرور:</span>
+                      <span className="font-bold text-gray-700">{passwordStrength.label}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        style={{ width: `${passwordStrength.score}%` }}
+                        className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Confirm Password */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  تأكيد كلمة المرور <span className="text-red-500">*</span>
+                  تأكيد كلمة المرور <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
@@ -149,7 +179,7 @@ export default function Register() {
                     value={passwordConfirmation}
                     onChange={(e) => setPasswordConfirmation(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pr-10 pl-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -174,40 +204,8 @@ export default function Register() {
               </button>
             </form>
 
-            {/* Social Logins */}
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <div className="text-center mb-4">
-                <span className="text-xs text-gray-400 bg-white px-2">أو التسجيل السريع باستخدام</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => alert('التسجيل عبر Google سيتوفر قريباً')}
-                  className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-semibold text-gray-700 transition-all"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span>Google</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => alert('التسجيل عبر Facebook سيتوفر قريباً')}
-                  className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-semibold text-gray-700 transition-all"
-                >
-                  <svg className="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                  <span>Facebook</span>
-                </button>
-              </div>
-            </div>
-
             {/* Login Link */}
-            <div className="text-center mt-6 text-xs text-gray-500">
+            <div className="text-center mt-6 pt-4 border-t border-gray-100 text-xs text-gray-500">
               <span>لديك حساب بالفعل؟ </span>
               <Link to="/login" className="text-main font-bold hover:underline">
                 تسجيل الدخول هنا

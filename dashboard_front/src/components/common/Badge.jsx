@@ -15,20 +15,29 @@ const STATUS_MAP = {
   not_subscribed: { label: 'غير مشترك', class: 'badge-cancelled', dotColor: '#ef4444' },
 
   // User roles
-  admin: { label: 'مدير نظام', class: 'badge-cancelled', dotColor: '#ef4444' },
+  admin: { label: 'مدير نظام', class: 'badge-purple', dotColor: '#7c3aed' },
   user: { label: 'عميل', class: 'badge-processing', dotColor: '#3b82f6' },
 
   // Stock
   in_stock: { label: 'متوفر', class: 'badge-confirmed', dotColor: '#10b981' },
   low_stock: { label: 'مخزون منخفض', class: 'badge-pending', dotColor: '#f59e0b' },
-  out_of_stock: { label: 'نفذ المخزون', class: 'badge-cancelled', dotColor: '#ef4444' },
+  out_of_stock: { label: 'نفد المخزون', class: 'badge-cancelled', dotColor: '#ef4444' },
 };
 
-export const Badge = ({ status, customLabel, variant }) => {
+const VARIANT_DOT_COLORS = {
+  success: '#10b981',
+  primary: '#0d9488',
+  info: '#3b82f6',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  purple: '#7c3aed',
+};
+
+export const Badge = ({ status, customLabel, variant, children }) => {
   const meta = STATUS_MAP[status] || {
-    label: customLabel || status,
+    label: children || customLabel || status,
     class: variant ? `badge-${variant}` : 'badge-pending',
-    dotColor: '#64748b',
+    dotColor: VARIANT_DOT_COLORS[variant] || '#64748b',
   };
 
   return (
@@ -40,10 +49,10 @@ export const Badge = ({ status, customLabel, variant }) => {
           borderRadius: '50%',
           backgroundColor: meta.dotColor,
           display: 'inline-block',
-          boxShadow: `0 0 0 2px rgba(255, 255, 255, 0.6)`,
+          boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.6)',
         }}
       />
-      <span>{customLabel || meta.label}</span>
+      <span>{children || customLabel || meta.label}</span>
     </span>
   );
 };

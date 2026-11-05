@@ -1,17 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Sparkles, Minimize2 } from 'lucide-react';
 import { aiService } from '../../services/api';
+import { Bot, X, Send, Sparkles, RotateCcw } from 'lucide-react';
+
+const INITIAL_MESSAGE = {
+  sender: 'bot',
+  text: 'أهلاً بك في صيدليتي! أنا مساعدك الطبي الذكي 🤖. كيف يمكنني مساعدتك اليوم بخصوص الأدوية أو الأعراض؟',
+};
+
+const QUICK_PROMPTS = [
+  'الجرعة الآمنة للباراسيتامول؟',
+  'نصائح لتناول المضادات الحيوية',
+  'بدائل المسكنات لمرضى المعدة',
+];
 
 const FloatingAIChat = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'ai',
-      text: 'أهلاً بك! أنا الصيدلي الذكي (AI). كيف يمكنني مساعدتك اليوم في الاستفسار عن الأدوية، الجرعات أو النصائح الطبية؟',
-    },
-  ]);
-  const [inputQuestion, setInputQuestion] = useState('');
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -25,151 +30,157 @@ const FloatingAIChat = () => {
     }
   }, [messages, isOpen]);
 
-  const handleSend = async (e) => {
-    e?.preventDefault();
-    if (!inputQuestion.trim() || loading) return;
+  const sendQuery = async (textToSend) => {
+    const userText = (textToSend ?? message).trim();
+    if (!userText || loading) return;
 
-    const userText = inputQuestion.trim();
-    const userMsg = {
-      id: Date.now(),
-      sender: 'user',
-      text: userText,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setInputQuestion('');
+    setMessages((prev) => [...prev, { sender: 'user', text: userText }]);
+    setMessage('');
     setLoading(true);
 
     try {
-      const res = await aiService.askAI(userText);
-      const answer = res.data?.answer || res.data?.message || 'عذراً، لم أتمكن من الحصول على إجابة في الوقت الحالي.';
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'ai',
-          text: answer,
-        },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'ai',
-          text: 'حدث خطأ في الاتصال بالخدمة الذكية، يرجى المحاولة بعد قليل.',
-        },
-      ]);
+      const res = await aiService.askQuestion(userText);
+      const reply =
+        res.data?.answer ||
+        res.data?.reply ||
+        'عذراً، لم أتمكن من معالجة السؤال حالياً.';
+      setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
+    } catch (err) {
+      const errMsg =
+        err.response?.data?.answer ||
+        'حدث خطأ في الاتصال بالمساعد الذكي. يرجى المحاولة لاحقاً.';
+      setMessages((prev) => [...prev, { sender: 'bot', text: errMsg }]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSend = (e) => {
+    e.preventDefault();
+    sendQuery(message);
+  };
+
   return (
     <>
-      {/* Floating Trigger Button with Ping Effect */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {!isOpen && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
-          </span>
-        )}
-
+      {/* Floating Action Button */}
+      {!isOpen && (
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 active:scale-90 ${
-            isOpen 
-              ? 'bg-rose-600 hover:bg-rose-700 rotate-90' 
-              : 'bg-gradient-to-r from-[#0f6848] to-[#10ac84] hover:scale-108 hover:shadow-emerald-900/30'
-          }`}
-          title="مساعد الصيدلي الذكي (AI)"
-          aria-label="مساعد الصيدلي الذكي"
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-tr from-[#0f6848] to-[#10ac84] text-white shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group cursor-pointer border-0"
+          title="اسأل الصيدلي الذكي"
         >
-          {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-7 h-7" />}
+          <span className="absolute -inset-1 rounded-full bg-emerald-400/30 animate-ping pointer-events-none"></span>
+          <Bot className="w-7 h-7 relative z-10 group-hover:rotate-12 transition-transform" />
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white"></span>
         </button>
-      </div>
+      )}
 
-      {/* Chat Window Popup */}
+      {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-96 h-[520px] max-h-[80vh] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col z-50 overflow-hidden animate-scaleIn">
+        <div className="fixed bottom-6 left-6 z-50 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col h-[480px] animate-scaleIn">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#0f6848] to-[#10ac84] text-white p-4 flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/15 backdrop-blur-md rounded-2xl">
-                <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm relative">
+                <Bot className="w-6 h-6 text-white" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-300 rounded-full border-2 border-[#0f6848]"></span>
               </div>
               <div>
-                <h4 className="font-extrabold text-sm font-almarai leading-tight text-white m-0">
-                  الصيدلي الذكي (AI)
+                <h4 className="font-bold text-sm font-almarai flex items-center gap-1 m-0 text-white">
+                  <span>الصيدلي الذكي</span>
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
                 </h4>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-[11px] text-emerald-100 font-medium">متصل ومتاح للإجابة</span>
-                </div>
+                <span className="text-[11px] text-emerald-100 block">متصل الآن للإجابة الفورية</span>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white/80 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors"
-              title="إغلاق"
-            >
-              <Minimize2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setMessages([INITIAL_MESSAGE])}
+                className="p-1.5 hover:bg-white/20 rounded-xl transition-colors text-white/90 hover:text-white cursor-pointer"
+                title="محادثة جديدة"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 hover:bg-white/20 rounded-xl transition-colors text-white cursor-pointer"
+                title="إغلاق"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Messages */}
+          {/* Messages Container */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/70">
-            {messages.map((msg) => (
+            {messages.map((msg, idx) => (
               <div
-                key={msg.id}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+                key={idx}
+                className={`flex ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed shadow-sm ${
+                  className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
                     msg.sender === 'user'
-                      ? 'bg-[#0f6848] text-white rounded-br-none'
-                      : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+                      ? 'bg-gradient-to-r from-[#0f6848] to-[#10ac84] text-white rounded-tr-none shadow-sm'
+                      : 'bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-none'
                   }`}
                 >
-                  <p className="m-0 whitespace-pre-wrap">{msg.text}</p>
+                  {msg.text}
                 </div>
               </div>
             ))}
 
+            {messages.length === 1 && !loading && (
+              <div className="pt-2 space-y-1.5">
+                <span className="text-[11px] text-gray-400 font-bold block">اقتراحات سريعة:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_PROMPTS.map((q, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => sendQuery(q)}
+                      className="text-[11px] bg-white hover:bg-emerald-50 text-[#0f6848] border border-emerald-200 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loading && (
-              <div className="flex justify-start animate-fadeIn">
-                <div className="bg-white text-gray-600 text-xs px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2">
-                  <span className="flex gap-1">
-                    <span className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce"></span>
-                    <span className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                    <span className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                  </span>
-                  <span className="font-medium text-emerald-800">الصيدلي يفكر في الإجابة...</span>
+              <div className="flex justify-end">
+                <div className="bg-white border border-gray-100 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                  </div>
+                  <span>يكتب الرد الطبي...</span>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Footer */}
-          <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-100 flex items-center gap-2 shadow-inner">
+          {/* Input Form */}
+          <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-100 flex gap-2">
             <input
               type="text"
-              value={inputQuestion}
-              onChange={(e) => setInputQuestion(e.target.value)}
-              placeholder="اكتب استفسارك الطبي أو اسم الدواء..."
-              disabled={loading}
-              className="flex-1 px-4 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-slate-50/50 focus:bg-white transition-all"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="اكتب سؤالك الطبي هنا..."
+              className="flex-1 bg-slate-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
             />
             <button
               type="submit"
-              disabled={loading || !inputQuestion.trim()}
-              className="bg-[#0f6848] hover:bg-[#10ac84] active:scale-95 text-white p-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shrink-0"
-              title="إرسال"
+              disabled={loading || !message.trim()}
+              className="bg-gradient-to-r from-[#0f6848] to-[#10ac84] text-white p-2.5 rounded-xl disabled:opacity-40 transition-all hover:shadow-md active:scale-95 cursor-pointer border-0"
             >
-              <Send className="w-4 h-4 rtl:rotate-180" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
         </div>
