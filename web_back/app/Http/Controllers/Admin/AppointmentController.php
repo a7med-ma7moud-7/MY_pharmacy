@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
+use App\Mail\AppointmentConfirmationMail;
 use App\Models\Appointment;
 use App\Models\Doctor;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Notifications\NewAppointmentNotification;
 use App\Models\User;
-use App\Mail\AppointmentConfirmationMail;
+use App\Notifications\NewAppointmentNotification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AppointmentController extends Controller
@@ -19,15 +20,11 @@ class AppointmentController extends Controller
     public function create($doctor_id = null)
     {
         $doctors = Doctor::all();
-        $selectedDoctor = null;
-        
-        if ($doctor_id) {
-            $selectedDoctor = Doctor::findOrFail($doctor_id);
-        }
-        
+        $selectedDoctor = $doctor_id ? Doctor::findOrFail($doctor_id) : null;
+
         return view('appointments.create', [
             'doctors' => $doctors,
-            'selectedDoctor' => $selectedDoctor
+            'selectedDoctor' => $selectedDoctor,
         ]);
     }
 
@@ -36,7 +33,6 @@ class AppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        // التحقق من البيانات المدخلة
         $validated = $request->validate([
             'patient_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -46,53 +42,42 @@ class AppointmentController extends Controller
             'appointment_time' => 'required',
             'notes' => 'nullable|string',
         ]);
-        
+
         // التحقق من عدم وجود حجز لنفس الطبيب في نفس اليوم والوقت
-        $exists = Appointment::where('doctor_id', $request->doctor_id)
-            ->where('appointment_date', $request->appointment_date)
-            ->where('appointment_time', $request->appointment_time)
-            ->exists();
-        
-        if ($exists) {
+        if (Appointment::isSlotTaken($validated['doctor_id'], $validated['appointment_date'], $validated['appointment_time'])) {
+            $message = 'هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.';
             if ($request->ajax()) {
-                return response()->json(['message' => 'هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.'], 422);
+                return response()->json(['message' => $message], 422);
             }
-            return back()->withErrors(['appointment_time' => 'هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.'])->withInput();
+            return back()->withErrors(['appointment_time' => $message])->withInput();
         }
-        
+
         // إنشاء الحجز الجديد
-        $appointment = Appointment::create([
-            'patient_name' => $request->patient_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'doctor_id' => $request->doctor_id,
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
-            'notes' => $request->notes,
+        $appointment = Appointment::create(array_merge($validated, [
             'status' => 'pending',
-        ]);
-        
-        // إرسال الإشعار عند حدوث الحدث
-        foreach (User::where('role', 'admin')->get() as $user) {
-     $user->notify(new NewAppointmentNotification($appointment));
+        ]));
+
+        // إرسال الإشعار للإدارة
+        User::notifyAdmins(new NewAppointmentNotification($appointment));
+
+        // إرسال بريد التأكيد
+        if (!empty($validated['email'])) {
+            try {
+                Mail::to($validated['email'])->send(new AppointmentConfirmationMail($appointment));
+            } catch (\Throwable $e) {
+                Log::warning('Failed sending appointment confirmation email: ' . $e->getMessage());
+            }
         }
-        
-        // بعد إنشاء الحجز
-        if ($request->email) {
-            Mail::to($request->email)->send(new AppointmentConfirmationMail($appointment));
-        }
-        
-        // هذا الشرط يجب أن يكون أول شيء بعد إنشاء الحجز
+
         if ($request->ajax() || $request->wantsJson() || $request->isJson() || $request->header('Accept') === 'application/json') {
-            return response()->json([
-                'success' => true,
+            return $this->successResponse([
                 'message' => 'تم الحجز بنجاح!',
                 'appointment_id' => $appointment->id,
             ]);
         }
 
         return redirect()->route('appointments.success', $appointment->id)
-                         ->with('success', 'تم حجز موعدك بنجاح، سيتم التواصل معك لتأكيد الحجز.');
+            ->with('success', 'تم حجز موعدك بنجاح، سيتم التواصل معك لتأكيد الحجز.');
     }
 
     /**
@@ -103,7 +88,7 @@ class AppointmentController extends Controller
         $appointment = Appointment::with('doctor')->findOrFail($id);
         return view('appointments.success', compact('appointment'));
     }
-    
+
     /**
      * عرض قائمة الحجوزات (للإدارة فقط)
      */
@@ -112,7 +97,7 @@ class AppointmentController extends Controller
         $appointments = Appointment::with('doctor')->latest()->paginate(10);
         return view('admin.appointments.index', compact('appointments'));
     }
-    
+
     /**
      * عرض تفاصيل الحجز (للإدارة فقط)
      */
@@ -121,21 +106,21 @@ class AppointmentController extends Controller
         $appointment = Appointment::with('doctor')->findOrFail($id);
         return view('admin.appointments.show', compact('appointment'));
     }
-    
+
     /**
      * تحديث حالة الحجز (للإدارة فقط)
      */
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
-        
+
         $appointment = Appointment::findOrFail($id);
-        $appointment->status = $request->status;
+        $appointment->status = $validated['status'];
         $appointment->save();
-        
+
         return redirect()->route('admin.appointments.index')
-                         ->with('success', 'تم تحديث حالة الحجز بنجاح.');
+            ->with('success', 'تم تحديث حالة الحجز بنجاح.');
     }
-} 
+}

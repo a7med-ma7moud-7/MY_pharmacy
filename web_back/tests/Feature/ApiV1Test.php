@@ -149,6 +149,46 @@ class ApiV1Test extends TestCase
         $this->assertEquals(13, $medicine->fresh()->count);
     }
 
+    public function test_order_creation_rolls_back_when_any_item_is_out_of_stock(): void
+    {
+        $medicine1 = Medicien::create([
+            'name' => 'Available Med',
+            'type' => 'Tablets',
+            'price' => 50,
+            'count' => 10,
+            'propose' => 'Pain',
+            'image' => 'med1.png',
+        ]);
+
+        $medicine2 = Medicien::create([
+            'name' => 'Low Stock Med',
+            'type' => 'Tablets',
+            'price' => 80,
+            'count' => 1,
+            'propose' => 'Fever',
+            'image' => 'med2.png',
+        ]);
+
+        $payload = [
+            'cart_items' => [
+                ['id' => $medicine1->id, 'price' => 50, 'quantity' => 2, 'total' => 100],
+                ['id' => $medicine2->id, 'price' => 80, 'quantity' => 5, 'total' => 400],
+            ],
+            'customer_name' => 'Rollback Tester',
+            'customer_phone' => '01099999999',
+            'address' => 'Cairo',
+            'delivery_method' => 'delivery',
+        ];
+
+        $response = $this->postJson('/api/v1/orders', $payload);
+
+        $response->assertStatus(400)
+                 ->assertJson(['success' => false]);
+
+        $this->assertDatabaseMissing('orders', ['customer_name' => 'Rollback Tester']);
+        $this->assertEquals(10, $medicine1->fresh()->count);
+    }
+
     public function test_appointment_booking_stores_and_returns_confirmation(): void
     {
         $doctor = Doctor::create([

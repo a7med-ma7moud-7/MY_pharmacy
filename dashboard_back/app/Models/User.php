@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 
-class User extends Authenticatable 
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -70,10 +70,106 @@ class User extends Authenticatable
         return $this->role === 'user';
     }
 
-    public function ratings()
+    public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class, 'user_id');
     }
+
+    /**
+     * تصفية وبحث المستخدمين
+     */
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        if (!empty($filters['search'])) {
+            $search = trim((string) $filters['search']);
+            $query->where(function (Builder $q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['role'])) {
+            $query->where('role', $filters['role']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * توليد رمز المصادقة الإداري (HMAC Token)
+     */
+    public function generateAdminToken(): string
+    {
+        $signature = hash_hmac(
+            'sha256',
+            $this->id . '|' . $this->email . '|' . $this->password,
+            (string) config('app.key')
+        );
+
+        return base64_encode($this->id . '|' . $signature);
+    }
+
+    /**
+     * التحقق من رمز المصادقة الإداري واسترجاع المستخدم
+     */
+    public static function verifyAdminToken(?string $bearerToken): ?self
+    {
+        if (empty($bearerToken)) {
+            return null;
+        }
+
+        $decoded = base64_decode($bearerToken, true);
+        if (!$decoded || !str_contains($decoded, '|')) {
+            return null;
+        }
+
+        [$userId, $providedHash] = explode('|', $decoded, 2);
+        $user = self::find($userId);
+
+        if (!$user) {
+            return null;
+        }
+
+        $expectedHash = hash_hmac(
+            'sha256',
+            $user->id . '|' . $user->email . '|' . $user->password,
+            (string) config('app.key')
+        );
+
+        return hash_equals($expectedHash, $providedHash) ? $user : null;
+    }
+
+    /**
+     * تنسيق بيانات المستخدم العامة للاستجابات
+     */
+    public function toPublicArray(bool $includeCreatedAt = false): array
+    {
+        $payload = [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'role' => $this->role ?? 'user',
+        ];
+
+        if ($includeCreatedAt) {
+            $payload['created_at'] = $this->created_at;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * إرسال إشعار لجميع المسؤولين بأمان
+     */
+    public static function notifyAdmins(object $notification): void
+    {
+        try {
+            $admins = self::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify($notification);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed sending admin notification: ' . $e->getMessage());
+        }
+    }
 }
-
-

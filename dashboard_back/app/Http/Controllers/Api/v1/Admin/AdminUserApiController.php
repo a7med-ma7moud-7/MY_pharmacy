@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,58 +15,34 @@ class AdminUserApiController extends Controller
     /**
      * استعراض قائمة المستخدمين والعملاء
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $query = User::query();
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
-        }
-
         $perPage = $request->integer('per_page', 10);
-        $users = $query->latest()->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $users->items(),
-            'current_page' => $users->currentPage(),
-            'last_page' => $users->lastPage(),
-            'per_page' => $users->perPage(),
-            'total' => $users->total(),
-        ]);
+        $users = User::query()
+            ->filter($request->only(['search', 'role']))
+            ->latest()
+            ->paginate($perPage);
+
+        return $this->paginatedResponse($users);
     }
 
     /**
      * تفاصيل مستخدم محدد
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $user = User::findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'created_at' => $user->created_at,
-            ],
+        return $this->successResponse([
+            'data' => $user->toPublicArray(includeCreatedAt: true),
         ]);
     }
 
     /**
      * إضافة مستخدم أو مدير جديد
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -81,8 +58,7 @@ class AdminUserApiController extends Controller
             'role' => $validatedData['role'],
         ]);
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم إنشاء المستخدم بنجاح',
             'data' => $user,
         ], 201);
@@ -91,7 +67,7 @@ class AdminUserApiController extends Controller
     /**
      * تعديل بيانات المستخدم وصلاحياته
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
         $user = User::findOrFail($id);
 
@@ -102,16 +78,15 @@ class AdminUserApiController extends Controller
             'role' => 'sometimes|required|in:admin,user',
         ]);
 
-        $user->fill($request->only(['name', 'email', 'role']));
+        $user->fill(collect($validatedData)->only(['name', 'email', 'role'])->toArray());
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+        if (!empty($validatedData['password'])) {
+            $user->password = Hash::make($validatedData['password']);
         }
 
         $user->save();
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم تحديث بيانات المستخدم بنجاح',
             'data' => $user,
         ]);
@@ -120,21 +95,17 @@ class AdminUserApiController extends Controller
     /**
      * حذف مستخدم (مع منع حذف النفس)
      */
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         $user = User::findOrFail($id);
 
         if (Auth::id() === $user->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكنك حذف حسابك الشخصي المسجل به حالياً.',
-            ], 400);
+            return $this->errorResponse('لا يمكنك حذف حسابك الشخصي المسجل به حالياً.', 400);
         }
 
         $user->delete();
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم حذف المستخدم بنجاح',
         ]);
     }

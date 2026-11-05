@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Medicien;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MedicienApiController extends Controller
@@ -11,89 +14,51 @@ class MedicienApiController extends Controller
     /**
      * قائمة الأدوية مع الفلترة والبحث
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $query = Medicien::query();
-
-        // البحث بالاسم أو الغرض الطبي
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('propose', 'like', '%' . $search . '%');
-            });
-        }
-
-        // التصفية بالنوع / التصنيف
-        if ($request->filled('type') && $request->type !== 'all' && $request->type !== 'الكل') {
-            $query->where('type', $request->type);
-        }
-
         $perPage = (int) $request->input('per_page', 8);
-        $medicines = $query->paginate($perPage);
+
+        $medicines = Medicien::query()
+            ->filter($request->only(['search', 'type']))
+            ->paginate($perPage);
 
         // إضافة رابط الصورة وحالة التوفر
-        $medicines->getCollection()->transform(function ($medicine) {
-            $medicine->image_url = $this->resolveImageUrl($medicine->image);
-            $medicine->is_in_stock = $medicine->count > 0;
+        $medicines->getCollection()->transform(function (Medicien $medicine) {
+            $medicine->image_url = $medicine->image_url;
+            $medicine->is_in_stock = $medicine->is_in_stock;
             return $medicine;
         });
 
-        // قائمة التصنيفات المتاحة
-        $types = Medicien::distinct()->whereNotNull('type')->pluck('type');
-
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => $medicines,
-            'types' => $types,
+            'types' => Medicien::getAvailableTypes(),
         ]);
     }
 
     /**
      * تفاصيل دواء محدد
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $medicine = Medicien::findOrFail($id);
-        $medicine->image_url = $this->resolveImageUrl($medicine->image);
-        $medicine->is_in_stock = $medicine->count > 0;
+        $medicine->image_url = $medicine->image_url;
+        $medicine->is_in_stock = $medicine->is_in_stock;
 
         // أدوية مشابهة من نفس التصنيف
         $related = Medicien::where('type', $medicine->type)
             ->where('id', '!=', $medicine->id)
             ->limit(4)
             ->get()
-            ->map(function ($item) {
-                $item->image_url = $this->resolveImageUrl($item->image);
+            ->map(function (Medicien $item) {
+                $item->image_url = $item->image_url;
                 return $item;
             });
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => [
                 'medicine' => $medicine,
                 'related' => $related,
             ],
         ]);
-    }
-
-    /**
-     * حل رابط الصورة
-     */
-    private function resolveImageUrl(?string $image): string
-    {
-        if (empty($image)) {
-            return asset('asset/1.png');
-        }
-        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
-            return $image;
-        }
-        if (file_exists(public_path('storage/' . $image))) {
-            return asset('storage/' . $image);
-        }
-        if (file_exists(public_path('asset/' . $image))) {
-            return asset('asset/' . $image);
-        }
-        return asset('storage/' . $image);
     }
 }

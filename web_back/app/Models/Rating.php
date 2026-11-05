@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Rating extends Model
 {
-
+    use HasFactory;
 
     protected $fillable = [
         'doctor_id',
@@ -15,12 +17,16 @@ class Rating extends Model
         'comment',
     ];
 
-    public function doctor()
+    protected $casts = [
+        'rating' => 'integer',
+    ];
+
+    public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class, 'doctor_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

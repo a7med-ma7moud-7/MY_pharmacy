@@ -9,7 +9,7 @@ use App\Http\Controllers\WebMedicienController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AIChatController;
-use App\Http\Controllers\admin\AppointmentController;
+use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\ShowOrederController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
@@ -101,7 +101,7 @@ require __DIR__.'/auth.php';
 
 // للتصحيح فقط - يجب إزالته في الإنتاج
 Route::get('/debug/doctors', function() {
-    $doctors = \App\Models\doctor::all();
+    $doctors = \App\Models\Doctor::all();
     return response()->json([
         'count' => $doctors->count(),
         'doctors' => $doctors->map(function($doctor) {

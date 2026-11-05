@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdminApiMiddleware
@@ -16,19 +16,9 @@ class AdminApiMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // 1. Check Bearer Token if present
-        $bearerToken = $request->bearerToken();
-        if ($bearerToken) {
-            $decoded = base64_decode($bearerToken, true);
-            if ($decoded && str_contains($decoded, '|')) {
-                [$userId, $providedHash] = explode('|', $decoded, 2);
-                $user = User::find($userId);
-                if ($user) {
-                    $expectedHash = hash_hmac('sha256', $user->id . '|' . $user->email . '|' . $user->password, config('app.key'));
-                    if (hash_equals($expectedHash, $providedHash)) {
-                        Auth::setUser($user);
-                    }
-                }
-            }
+        $tokenUser = User::verifyAdminToken($request->bearerToken());
+        if ($tokenUser) {
+            Auth::setUser($tokenUser);
         }
 
         // 2. Check if user is authenticated
@@ -40,8 +30,9 @@ class AdminApiMiddleware
         }
 
         // 3. Check if user has admin role
+        /** @var User $user */
         $user = Auth::user();
-        if (($user->role ?? null) !== 'admin') {
+        if (!$user->isAdmin()) {
             return response()->json([
                 'success' => false,
                 'message' => 'ليس لديك صلاحية الوصول إلى لوحة التحكم الإدارية.',

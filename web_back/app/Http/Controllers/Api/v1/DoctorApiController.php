@@ -1,111 +1,66 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DoctorApiController extends Controller
 {
     /**
-     * قائمة الأطباء مع الفلترة والبحث
+     * قائمة الأطباء مع الفلترة والبحث وحساب التقييمات على مستوى SQL
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $query = Doctor::query();
-
-        // تصفية بالأطباء النشطين والمشتركين (دعم القيم العربية والإنجليزية)
-        if (\Schema::hasColumn('doctors', 'status')) {
-            $query->where(function ($q) {
-                $q->whereIn('status', ['active', 'متاح', 'نشط'])->orWhereNull('status');
-            });
-        }
-        if (\Schema::hasColumn('doctors', 'subscription')) {
-            $query->where(function ($q) {
-                $q->whereIn('subscription', ['subscribed', 'سنوي', 'شهري', 'مشترك'])->orWhereNull('subscription');
-            });
-        }
-
-        // البحث بالاسم أو التخصص
-        if ($request->filled('search')) {
-            $searchTerm = trim($request->search);
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('specialty', 'like', '%' . $searchTerm . '%');
-
-                $nameParts = explode(' ', $searchTerm);
-                foreach ($nameParts as $part) {
-                    if (strlen($part) > 2) {
-                        $q->orWhere('name', 'like', '%' . $part . '%');
-                    }
-                }
-            });
-        }
-
-        // التصفية بالتخصص
-        if ($request->filled('specialty') && $request->specialty !== 'all' && $request->specialty !== 'كل التخصصات') {
-            $query->where('specialty', $request->specialty);
-        }
-
-        // التصفية بالمحافظة
-        if ($request->filled('location')) {
-            $query->where('location', $request->location);
-        }
-
-        // التصفية بالمدينة
-        if ($request->filled('tow_location')) {
-            $query->where('tow_location', $request->tow_location);
-        }
-
-        // الترتيب
-        $query->orderBy('name', 'asc');
-
         $perPage = (int) $request->input('per_page', 9);
-        $doctors = $query->with('ratings')->paginate($perPage);
 
-        // إضافة بيانات التقييم ورابط الصورة لكل طبيب
-        $doctors->getCollection()->transform(function ($doctor) {
-            $ratings = $doctor->ratings;
-            $doctor->average_rating = round($ratings->avg('rating') ?: 5.0, 1);
-            $doctor->ratings_count = $ratings->count();
-            $doctor->image_url = $this->resolveImageUrl($doctor->image);
+        $doctors = Doctor::query()
+            ->activeAndSubscribed()
+            ->filter($request->only(['search', 'specialty', 'location', 'tow_location']))
+            ->withAvg('ratings as ratings_avg', 'rating')
+            ->withCount('ratings')
+            ->orderBy('name', 'asc')
+            ->paginate($perPage);
+
+        // إضافة بيانات التقييم ورابط الصورة لكل طبيب بدون استعلامات إضافية
+        $doctors->getCollection()->transform(function (Doctor $doctor) {
+            $doctor->average_rating = round((float) ($doctor->ratings_avg ?: 5.0), 1);
+            $doctor->ratings_count = (int) ($doctor->ratings_count ?? 0);
+            $doctor->image_url = $doctor->image_url;
             return $doctor;
         });
 
-        // قوائم الفلترة
-        $specialties = Doctor::distinct()->whereNotNull('specialty')->pluck('specialty');
-        $locations = Doctor::distinct()->whereNotNull('location')->pluck('location');
-        $cities = Doctor::distinct()->whereNotNull('tow_location')->pluck('tow_location');
-
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => $doctors,
-            'filters' => [
-                'specialties' => $specialties,
-                'locations' => $locations,
-                'cities' => $cities,
-            ],
+            'filters' => Doctor::getFilterOptions(),
         ]);
     }
 
     /**
-     * تفاصيل طبيب محدد مع تقييماته
+     * تفاصيل طبيب محدد مع تقييماته في استعلام واحد دون تكرار
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
-        $doctor = Doctor::with(['ratings.user'])->findOrFail($id);
+        $doctor = Doctor::findOrFail($id);
 
-        $ratings = $doctor->ratings()->with('user')->latest()->get();
-        $averageRating = round($ratings->avg('rating') ?: 5.0, 1);
+        $ratings = $doctor->ratings()
+            ->with('user:id,name,email,avatar')
+            ->latest()
+            ->get();
+
+        $averageRating = round((float) ($ratings->avg('rating') ?: 5.0), 1);
         $ratingsCount = $ratings->count();
 
+        $doctor->setRelation('ratings', $ratings);
         $doctor->average_rating = $averageRating;
         $doctor->ratings_count = $ratingsCount;
-        $doctor->image_url = $this->resolveImageUrl($doctor->image);
+        $doctor->image_url = $doctor->image_url;
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => [
                 'doctor' => $doctor,
                 'ratings' => $ratings,
@@ -113,25 +68,5 @@ class DoctorApiController extends Controller
                 'ratings_count' => $ratingsCount,
             ],
         ]);
-    }
-
-    /**
-     * حل رابط الصورة
-     */
-    private function resolveImageUrl(?string $image): string
-    {
-        if (empty($image)) {
-            return asset('asset/1.png');
-        }
-        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
-            return $image;
-        }
-        if (file_exists(public_path('storage/' . $image))) {
-            return asset('storage/' . $image);
-        }
-        if (file_exists(public_path('asset/' . $image))) {
-            return asset('asset/' . $image);
-        }
-        return asset('storage/' . $image);
     }
 }

@@ -4,53 +4,34 @@ namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Medicien;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class AdminMedicienApiController extends Controller
 {
     /**
      * قائمة الأدوية مع الترقيم والبحث والتصفية
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $query = Medicien::query();
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('propose', 'like', "%{$search}%")
-                  ->orWhere('type', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
         $perPage = $request->integer('per_page', 10);
-        $medicines = $query->latest()->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $medicines->items(),
-            'current_page' => $medicines->currentPage(),
-            'last_page' => $medicines->lastPage(),
-            'per_page' => $medicines->perPage(),
-            'total' => $medicines->total(),
-        ]);
+        $medicines = Medicien::query()
+            ->filter($request->only(['search', 'type']), searchByType: true)
+            ->latest()
+            ->paginate($perPage);
+
+        return $this->paginatedResponse($medicines);
     }
 
     /**
      * تفاصيل صنف دواء
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $medicine = Medicien::findOrFail($id);
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => $medicine,
         ]);
     }
@@ -58,7 +39,7 @@ class AdminMedicienApiController extends Controller
     /**
      * إضافة دواء جديد
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -69,17 +50,11 @@ class AdminMedicienApiController extends Controller
             'count' => 'required|numeric|min:0',
         ]);
 
-        $medicien = new Medicien($validatedData);
-
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('medicines', 'public');
-            $medicien->image = $imagePath;
-        }
-
+        $medicien = new Medicien(collect($validatedData)->except('image')->toArray());
+        $medicien->image = $medicien->storeUploadedImage($request, 'image', 'medicines');
         $medicien->save();
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم إضافة الدواء بنجاح',
             'data' => $medicien,
         ], 201);
@@ -88,7 +63,7 @@ class AdminMedicienApiController extends Controller
     /**
      * تحديث بيانات وصورة الدواء
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
         $medicien = Medicien::findOrFail($id);
 
@@ -101,20 +76,15 @@ class AdminMedicienApiController extends Controller
             'count' => 'sometimes|required|numeric|min:0',
         ]);
 
-        $medicien->fill($request->except('image'));
+        $medicien->fill(collect($validatedData)->except('image')->toArray());
 
         if ($request->hasFile('image')) {
-            if ($medicien->image && Storage::disk('public')->exists($medicien->image)) {
-                Storage::disk('public')->delete($medicien->image);
-            }
-            $imagePath = $request->file('image')->store('medicines', 'public');
-            $medicien->image = $imagePath;
+            $medicien->image = $medicien->storeUploadedImage($request, 'image', 'medicines', $medicien->image);
         }
 
         $medicien->save();
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم تحديث بيانات الدواء بنجاح',
             'data' => $medicien,
         ]);
@@ -123,18 +93,17 @@ class AdminMedicienApiController extends Controller
     /**
      * تحديث سريع لكمية المخزون
      */
-    public function updateStock(Request $request, $id)
+    public function updateStock(Request $request, $id): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'count' => 'required|numeric|min:0',
         ]);
 
         $medicien = Medicien::findOrFail($id);
-        $medicien->count = $request->count;
+        $medicien->count = $validated['count'];
         $medicien->save();
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم تحديث المخزون بنجاح',
             'data' => $medicien,
         ]);
@@ -143,18 +112,13 @@ class AdminMedicienApiController extends Controller
     /**
      * حذف صنف دواء
      */
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         $medicien = Medicien::findOrFail($id);
-
-        if ($medicien->image && Storage::disk('public')->exists($medicien->image)) {
-            Storage::disk('public')->delete($medicien->image);
-        }
-
+        $medicien->deleteStoredImage($medicien->image);
         $medicien->delete();
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم حذف الدواء بنجاح',
         ]);
     }

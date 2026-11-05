@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Mail\AppointmentConfirmationMail;
 use App\Models\Appointment;
-use App\Models\Doctor;
 use App\Models\User;
 use App\Notifications\NewAppointmentNotification;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AppointmentApiController extends Controller
@@ -16,7 +17,7 @@ class AppointmentApiController extends Controller
     /**
      * حفظ حجز موعد جديد
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'patient_name' => 'required|string|max:255',
@@ -29,51 +30,28 @@ class AppointmentApiController extends Controller
         ]);
 
         // التحقق من عدم وجود حجز لنفس الطبيب في نفس اليوم والوقت
-        $exists = Appointment::where('doctor_id', $request->doctor_id)
-            ->whereDate('appointment_date', $request->appointment_date)
-            ->where('appointment_time', $request->appointment_time)
-            ->exists();
-
-        if ($exists) {
-            return response()->json([
-                'success' => false,
-                'message' => 'هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.',
-            ], 422);
+        if (Appointment::isSlotTaken($validated['doctor_id'], $validated['appointment_date'], $validated['appointment_time'])) {
+            return $this->errorResponse('هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.', 422);
         }
 
         // إنشاء الحجز
-        $appointment = Appointment::create([
-            'patient_name' => $request->patient_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'doctor_id' => $request->doctor_id,
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
-            'notes' => $request->notes,
+        $appointment = Appointment::create(array_merge($validated, [
             'status' => 'pending',
-        ]);
+        ]));
 
         // إرسال إشعار للإدارة
-        try {
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new NewAppointmentNotification($appointment));
-            }
-        } catch (\Exception $e) {
-            \Log::warning('Failed sending appointment notification: ' . $e->getMessage());
-        }
+        User::notifyAdmins(new NewAppointmentNotification($appointment));
 
         // إرسال بريد التأكيد للمريض
-        if ($request->filled('email')) {
+        if (!empty($validated['email'])) {
             try {
-                Mail::to($request->email)->send(new AppointmentConfirmationMail($appointment));
-            } catch (\Exception $e) {
-                \Log::warning('Failed sending confirmation email: ' . $e->getMessage());
+                Mail::to($validated['email'])->send(new AppointmentConfirmationMail($appointment));
+            } catch (\Throwable $e) {
+                Log::warning('Failed sending confirmation email: ' . $e->getMessage());
             }
         }
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم حجز موعدك بنجاح! سيتم التواصل معك لتأكيد الموعد.',
             'data' => [
                 'appointment_id' => $appointment->id,
@@ -88,12 +66,11 @@ class AppointmentApiController extends Controller
     /**
      * استرجاع تفاصيل حجز موعد (لصفحة التأكيد)
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $appointment = Appointment::with('doctor')->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => $appointment,
         ]);
     }

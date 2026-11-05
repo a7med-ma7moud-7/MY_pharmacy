@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,39 +15,33 @@ class AuthApiController extends Controller
     /**
      * تسجيل مستخدم جديد
      */
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
             'role' => 'user',
         ]);
 
         Auth::login($user);
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم إنشاء الحساب بنجاح',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-            ],
+            'user' => $user->toPublicArray(),
         ], 201);
     }
 
     /**
      * تسجيل الدخول
      */
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
             'email' => 'required|email',
@@ -57,31 +52,25 @@ class AuthApiController extends Controller
             if ($request->hasSession()) {
                 $request->session()->regenerate();
             }
+
+            /** @var User $user */
             $user = Auth::user();
 
-            return response()->json([
-                'success' => true,
+            return $this->successResponse([
                 'message' => 'تم تسجيل الدخول بنجاح',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role ?? 'user',
-                ],
+                'user' => $user->toPublicArray(),
             ]);
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'بيانات الاعتماد غير متطابقة مع سجلاتنا.',
-        ], 401);
+        return $this->errorResponse('بيانات الاعتماد غير متطابقة مع سجلاتنا.', 401);
     }
 
     /**
      * استرجاع بيانات المستخدم الحالي
      */
-    public function user(Request $request)
+    public function user(Request $request): JsonResponse
     {
+        /** @var User|null $user */
         $user = Auth::user();
 
         if (!$user) {
@@ -93,28 +82,23 @@ class AuthApiController extends Controller
 
         return response()->json([
             'authenticated' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role ?? 'user',
-            ],
+            'user' => $user->toPublicArray(),
         ]);
     }
 
     /**
      * تسجيل الخروج
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         Auth::logout();
+
         if ($request->hasSession()) {
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'message' => 'تم تسجيل الخروج بنجاح',
         ]);
     }
