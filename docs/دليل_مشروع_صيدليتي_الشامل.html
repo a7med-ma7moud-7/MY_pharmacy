@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل ومواصفات منظومة صيدليتي الصحية المتكاملة - Saydalety Ecosystem</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Almarai:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'neutral',
+                fontFamily: 'Cairo, sans-serif',
+                securityLevel: 'loose',
+                flowchart: { curve: 'basis', htmlLabels: true }
+            });
+        });
+    </script>
+    <style>
+        :root {
+            --primary: #0f6848;
+            --primary-dark: #09432e;
+            --primary-light: #e8f5ef;
+            --primary-glow: rgba(15, 104, 72, 0.2);
+            --secondary: #10ac84;
+            --secondary-light: #d1f2e9;
+            --accent: #2980b9;
+            --accent-light: #ebf5fb;
+            --warning: #f39c12;
+            --warning-light: #fef5e7;
+            --danger: #e74c3c;
+            --danger-light: #fdedec;
+            --dark: #1e293b;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --border-highlight: #cbd5e1;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Cairo', 'Almarai', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.85;
+            padding-bottom: 80px;
+        }
+
+        /* Top Sticky Navbar */
+        .top-navbar {
+            background: #ffffff;
+            border-bottom: 2px solid var(--primary-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 10px var(--primary-glow);
+        }
+
+        .brand-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            transform: translateY(-2px);
+        }
+
+        .btn-download-pdf {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+        }
+
+        .btn-download-pdf:hover {
+            background: #b03a2e;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        /* Layout Container */
+        .page-wrapper {
+            display: flex;
+            max-width: 1440px;
+            margin: 30px auto;
+            padding: 0 25px;
+            gap: 30px;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            position: sticky;
+            top: 90px;
+            max-height: calc(100vh - 110px);
+            overflow-y: auto;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .sidebar-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--primary);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-item {
+            margin-bottom: 6px;
+        }
+
+        .toc-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .toc-link i {
+            font-size: 0.95rem;
+            width: 18px;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .toc-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .toc-link:hover i {
+            color: var(--primary);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        /* Cover Page Card */
+        .cover-card {
+            background: linear-gradient(135deg, #09432e 0%, #0f6848 50%, #10ac84 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 55px 45px;
+            margin-bottom: 35px;
+            box-shadow: 0 15px 35px rgba(15, 104, 72, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cover-card::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 140%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cover-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(8px);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cover-card h1 {
+            font-size: 2.6rem;
+            font-weight: 900;
+            line-height: 1.35;
+            margin-bottom: 16px;
+        }
+
+        .cover-card p.subtitle {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 850px;
+            line-height: 1.8;
+            margin-bottom: 35px;
+            font-weight: 400;
+        }
+
+        .cover-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            border-top: 1px solid rgba(255,255,255,0.25);
+            padding-top: 25px;
+        }
+
+        .meta-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px 18px;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+
+        .meta-label {
+            font-size: 0.78rem;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Standard Section Card */
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 35px 40px;
+            margin-bottom: 35px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.03);
+            position: relative;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .section-icon {
+            background: var(--primary-light);
+            color: var(--primary);
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .badge-core {
+            background: linear-gradient(135deg, #10ac84, #0f6848);
+            color: white;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }
+
+        .badge-doctor { background: #e0f2fe; color: #0284c7; }
+        .badge-pharmacy { background: #fef3c7; color: #d97706; }
+        .badge-ai { background: #f3e8ff; color: #9333ea; }
+        .badge-geo { background: #ffedd5; color: #ea580c; }
+        .badge-security { background: #fee2e2; color: #dc2626; }
+
+        /* Typography inside cards */
+        p {
+            margin-bottom: 16px;
+            color: var(--text-main);
+            font-size: 1.02rem;
+            text-align: justify;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin: 28px 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 20px 0 10px 0;
+        }
+
+        ul, ol {
+            margin: 15px 25px 25px 0;
+        }
+
+        li {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        /* Diagram Box */
+        .diagram-container {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            padding: 25px;
+            margin: 25px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.015);
+        }
+
+        .diagram-caption {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* Callout Alerts */
+        .alert {
+            padding: 18px 22px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-right: 5px solid;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .alert i {
+            font-size: 1.4rem;
+            margin-top: 3px;
+        }
+
+        .alert-content h5 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .alert-content p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        .alert-info {
+            background: #f0fdf4;
+            border-color: var(--secondary);
+            color: #14532d;
+        }
+        .alert-info i { color: var(--secondary); }
+
+        .alert-warning {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #78350f;
+        }
+        .alert-warning i { color: #f59e0b; }
+
+        .alert-danger {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #7f1d1d;
+        }
+        .alert-danger i { color: #ef4444; }
+
+        /* Feature Specification Cards */
+        .feature-card {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            padding: 25px;
+            margin: 22px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            border-color: var(--secondary);
+        }
+
+        .feature-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .feature-card-header h4 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Grid systems */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .stat-card .icon {
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .stat-card .num {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .stat-card .lbl {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Detailed Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            text-align: right;
+            background: white;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--dark);
+            font-weight: 800;
+            padding: 14px 18px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Realistic Scenario Box */
+        .scenario-box {
+            background: linear-gradient(135deg, #fdfbf7 0%, #f4ede4 100%);
+            border: 1.5px dashed #d4b895;
+            border-radius: 14px;
+            padding: 25px 30px;
+            margin: 25px 0;
+            color: #4a3b32;
+        }
+
+        .scenario-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: #8c5b23;
+            margin-bottom: 12px;
+        }
+
+        /* Print Style */
+        @media print {
+            .top-navbar, .sidebar, .btn, .nav-actions {
+                display: none !important;
+            }
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+            .page-wrapper {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                display: block;
+            }
+            .section-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid;
+                margin-bottom: 25px;
+                padding: 20px;
+            }
+            .cover-card {
+                page-break-after: always;
+                color: black;
+                background: white !important;
+                border: 2px solid #0f6848;
+                box-shadow: none;
+            }
+            .cover-card h1, .cover-card p.subtitle {
+                color: #0f6848;
+            }
+            .diagram-container {
+                border: 1px solid #ccc;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Sticky Navbar -->
+    <header class="top-navbar">
+        <div class="brand-box">
+            <div class="brand-icon">
+                <i class="fas fa-hand-holding-medical"></i>
+            </div>
+            <div>
+                <div class="brand-title">منصة صيدليتي | Saydalety Ecosystem</div>
+                <div class="brand-subtitle">دليل المواصفات والمعمارية التشغيلية الشاملة للمنصة</div>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <!-- Download Pre-generated PDF -->
+            <a href="Saydalety_Comprehensive_System_Documentation.pdf" download="Saydalety_Comprehensive_System_Documentation.pdf" class="btn btn-download-pdf">
+                <i class="fas fa-file-pdf"></i> تحميل كملف PDF
+            </a>
+            <!-- Direct Download HTML -->
+            <a href="Saydalety_Comprehensive_System_Documentation.html" download="Saydalety_Comprehensive_System_Documentation.html" class="btn btn-outline">
+                <i class="fas fa-file-code"></i> تحميل كملف HTML
+            </a>
+            <!-- Browser Print Dialog -->
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> طباعة فورية
+            </button>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <!-- Sidebar Quick Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">
+                <i class="fas fa-compass"></i> فهرس محتويات المشروع
+            </div>
+            <ul class="toc-list">
+                <li class="toc-item"><a href="#section-1" class="toc-link"><i class="fas fa-file-alt"></i> 1. الغلاف التعريفي</a></li>
+                <li class="toc-item"><a href="#section-2" class="toc-link"><i class="fas fa-briefcase"></i> 2. الملخص التنفيذي</a></li>
+                <li class="toc-item"><a href="#section-3" class="toc-link"><i class="fas fa-eye"></i> 3. الرؤية وفلسفة المنظومة</a></li>
+                <li class="toc-item"><a href="#section-4" class="toc-link"><i class="fas fa-sitemap"></i> 4. المعمارية العامة للمنظومة</a></li>
+                <li class="toc-item"><a href="#section-5" class="toc-link"><i class="fas fa-globe"></i> 5. بوابة المريض والموقع العام</a></li>
+                <li class="toc-item"><a href="#section-6" class="toc-link"><i class="fas fa-map-marked-alt"></i> 6. الخدمات الجغرافية والخرائط</a></li>
+                <li class="toc-item"><a href="#section-7" class="toc-link"><i class="fas fa-user-md"></i> 7. بوابة الطبيب وإدارة الكشوفات</a></li>
+                <li class="toc-item"><a href="#section-8" class="toc-link"><i class="fas fa-clinic-medical"></i> 8. بوابة الصيدلية وسلامة الدواء</a></li>
+                <li class="toc-item"><a href="#section-9" class="toc-link"><i class="fas fa-brain"></i> 9. الصيدلي الذكي ومحرك AI</a></li>
+                <li class="toc-item"><a href="#section-10" class="toc-link"><i class="fas fa-tachometer-alt"></i> 10. لوحة الإدارة والرقابة المركزية</a></li>
+                <li class="toc-item"><a href="#section-11" class="toc-link"><i class="fas fa-users-cog"></i> 11. الأدوار والمصادقة (RBAC)</a></li>
+                <li class="toc-item"><a href="#section-12" class="toc-link"><i class="fas fa-project-diagram"></i> 12. سيناريو الرحلة العلاجية الكاملة</a></li>
+                <li class="toc-item"><a href="#section-13" class="toc-link"><i class="fas fa-lock"></i> 13. أمن البيانات والسجلات الطبية</a></li>
+                <li class="toc-item"><a href="#section-14" class="toc-link"><i class="fas fa-chart-line"></i> 14. القيمة التشغيلية والعوائد</a></li>
+                <li class="toc-item"><a href="#section-15" class="toc-link"><i class="fas fa-rocket"></i> 15. الخلاصة والتوسع المستقبلي</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Stream -->
+        <main class="main-content">
+
+            <!-- SECTION 1: COVER PAGE -->
+            <section id="section-1" class="cover-card">
+                <span class="cover-tag"><i class="fas fa-certificate"></i> الدليل الفني والتشغيلي الشامل للمشروع</span>
+                <h1>منصة صيدليتي المتكاملة (Saydalety)</h1>
+                <p class="subtitle">
+                    منظومة الرعاية الصحية الرقمية الشاملة التي تربط المرضى، الأطباء، والصيادلة في بيئة علاجية موحدة ومترابطة، مدعومة بالسجلات الطبية الإلكترونية (EMR)، الروشتات الرقمية التفاعلية، الاستشارات الفورية، المساعد الصيدلي الذكي الهجين، والاكتشاف الجغرافي الدقيق.
+                </p>
+                <div class="cover-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">طبيعة المستند:</span>
+                        <span class="meta-value">وثيقة المواصفات والمعمارية الكاملة</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">المنظومة:</span>
+                        <span class="meta-value">Saydalety Healthcare Platform</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">الجمهور المستهدف:</span>
+                        <span class="meta-value">الأطباء، مسؤولو الرعاية الصحية، المستثمرون، فرق التطوير</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">الحالة التشغيلية:</span>
+                        <span class="meta-value">مرجع معتمد لجميع بوابات المشروع</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: EXECUTIVE SUMMARY -->
+            <section id="section-2" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-briefcase"></i></div>
+                        <div>
+                            <h2>2. الملخص التنفيذي للمنصة (Executive Summary)</h2>
+                            <div class="section-subtitle">الشبكة الصحية الموحدة لربط أطراف المثلث العلاجي</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-core">منظومة موحدة</span>
+                </div>
+
+                <p>
+                    تُمثل منصة <strong>صيدليتي (Saydalety)</strong> حلاً برمجياً وصحياً متكاملاً يتجاوز مفهوم الصيدليات والمتاجر الإلكترونية التقليدية ليؤسس شبكة رعاية صحية رقمية مترابطة. تدمج المنصة بين أربعة قطاعات حيوية:
+                </p>
+
+                <div class="grid-4">
+                    <div class="stat-card">
+                        <div class="icon"><i class="fas fa-laptop-medical"></i></div>
+                        <div class="num">بوابة المريض</div>
+                        <div class="lbl">تصفح الأطباء، حجز المواعيد، متجر الأدوية، والسجل الطبي</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon"><i class="fas fa-user-md"></i></div>
+                        <div class="num">بوابة الطبيب</div>
+                        <div class="lbl">إدارة العيادة، تدوين السجل EMR، شات المرضى، والحالات المعالجة</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon"><i class="fas fa-clinic-medical"></i></div>
+                        <div class="num">بوابة الصيدلية</div>
+                        <div class="lbl">استقبال الروشتات، محرك فحص التعارضات، وتجهيز الطلبات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon"><i class="fas fa-brain"></i></div>
+                        <div class="num">محرك الذكاء الاصطناعي</div>
+                        <div class="lbl">استشارات دوائية هجينة، فحص التاريخ الطبي، واكتشاف جغرافي</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="alert-content">
+                        <h5>التكامل السريري التام:</h5>
+                        <p>
+                            تتميز منصة صيدليتي بأن الدورة العلاجية للمريض تحدث داخل حلقة مغلقة وموثقة: يبدأ المريض باكتشاف الطبيب جغرافياً وحجز الموعد، ثم يُجري الكشف ليقوم الطبيب بتحديث سجله الطبي وإصدار الروشتة إلكترونياً، فتصل الروشتة مباشرة إلى الصيدلية المختارة مع تنبيهات أمان فورية ضد أي تعارض مع أمراضه المزمنة، ليتسلم المريض علاجه الصحيح بأقصى درجات الأمان الطبي.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: PLATFORM VISION & OBJECTIVES -->
+            <section id="section-3" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-eye"></i></div>
+                        <div>
+                            <h2>3. الرؤية وفلسفة المنظومة (Platform Vision & Objectives)</h2>
+                            <div class="section-subtitle">الأهداف المجتمعية والحلول الجذرية التي تقدمها المنصة</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>
+                    تستهدف منصة <strong>صيدليتي</strong> حل التحديات الكبرى التي يواجهها قطاع الرعاية الصحية الأولية والصيدلانية في العالم العربي:
+                </p>
+
+                <div class="grid-3">
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-shield-virus text-danger"></i> منع الأخطاء الدوائية</h4>
+                        </div>
+                        <p>القضاء على مشكلة الروشتات الورقية غير المقروءة والتعارضات الدوائية الخطيرة (Drug-Drug & Drug-Disease Interactions) بفضل محرك الفحص الآلي المستند للسجل الطبي.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-folder-open text-primary"></i> حفظ واستدامة التاريخ الطبي</h4>
+                        </div>
+                        <p>توفير ملف طبي إلكتروني موحد (EMR) لكل مريض يحتفظ بسجل أمراضه المزمنة، حساسياته الدوائية، وفحوصاته السابقة ليكون متاحاً للأطباء المعالجين في كل زيارة.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-map-marked text-warning"></i> سرعة الوصول الجغرافي</h4>
+                        </div>
+                        <p>تمكين المريض من الوصول اللحظي لأقرب عيادة متخصصة أو صيدلية تتوفر فيها أدويته المطلوبة عبر خريطة حية تفاعلية تعتمد على الموقع الفعلي.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: HIGH-LEVEL ARCHITECTURE -->
+            <section id="section-4" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-sitemap"></i></div>
+                        <div>
+                            <h2>4. المعمارية العامة للمنظومة (High-Level System Architecture)</h2>
+                            <div class="section-subtitle">الهيكل البرمجي والترابط بين البوابات والمحركات المركزية</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-core">معمارية متكاملة</span>
+                </div>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+flowchart TD
+    subgraph Users["المستخدمون المعتمدون"]
+        P["المريض"]
+        D["الطبيب"]
+        Ph["الصيدلي"]
+        A["مدير النظام"]
+    end
+
+    subgraph Portals["بوابات المنظومة"]
+        WebPortal["بوابة المريض والموقع العام"]
+        DocPortal["بوابة الطبيب وإدارة الكشوفات"]
+        PharPortal["بوابة الصيدلية والروشتات"]
+        AdmPortal["لوحة الإدارة والرقابة المركزية"]
+    end
+
+    subgraph Core["نواة النظام وقواعد البيانات"]
+        EMR["السجل الطبي الموحد EMR"]
+        RxEngine["محرك الروشتات الرقمية"]
+        GeoEngine["محرك الخرائط والمواقع GIS"]
+        AIEngine["محرك الصيدلي الذكي RAG"]
+        SafetyEngine["محرك الأمان وتنبيه التعارضات CDSS"]
+    end
+
+    P <--> WebPortal
+    D <--> DocPortal
+    Ph <--> PharPortal
+    A <--> AdmPortal
+
+    WebPortal <--> Core
+    DocPortal <--> Core
+    PharPortal <--> Core
+    AdmPortal <--> Core
+                    </pre>
+                    <div class="diagram-caption">مخطط 1: المعمارية الشاملة لمنظومة صيدليتي الصحية المتكاملة</div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: PATIENT PORTAL & WEBSITE -->
+            <section id="section-5" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-globe"></i></div>
+                        <div>
+                            <h2>5. بوابة المريض والموقع العام (Patient Portal & Public Website)</h2>
+                            <div class="section-subtitle">تجربة الزائر والمريض: من البحث والحجز إلى شراء الأدوية وتتبع الرعاية</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+graph TD
+    User["المريض أو العميل"] --> Home["الصفحة الرئيسية"]
+    Home --> Doctors["دليل الأطباء"]
+    Home --> Store["متجر الأدوية"]
+    Home --> Booking["حجز المواعيد"]
+    Home --> Nearby["خريطة الرعاية القريبة مني"]
+    Home --> AIChat["الصيدلي الذكي"]
+    Home --> Track["تتبع الطلبات"]
+    Home --> EMRPortal["ملفي الصحي وسجلاتي"]
+
+    Doctors --> DocProfile["الملف الشخصي للطبيب والحالات المعالجة"]
+    DocProfile --> Booking
+
+    Store --> MedDetail["تفاصيل الدواء والجرعات"]
+    MedDetail --> Cart["سلة المشتريات التفاعلية"]
+    Cart --> Checkout["إتمام الطلب والتوصيل"]
+    Checkout --> Track
+                    </pre>
+                    <div class="diagram-caption">مخطط 2: خريطة تدفق تجربة المريض عبر واجهات الموقع الإلكتروني</div>
+                </div>
+
+                <h3><i class="fas fa-list-check text-primary"></i> المكونات والوظائف الأساسية لبوابة المريض:</h3>
+                <ul>
+                    <li><strong>دليل الأطباء والفلترة الذكية:</strong> استعراض الأطباء المعتمدين مع إمكانية الفلترة حسب التخصص، المحافظة، المدينة، سعر الكشف، أو حسب <em>الأقرب لموقع المريض جغرافياً</em>.</li>
+                    <li><strong>الملف التعريفي للطبيب (Doctor Profile):</strong> صفحة شاملة لكل طبيب تعرض مؤهلاته، سعر الكشف، جدول المواعيد، تقييمات المرضى الموثقة، بالإضافة إلى <strong>سجل الحالات الطبية المعالجة</strong> التي نشرها الطبيب لعرض خبرته الواقعية.</li>
+                    <li><strong>حجز المواعيد التفاعلي:</strong> نظام حجز آلي يمنع التعارض الزمني في العيادة، ويوثق الحجز فورياً مع إرسال بريد إلكتروني ورسالة تأكيدية للمريض.</li>
+                    <li><strong>متجر الأدوية والمستلزمات الطبية:</strong> كتالوج دوائي متكامل مصنف حسب شكل الدواء (أقراص، فوار، شراب، حقن...)، مع سلة تسوق ذكية وخيارات توصيل للمنزل أو استلام من أقرب فرع صيدلية.</li>
+                    <li><strong>تتبع الطلبات اللوجستي:</strong> استعلام المريض برقم الطلب والهاتف عن مرحلة تجهيز وشحن دوائه (قيد الانتظار، قيد التجهيز، مكتمل، ملغي).</li>
+                    <li><strong>بوابة صحتي (My Health Portal):</strong> حساب خاص بالمريض يستعرض من خلاله سجله الطبي الإلكتروني، روشتاته النشطة والمؤرشفة، ومحادثاته مع الأطباء والصيادلة.</li>
+                </ul>
+            </section>
+
+            <!-- SECTION 6: LOCATION-BASED SERVICES -->
+            <section id="section-6" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-map-marked-alt"></i></div>
+                        <div>
+                            <h2>6. الخدمات القائمة على الموقع الجغرافي والخرائط (Location-Based Services)</h2>
+                            <div class="section-subtitle">محرك الاكتشاف المكاني اللحظي للعيادات والصيدليات القريبة</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-geo"><i class="fas fa-map-pin"></i> خدمات مكانية حية</span>
+                </div>
+
+                <p>
+                    تعتمد المنصة على محرك جغرافي متطور (GIS Engine) يربط إحداثيات العيادات وفروع الصيدليات بموقع المريض الفعلي عبر تقنية <strong>HTML5 Geolocation</strong>، مع توفير خيار الإدخال اليدوي للعنوان في حال عدم تفعيل الـ GPS.
+                </p>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor P as المريض أو الزائر
+    participant Browser as متصفح الويب
+    participant GeoSvc as محرك الحسابات الجغرافية
+    participant DB as قاعدة البيانات المكانية
+    participant Map as الخريطة التفاعلية
+
+    P->>Browser: الدخول إلى صفحة الرعاية القريبة مني
+    Browser-->>P: طلب تصريح الوصول للموقع الجغرافي
+    alt تم السماح
+        P->>Browser: موافقة على مشاركة الموقع
+        Browser->>GeoSvc: إرسال إحداثيات خط الطول والعرض
+    else تم الرفض
+        P->>Browser: تحديد الحي أو العنوان يدويا
+        Browser->>GeoSvc: تحويل العنوان لإحداثيات جغرافية
+    end
+    GeoSvc->>DB: استعلام مكاني عن الأطباء والصيدليات القريبة
+    DB-->>GeoSvc: قائمة الإحداثيات والمسافات المحسوبة
+    GeoSvc-->>Map: تلوين الدبابيس وترتيب النتائج من الأقرب للأبعد
+    Map-->>P: عرض بطاقات العيادات والصيدليات مع زر الحجز والاتصال
+                    </pre>
+                    <div class="diagram-caption">مخطط 3: تسلسل عملية الاكتشاف الجغرافي للخدمات الطبية الأقرب</div>
+                </div>
+
+                <h4>خوارزمية الحساب المكاني (Haversine Formula):</h4>
+                <p>
+                    تُحسب المسافة بدقة عالية على سطح الأرض وفق المعادلة الرياضية المعيارية المدمجة في قاعدة البيانات:
+                </p>
+                <div style="background: #1e293b; color: #a5f3fc; padding: 16px 22px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; direction: ltr; text-align: left; margin: 15px 0;">
+                    d = 2R × asin(sqrt(sin²(Δlat/2) + cos(lat1) × cos(lat2) × sin²(Δlon/2)))
+                </div>
+                <p>
+                    حيث <code>R = 6371 km</code>. وتتيح هذه الخوارزمية فرز وترتيب العيادات والصيدليات في أجزاء من الثانية مع بيان المسافة المباشرة ووقت الوصول التقديري.
+                </p>
+            </section>
+
+            <!-- SECTION 7: DOCTOR PORTAL -->
+            <section id="section-7" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-user-md"></i></div>
+                        <div>
+                            <h2>7. بوابة الطبيب وإدارة الكشوفات (Doctor Portal & Clinical Management)</h2>
+                            <div class="section-subtitle">البيئة الرقمية التخصصية للأطباء لإدارة العيادات والسجلات الطبية</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-doctor"><i class="fas fa-stethoscope"></i> بوابة الطبيب</span>
+                </div>
+
+                <p>
+                    توفر بوابة الطبيب بيئة عمل سحابية شاملة تمكن كل طبيب معتمد من متابعة نشاطه الطبي، وإدارة مرضاه، وتوثيق عملياته السريرية:
+                </p>
+
+                <div class="grid-2">
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-chart-line"></i> لوحة متابعة الطبيب (Dashboard)</h4>
+                        </div>
+                        <p>واجهة فورية تلخص كشوفات اليوم، المواعيد القادمة المؤكدة، طلبات المحادثة المعلقة من المرضى، ومتوسط تقييمات العيادة.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-file-medical"></i> السجل الطبي الموحد (Patient EMR)</h4>
+                        </div>
+                        <p>الوصول المصرح لملف المريض عند الحجز: استعراض تاريخ الأمراض المزمنة، الحساسيات الدوائية، وتدوين التشخيص والروشتة الإلكترونية.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-briefcase-medical"></i> إدارة الحالات الطبية المعالجة</h4>
+                        </div>
+                        <p>توثيق الحالات الناجحة مع صور الأشعة والتحاليل قبل/بعد، مع تطبيق معايير إخفاء هوية المريض تماماً ونشر الحالات بالملف العام.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-comments text-primary"></i> الشات الطبي والاستشارات</h4>
+                        </div>
+                        <p>قناة تواصل فورية مشفرة تربط الطبيب بمرضاه بعد الكشف للمتابعة العلاجية، تبادل نتائج التحاليل، والرد على الاستفسارات الطارئة.</p>
+                    </div>
+                </div>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor D as الطبيب المعالج
+    participant Portal as بوابة الطبيب
+    participant EMR as السجل الطبي الموحد
+    participant Chat as خادم المحادثات الآمن
+    actor P as المريض
+
+    D->>Portal: تسجيل الدخول وتصفح مواعيد اليوم
+    Portal->>EMR: طلب ملف المريض المصرح به بموجب الحجز
+    EMR-->>Portal: عرض الأمراض المزمنة والروشتات السابقة
+    D->>EMR: تدوين تشخيص الزيارة والروشتة الجديدة
+    P->>Chat: إرسال استفسار حول الجرعة في الشات
+    Chat->>D: إشعار فوري باستفسار من المريضة
+    D->>Chat: الرد على المريض وتأكيد التعليمات العلاجية
+                    </pre>
+                    <div class="diagram-caption">مخطط 4: تدفق تفاعل الطبيب مع السجل الطبي وشات المريض بعد الاستشارة</div>
+                </div>
+            </section>
+
+            <!-- SECTION 8: PHARMACY PORTAL & MEDICATION SAFETY -->
+            <section id="section-8" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-clinic-medical"></i></div>
+                        <div>
+                            <h2>8. بوابة الصيدلية وسلامة الدواء (Pharmacy Portal & Medication Safety)</h2>
+                            <div class="section-subtitle">صرف الروشتات الرقمية ونظام دعم القرار السريري لفحص التعارضات (CDSS)</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-pharmacy"><i class="fas fa-pills"></i> بوابة الصيدلية</span>
+                </div>
+
+                <p>
+                    تُمثل بوابة الصيدلية خط الدفاع الأول لسلامة المريض؛ حيث لا تقتصر على صرف الدواء، بل تُساند الصيدلي في التحقق السريري من سلامة الروشتة وملاءمتها للحالة الصحية للمريض:
+                </p>
+
+                <ul>
+                    <li><strong>طابور الروشتات الرقمية:</strong> استلام الروشتات الصادرة من الأطباء لحظياً، ومراجعة توفر الأصناف في المخزون.</li>
+                    <li><strong>تنبيهات الأمراض المزمنة والحساسيات:</strong> فور فتح الروشتة، تظهر بطاقة ملونة توضح أمراض المريض المسجلة (ضغط، سكري، اعتلال كلى...) والحساسيات المعروفة.</li>
+                    <li><strong>محرك فحص التعارضات الدوائية (CDSS):</strong> مطابقة آلية فورية تفحص تعارض مكونات الروشتة مع بعضها أو مع أدوية المريض الدائمة، وإظهار تنبيهات بصرية ملونة (منخفض، متوسط، عالي الخطورة) مع الشرح الطبي.</li>
+                    <li><strong>محادثة الروشتة المباشرة:</strong> شات مدمج مع المريض لشرح تعليمات تناول العلاج، أو اقتراح أدوية بديلة بنفس المادة الفعالة بعد الرجوع للطبيب عند حدوث نقص في صنف معين.</li>
+                </ul>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+flowchart TD
+    RxReceive["استقبال روشتة جديدة في بوابة الصيدلية"] --> PullEMR["استحضار السجل الطبي للمريض والأمراض المزمنة"]
+    PullEMR --> CheckSafety{"فحص خوارزمية التعارضات الدوائية"}
+
+    CheckSafety -->|لا توجد تعارضات| SafeStatus["إشارة خضراء: الروشتة آمنة تماما"]
+    CheckSafety -->|تعارض مع مرض مزمن| DiseaseWarn["تنبيه برتقالي: تعارض مع مرض مزمن مسجل"]
+    CheckSafety -->|تداخل دوائي حرج| CriticalWarn["تنبيه أحمر عالي الخطورة: تداخل دوائي محتمل"]
+
+    SafeStatus --> PrepareMed["تجهيز الأدوية للتسليم أو الشحن"]
+
+    DiseaseWarn --> OpenRxChat["فتح شات الروشتة مع المريض أو الطبيب"]
+    CriticalWarn --> OpenRxChat
+
+    OpenRxChat --> ChatResolution{"هل تم الاتفاق على بديل آمن؟"}
+    ChatResolution -->|نعم| UpdateRx["تعديل الصنف وتوثيق السبب"]
+    ChatResolution -->|لا| HoldRx["تعليق الروشتة لحين مراجعة الطبيب المعالج"]
+
+    UpdateRx --> PrepareMed
+                    </pre>
+                    <div class="diagram-caption">مخطط 5: دورة حياة فحص سلامة الروشتة والتعارضات الدوائية في بوابة الصيدلية</div>
+                </div>
+            </section>
+
+            <!-- SECTION 9: AI CLINICAL ASSISTANT -->
+            <section id="section-9" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-brain"></i></div>
+                        <div>
+                            <h2>9. الصيدلي الذكي ومحرك الاستعلام الهجين (AI Clinical Assistant)</h2>
+                            <div class="section-subtitle">الجمع الآمن بين بيانات المريض المصرح بها وقواعد المعرفة الطبية المعتمدة</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-ai"><i class="fas fa-microchip"></i> ذكاء اصطناعي سريري</span>
+                </div>
+
+                <p>
+                    يعمل <strong>الصيدلي الذكي</strong> في منصة صيدليتي عبر نموذج هجين (Hybrid Clinical AI) يدمج تقنية <strong>RAG (Retrieval-Augmented Generation)</strong> لتوفير استشارات صيدلانية دقيقة وموثوقة:
+                </p>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+flowchart TD
+    UserQ["سؤال المستخدم أو المريض"] --> Classifier{"المصنف الذكي للاستعلامات"}
+
+    Classifier -->|سؤال عن مريض معين| AuthCheck{"التحقق من هوية المستخدم وصلاحيته"}
+    Classifier -->|سؤال طبي دوائي عام| GenKnowledge["استدعاء قاعدة المعرفة الطبية العامة"]
+    Classifier -->|سؤال مركب هجين| HybridPath["دمج سجل المريض مع المعرفة الطبية"]
+
+    AuthCheck -->|غير مسجل أو غير مصرح| RefuseSec["رفض الطلب: يرجى تسجيل الدخول للوصول لملفك"]
+    AuthCheck -->|مصرح ومطابق| FetchEMR["استرجاع البيانات من السجل الطبي الداخلي"]
+
+    FetchEMR --> SynthesizeAns["صياغة الإجابة المخصصة"]
+    GenKnowledge --> SynthesizeAns
+    HybridPath --> SynthesizeAns
+
+    SynthesizeAns --> Guardrails{"فحص معايير الأمان الطبي"}
+    Guardrails -->|محاولة تشخيص أو خطر| SafeDisclaimer["تعديل الرد وإضافة تحذير طبي صارم"]
+    Guardrails -->|آمن وموثوق| DeliverAns["عرض الإجابة السريرية المنسقة للمستخدم"]
+                    </pre>
+                    <div class="diagram-caption">مخطط 6: مسار فرز ومعالجة الاستعلامات الهجينة في الصيدلي الذكي</div>
+                </div>
+
+                <h3><i class="fas fa-shield-virus text-danger"></i> ضوابط الأمان السريري وعدم التشخيص:</h3>
+                <ul>
+                    <li><strong>حظر التشخيص النهائي:</strong> الذكاء الاصطناعي موجه لتقديم معلومات دوائية وإرشادية فقط، ويحظر عليه تشخيص الأمراض أو استبدال الطبيب البشري.</li>
+                    <li><strong>حماية أدوية الطوارئ والجدول:</strong> في حالات الطوارئ الحادة، يوجه النظام المريض فوراً لطلب الإسعاف أو التوجه لأقرب مستشفى.</li>
+                    <li><strong>عزل هوية المريض:</strong> تُعالج الاستفسارات بعد تشفير البيانات وحذف المعرفات الشخصية (De-identification) لضمان الخصوصية.</li>
+                </ul>
+            </section>
+
+            <!-- SECTION 10: CENTRAL ADMIN DASHBOARD -->
+            <section id="section-10" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        <div>
+                            <h2>10. لوحة الإدارة والرقابة المركزية (Central Admin Dashboard)</h2>
+                            <div class="section-subtitle">التحكم التشغيلي، إدارة الحسابات، التحليلات المالية، والرقابة الطبية</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+flowchart LR
+    Admin["مدير النظام"] --> AuthCheck{"فحص الصلاحية كمدير"}
+    AuthCheck -->|معتمد| AdminDash["لوحة الإدارة الرئيسية"]
+
+    AdminDash --> Appts["إدارة الحجوزات والمواعيد"]
+    AdminDash --> Ords["إدارة طلبات الأدوية والشحن"]
+    AdminDash --> Docs["اعتماد وإدارة الأطباء"]
+    AdminDash --> Pharms["اعتماد وإدارة الصيدليات"]
+    AdminDash --> Cases["مراقبة الحالات المنشورة"]
+    AdminDash --> Meds["مخزون الأدوية والأصناف"]
+    AdminDash --> Reps["التقارير والإحصائيات وتصدير Excel"]
+                    </pre>
+                    <div class="diagram-caption">مخطط 7: وحدات لوحة التحكم المركزية لإدارة المنظومة</div>
+                </div>
+
+                <h3><i class="fas fa-cogs text-primary"></i> المهام والمسؤوليات الإدارية:</h3>
+                <ul>
+                    <li><strong>اعتماد تراخيص الأطباء والصيدليات:</strong> مراجعة الوثائق وتراخيص مزاولة المهنة قبل تفعيل البوابات الخاصة بهم لضمان موثوقية الشبكة.</li>
+                    <li><strong>مراقبة الحالات الطبية المنشورة:</strong> مراجعة الحالات الطبية التي يرغب الأطباء بنشرها للتأكد من خلوها من أي معلومات تفصح عن هوية المريض.</li>
+                    <li><strong>إدارة العمليات والمخزون:</strong> تتبع مخزون الأدوية، تحديث الأسعار، ومتابعة حالات الشحن والتوصيل.</li>
+                    <li><strong>التقارير المالية والتحليلات:</strong> متابعة مؤشرات الأداء، حجم المبيعات، ومعدلات الحجز، مع إمكانية تصدير البيانات إلى ملفات Excel بنقرة واحدة.</li>
+                </ul>
+            </section>
+
+            <!-- SECTION 11: USER ROLES & ACCESS CONTROL -->
+            <section id="section-11" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-users-cog"></i></div>
+                        <div>
+                            <h2>11. أدوار ومسؤوليات المستخدمين (User Roles & Access Control - RBAC)</h2>
+                            <div class="section-subtitle">مصفوفة الصلاحيات وحدود الوصول لكل فئة في المنظومة</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الدور الوظيفي (Role)</th>
+                                <th>الوظائف والمسؤوليات الأساسية</th>
+                                <th>حدود الوصول وصلاحيات البيانات</th>
+                                <th>آلية المصادقة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>المريض (Patient)</strong></td>
+                                <td>تصفح الأطباء، حجز المواعيد، شراء الأدوية، إدارة سجله الطبي، التحدث مع طبيبه وصيدليته، واستشارة الذكاء الاصطناعي.</td>
+                                <td>الاطلاع على بياناته وسجلاته الشخصية فقط. محمي بالكامل من اطلاع غير المصرح لهم.</td>
+                                <td>بريد إلكتروني وكلمة مرور / رمز تأكيد الهاتف OTP.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الطبيب (Doctor)</strong></td>
+                                <td>إدارة جدول الكشوفات، الاطلاع على سجلات مرضاه المحجوزين لديه، إصدار الروشتات، نشر الحالات المعالجة، والشات الطبي.</td>
+                                <td>الوصول الكامل لسجلات مرضاه المرتبطين بمواعيد كشف فقط. لا يملك صلاحية الاطلاع على مرضى الأطباء الآخرين.</td>
+                                <td>بوابة الطبيب بعد مراجعة واعتماد ترخيص المهنة.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الصيدلي (Pharmacist)</strong></td>
+                                <td>استقبال الروشتات الرقمية، مراجعة تنبيهات الأمان والتعارضات الدوائية، شات الروشتة مع المريض، وتجهيز الطلبات.</td>
+                                <td>الاطلاع على الروشتة الواردة والأمراض المزمنة للمريض صاحب الروشتة لضمان سلامة الصرف.</td>
+                                <td>بوابة الصيدلية بحساب مهني معتمد.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>مدير النظام (Admin)</strong></td>
+                                <td>الرقابة التشغيلية، اعتماد الكوادر الطبية والصيدلانية، متابعة التقارير المالية واللوجستية، وحل النزاعات.</td>
+                                <td>إشراف إداري ورقابي شامل، مع حظر الوصول لخصوصية المحادثات والسجلات الطبية إلا في بلاغات رسمية موثقة.</td>
+                                <td>لوحة التحكم المركزية بصلاحيات المشرف العام (Super Admin).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION 12: END-TO-END PATIENT JOURNEY -->
+            <section id="section-12" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-project-diagram"></i></div>
+                        <div>
+                            <h2>12. سيناريو الرحلة العلاجية الكاملة (End-to-End Operational Workflow)</h2>
+                            <div class="section-subtitle">مثال عملي يوضح تناغم كافة بوابات المنصة في مسار علاجي واحد</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-title"><i class="fas fa-heartbeat"></i> السيناريو السريري التطبيقي الكامل:</div>
+                    <ol>
+                        <li><strong>الاكتشاف الجغرافي:</strong> يبحث المريض "كريم" في المنصة عن طبيب عظام قريب. تظهر له عيادة "د. سامح" على بُعد 1.5 كم مع تقييماته الإيجابية وحالاته المعالجة المنشورة.</li>
+                        <li><strong>حجز الكشف:</strong> يحجز كريم موعداً متاحاً في نفس اليوم. يتلقى د. سامح إشعاراً في لوحة تحكمه بوجود كشف جديد.</li>
+                        <li><strong>الكشف وتحديث السجل الطبي:</strong> بعد فحص المريض بالعيادة، يفتح الطبيب سجله الطبي (EMR) ويسجل إصابته بخشونة المفاصل، ويصدر له روشتة إلكترونية تتضمن علاجاً للمفاصل ومسكناً.</li>
+                        <li><strong>توجيه الروشتة للصيدلية:</strong> يتم إرسال الروشتة رقمياً لأقرب صيدلية يختارها المريض (صيدلية الشفاء).</li>
+                        <li><strong>فحص الأمان الدوائي (CDSS):</strong> فور استلام الصيدلية للروشتة، يطلق النظام تنبيهاً بأن المريض مسجل لديه حساسية من مركبات السلفا، وأحد أدوية الروشتة يحتوي مشتقاتها!</li>
+                        <li><strong>الشات الفوري والبديل الآمن:</strong> يفتح الصيدلي شات الروشتة مع المريض والطبيب، ويتم الاتفاق على بديل مكافئ آمن تماماً، ويتم تعديل الروشتة وتجهيزها.</li>
+                        <li><strong>التسليم والاستشارة الذكية:</strong> يتسلم المريض علاجه ويتتبعه حتى المنزل. وفي المساء، يستشير الصيدلي الذكي في الموقع عن أفضل موعد لتناول الدواء بالنسبة للوجبات، فيجيبه بدقة وفق بيانات الروشتة المصروفة.</li>
+                    </ol>
+                </div>
+
+                <div class="diagram-container">
+                    <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor P as المريض كريم
+    participant Web as الموقع والخرائط
+    actor D as الطبيب د. سامح
+    participant EMR as السجل والروشتة
+    actor Ph as الصيدلي صيدلية الشفاء
+    participant AI as الصيدلي الذكي
+
+    P->>Web: اكتشاف أقرب طبيب جغرافيا وحجز كشف
+    Web->>D: إشعار بحجز موعد جديد
+    D->>EMR: الكشف وتدوين السجل والروشتة الرقمية
+    EMR->>Ph: توجيه الروشتة لصيدلية المريض المختارة
+    Ph->>Ph: فحص التعارضات والحساسيات وكشف حساسية سلفا
+    Ph->>P: شات الروشتة: اقتراح بديل آمن وتعديل الصنف
+    Ph->>P: تجهيز وتسليم الدواء وتحديث التتبع
+    P->>AI: سؤال: متى أتناول علاجي المصروف اليوم؟
+    AI->>EMR: جلب بيانات روشتة كريم النشطة
+    AI-->>P: إجابة دقيقة بتعليمات تناول الدواء مع الطعام
+                    </pre>
+                    <div class="diagram-caption">مخطط 8: التدفق التشغيلي الشامل المتكامل بين المريض، الطبيب، الصيدلي، والذكاء الاصطناعي</div>
+                </div>
+            </section>
+
+            <!-- SECTION 13: EMR SECURITY & PRIVACY -->
+            <section id="section-13" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-lock"></i></div>
+                        <div>
+                            <h2>13. أمن البيانات والسجلات الطبية والخصوصية (EMR Security & Privacy)</h2>
+                            <div class="section-subtitle">المعايير الأمنية المتوافقة مع أطر حماية البيانات الصحية العالمية</div>
+                        </div>
+                    </div>
+                    <span class="badge badge-security"><i class="fas fa-user-shield"></i> معايير أمنية مشددة</span>
+                </div>
+
+                <div class="grid-3">
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-key text-primary"></i> تشفير البيانات الحساسة</h4>
+                        </div>
+                        <p>تشفير كامل لقواعد البيانات والسجلات الطبية والمرفقات باستخدام خوارزميات AES-256 أثناء التخزين، وبروتوكول TLS 1.3 أثناء نقل البيانات عبر الشبكة.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-user-check text-secondary"></i> تفويض الوصول بحاجة العمل</h4>
+                        </div>
+                        <p>قصر صلاحية استعراض الملف الطبي على الطبيب المعالج الذي يملك المريض حجزاً نشطاً لديه، مع انتهاء صلاحية الوصول تلقائياً بعد انتهاء فترة المتابعة.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-history text-warning"></i> سجل التدقيق الرقمي (Audit Trail)</h4>
+                        </div>
+                        <p>توثيق رقمي فوري لكل عملية فتح، تعديل، أو استعلام على السجل الطبي بهوية المستخدم وتوقيت العملية وعنوان IP لضمان الشفافية المطلقة ومنع التطفل.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 14: BUSINESS VALUE & BENEFITS -->
+            <section id="section-14" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <h2>14. القيمة التشغيلية والعوائد المتوقعة (Business Value & Benefits)</h2>
+                            <div class="section-subtitle">الأثر الإيجابي والمكاسب المتحققة لكافة أطراف المنظومة</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الفئة المستفيدة</th>
+                                <th>المكاسب التشغيلية والسريرية المباشرة</th>
+                                <th>المكاسب الاقتصادية والتنافسية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>المرضى</strong></td>
+                                <td>سجل طبي رقمي دائم، حماية من التداخلات الدوائية، وسرعة الوصول لأقرب مقدم خدمة طبية.</td>
+                                <td>توفير تكاليف الفحوصات المكررة وتجنب نفقات علاج المضاعفات الناتجة عن الأخطاء الدوائية.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الأطباء</strong></td>
+                                <td>إدارة رقمية متكاملة للعيادة، سهولة تدوين الروشتات، وتوثيق السمعة المهنية عبر الحالات المعالجة.</td>
+                                <td>زيادة معدلات حجز الكشوفات بنسبة ملحوظة بفضل الظهور الجغرافي وثقة المرضى في التقييمات.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الصيدليات</strong></td>
+                                <td>استقبال روشتات واضحة إلكترونياً، تقليل أخطاء الصرف، وشات مباشر مع المريض لتعديل البدائل.</td>
+                                <td>زيادة مبيعات الصيدلية وجذب المرضى المقيمين في المحيط الجغرافي المباشر للفرع.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>إدارة المنصة والمستثمرون</strong></td>
+                                <td>امتلاك شبكة رعاية صحية وطنية متكاملة ذات قيمة سوقية عالية وقاعدة بيانات طبية قيمة.</td>
+                                <td>تنويع مصادر الإيرادات: اشتراكات العيادات والصيدليات، عمولات العمليات، والخدمات التحليلية.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION 15: CONCLUSION & ROADMAP -->
+            <section id="section-15" class="section-card">
+                <div class="section-header">
+                    <div class="section-title-wrap">
+                        <div class="section-icon"><i class="fas fa-rocket"></i></div>
+                        <div>
+                            <h2>15. الخلاصة والتوسع المستقبلي (Conclusion & Future Roadmap)</h2>
+                            <div class="section-subtitle">جاهزية المنظومة والآفاق التوسعية المستقبلية</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>
+                    تُمثل <strong>منصة صيدليتي</strong> بنية تحتية نموذجية لمنظومات الرعاية الصحية الحديثة (HealthTech)؛ حيث تلبي احتياجات المريض اليومية وتوفر للأطباء والصيادلة بيئة سريرية آمنة ومريحة.
+                </p>
+
+                <h3><i class="fas fa-road text-primary"></i> آفاق التوسع المستقبلي للمنظومة:</h3>
+                <div class="grid-3">
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-video text-secondary"></i> الاستشارات الطبية بالفيديو (Telehealth)</h4>
+                        </div>
+                        <p>دعم مكالمات الفيديو المباشرة المشفرة بين الطبيب والمريض للاستشارات الافتراضية داخل البوابة.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-file-invoice-dollar text-primary"></i> الربط مع شركات التأمين الصحي</h4>
+                        </div>
+                        <p>الفحص التلقائي لنسب التغطية التأمينية للروشتات وإجراء الموافقات الطبية اللحظية (E-Claims).</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-header">
+                            <h4><i class="fas fa-vial text-warning"></i> تكامل معامل التحاليل ومراكز الأشعة</h4>
+                        </div>
+                        <p>إرسال نتائج الفحوصات والتحاليل المخبرية مباشرة إلى السجل الطبي للمريض فور صدورها.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" style="margin-top: 30px;">
+                    <i class="fas fa-check-double"></i>
+                    <div class="alert-content">
+                        <h5>جاهزية المشروع:</h5>
+                        <p>
+                            يُعتبر هذا الدليل التوثيقي المرجع الفني والتشغيلي المعتمد والشامل لكافة مكونات وبوابات منصة صيدليتي كمشروع متكامل وجاهز للتطبيق العملي والعرض المؤسسي.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>
