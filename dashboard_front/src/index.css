@@ -267,10 +267,52 @@ input, select, textarea {
   height: 0;
   background: linear-gradient(135deg, rgba(13, 148, 136, 0.03), rgba(20, 184, 166, 0.03));
   transition: height 0.3s ease;
+  pointer-events: none;
 }
 
 .card:hover::before {
   height: 100%;
+}
+
+/* Status Filter Tabs */
+.status-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 15px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--slate-600);
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.status-tab:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-700);
+  transform: translateY(-1px);
+}
+
+.status-tab.active {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.28);
+}
+
+.table tbody tr,
+.data-table tbody tr {
+  animation: fadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Glass effect card */

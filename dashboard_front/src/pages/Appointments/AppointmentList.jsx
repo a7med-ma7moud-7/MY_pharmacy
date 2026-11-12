@@ -112,6 +112,26 @@ export const AppointmentList = () => {
         </div>
       </div>
 
+      {/* Quick Status Tabs */}
+      <div className="status-tabs">
+        {[
+          { value: '', label: 'جميع الحجوزات' },
+          { value: 'pending', label: 'قيد الانتظار' },
+          { value: 'confirmed', label: 'المؤكدة' },
+          { value: 'completed', label: 'الكشوفات المكتملة' },
+          { value: 'cancelled', label: 'الملغية' },
+        ].map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setStatusFilter(tab.value)}
+            className={`status-tab ${statusFilter === tab.value ? 'active' : ''}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filter and Search Box */}
       <div
         className="card"

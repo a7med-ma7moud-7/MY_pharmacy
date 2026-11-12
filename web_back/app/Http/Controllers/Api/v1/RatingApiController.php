@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Rating;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 class RatingApiController extends Controller
 {
     /**
-     * حفظ تقييم طبيب جديد
+     * حفظ أو تحديث تقييم طبيب بأمان دون تعارض مفاتيح خارجية
      */
     public function store(Request $request): JsonResponse
     {
@@ -22,12 +25,32 @@ class RatingApiController extends Controller
             'comment' => 'nullable|string|max:500',
         ]);
 
-        $rating = Rating::create([
-            'doctor_id' => $validated['doctor_id'],
-            'user_id' => Auth::id() ?? $validated['user_id'] ?? 1,
-            'rating' => $validated['rating'],
-            'comment' => $validated['comment'] ?? null,
-        ]);
+        $authenticatedUserId = Auth::id();
+        $resolvedUserId = $authenticatedUserId ?? $validated['user_id'] ?? User::query()->value('id');
+
+        if (!$resolvedUserId) {
+            return $this->errorResponse('يرجى تسجيل الدخول أولاً لإضافة تقييم.', 401);
+        }
+
+        if ($authenticatedUserId) {
+            $rating = Rating::updateOrCreate(
+                [
+                    'doctor_id' => $validated['doctor_id'],
+                    'user_id' => $authenticatedUserId,
+                ],
+                [
+                    'rating' => $validated['rating'],
+                    'comment' => $validated['comment'] ?? null,
+                ]
+            );
+        } else {
+            $rating = Rating::create([
+                'doctor_id' => $validated['doctor_id'],
+                'user_id' => $resolvedUserId,
+                'rating' => $validated['rating'],
+                'comment' => $validated['comment'] ?? null,
+            ]);
+        }
 
         return $this->successResponse([
             'message' => 'تم إضافة التقييم بنجاح! شكراً لمشاركتنا رأيك.',

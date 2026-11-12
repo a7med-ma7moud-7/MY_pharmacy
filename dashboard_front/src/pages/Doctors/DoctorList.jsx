@@ -125,6 +125,24 @@ export const DoctorList = () => {
         </button>
       </div>
 
+      {/* Quick Status Tabs */}
+      <div className="status-tabs">
+        {[
+          { value: '', label: 'جميع الأطباء' },
+          { value: 'active', label: 'الأطباء النشطون' },
+          { value: 'inactive', label: 'غير النشطين' },
+        ].map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setStatusFilter(tab.value)}
+            className={`status-tab ${statusFilter === tab.value ? 'active' : ''}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filters & Search Bar */}
       <div
         className="card"
@@ -256,7 +274,7 @@ export const DoctorList = () => {
                       <Badge variant="info">{doc.specialty}</Badge>
                     </td>
                     <td>
-                      <strong style={{ color: 'var(--primary-color)' }}>{doc.price} ر.س</strong>
+                      <strong style={{ color: 'var(--primary-color)' }}>{doc.price} ج.م</strong>
                     </td>
                     <td style={{ direction: 'ltr', textAlign: 'right', fontSize: '0.85rem' }}>
                       {doc.number}

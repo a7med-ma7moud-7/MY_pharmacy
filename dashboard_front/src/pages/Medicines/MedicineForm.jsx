@@ -168,7 +168,7 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
           </div>
 
           <div>
-            <label className="form-label required">السعر (ر.س)</label>
+            <label className="form-label required">السعر (ج.م)</label>
             <input
               type="number"
               step="0.01"

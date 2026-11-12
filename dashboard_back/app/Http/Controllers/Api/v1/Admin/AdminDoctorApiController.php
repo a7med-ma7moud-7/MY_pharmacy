@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
@@ -13,29 +15,40 @@ class AdminDoctorApiController extends Controller
     private const ALLOWED_SUBSCRIPTIONS = 'subscribed,not_subscribed,سنوي,شهري,مشترك,غير مشترك';
 
     /**
-     * استعراض قائمة الأطباء مع الترقيم والبحث
+     * استعراض قائمة الأطباء مع الترقيم والبحث وحساب التقييمات دون N+1
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->integer('per_page', 10);
+        $perPage = $this->resolvePerPage($request, default: 10, max: 100);
 
         $doctors = Doctor::query()
-            ->filter($request->only(['search', 'specialty', 'status']), includeContactInSearch: true)
-            ->latest()
+            ->filter($request->only(['search', 'specialty', 'status', 'location']), includeContactInSearch: true)
+            ->withAvg('ratings as ratings_avg', 'rating')
+            ->withCount('ratings')
+            ->sortBy($request->query('sort'), defaultColumn: 'created_at', defaultDirection: 'desc')
             ->paginate($perPage);
+
+        $doctors->getCollection()->transform(function (Doctor $doctor) {
+            $doctor->average_rating = round((float) ($doctor->ratings_avg ?: 0), 1);
+            $doctor->ratings_count = (int) ($doctor->ratings_count ?? 0);
+            $doctor->appendResolvedImages();
+            return $doctor;
+        });
 
         return $this->paginatedResponse($doctors);
     }
 
     /**
-     * تفاصيل طبيب محدد مع تقييماته
+     * تفاصيل طبيب محدد مع تقييماته ومعرض صور العيادة
      */
     public function show($id): JsonResponse
     {
         $doctor = Doctor::findOrFail($id);
         $ratings = $doctor->ratings()->with('user:id,name,email')->latest()->get();
-        $averageRating = round($ratings->avg('rating') ?? 0, 1);
+        $averageRating = round((float) ($ratings->avg('rating') ?? 0), 1);
         $ratingsCount = $ratings->count();
+
+        $doctor->appendResolvedImages();
 
         return $this->successResponse([
             'data' => array_merge($doctor->toArray(), [
@@ -47,11 +60,11 @@ class AdminDoctorApiController extends Controller
     }
 
     /**
-     * إضافة طبيب جديد
+     * إضافة طبيب جديد مع التحقق من الصورة الرئيسية وصور المعرض
      */
     public function store(Request $request): JsonResponse
     {
-        $validatedData = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'specialty' => 'required|string|max:255',
@@ -61,11 +74,22 @@ class AdminDoctorApiController extends Controller
             'tow_location' => 'nullable|string|max:255',
             'status' => 'required|in:' . self::ALLOWED_STATUSES,
             'subscription' => 'required|in:' . self::ALLOWED_SUBSCRIPTIONS,
-        ]);
+        ];
 
-        $doctor = new Doctor(collect($validatedData)->except('image')->toArray());
+        for ($i = 1; $i <= 5; $i++) {
+            $rules["image-{$i}"] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048';
+        }
+
+        $validatedData = $request->validate($rules);
+
+        $fillableOnly = collect($validatedData)
+            ->except(['image', 'image-1', 'image-2', 'image-3', 'image-4', 'image-5'])
+            ->toArray();
+
+        $doctor = new Doctor($fillableOnly);
         $doctor->syncUploadedImages($request);
         $doctor->save();
+        $doctor->appendResolvedImages();
 
         return $this->successResponse([
             'message' => 'تم إضافة الطبيب بنجاح',
@@ -80,7 +104,7 @@ class AdminDoctorApiController extends Controller
     {
         $doctor = Doctor::findOrFail($id);
 
-        $validatedData = $request->validate([
+        $rules = [
             'name' => 'sometimes|required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'specialty' => 'sometimes|required|string|max:255',
@@ -90,11 +114,22 @@ class AdminDoctorApiController extends Controller
             'tow_location' => 'nullable|string|max:255',
             'status' => 'sometimes|required|in:' . self::ALLOWED_STATUSES,
             'subscription' => 'sometimes|required|in:' . self::ALLOWED_SUBSCRIPTIONS,
-        ]);
+        ];
 
-        $doctor->fill(collect($validatedData)->except('image')->toArray());
+        for ($i = 1; $i <= 5; $i++) {
+            $rules["image-{$i}"] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048';
+        }
+
+        $validatedData = $request->validate($rules);
+
+        $fillableOnly = collect($validatedData)
+            ->except(['image', 'image-1', 'image-2', 'image-3', 'image-4', 'image-5'])
+            ->toArray();
+
+        $doctor->fill($fillableOnly);
         $doctor->syncUploadedImages($request);
         $doctor->save();
+        $doctor->appendResolvedImages();
 
         return $this->successResponse([
             'message' => 'تم تحديث بيانات الطبيب بنجاح',
@@ -103,7 +138,7 @@ class AdminDoctorApiController extends Controller
     }
 
     /**
-     * حذف طبيب وصوره
+     * حذف طبيب وصوره المخزنة
      */
     public function destroy($id): JsonResponse
     {

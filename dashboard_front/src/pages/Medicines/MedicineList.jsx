@@ -157,6 +157,28 @@ export const MedicineList = () => {
         </button>
       </div>
 
+      {/* Quick Type Filter Tabs */}
+      <div className="status-tabs">
+        {[
+          { value: '', label: 'الكل' },
+          { value: 'أقراص', label: 'أقراص' },
+          { value: 'كبسولات', label: 'كبسولات' },
+          { value: 'شراب', label: 'شراب' },
+          { value: 'حقن', label: 'حقن' },
+          { value: 'مرهم / كريم', label: 'مرهم / كريم' },
+          { value: 'قطرات', label: 'قطرات' },
+        ].map((tab) => (
+          <button
+            key={tab.value || 'all'}
+            type="button"
+            className={`status-tab ${typeFilter === tab.value ? 'active' : ''}`}
+            onClick={() => setTypeFilter(tab.value)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filter and Search Box */}
       <div
         className="card"
@@ -287,7 +309,7 @@ export const MedicineList = () => {
                       <Badge variant="info">{med.type || 'أقراص'}</Badge>
                     </td>
                     <td>
-                      <strong style={{ color: 'var(--primary-color)' }}>{med.price} ر.س</strong>
+                      <strong style={{ color: 'var(--primary-color)' }}>{med.price} ج.م</strong>
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

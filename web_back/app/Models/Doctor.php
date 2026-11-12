@@ -94,6 +94,51 @@ class Doctor extends Model
     }
 
     /**
+     * التحقق من جاهزية الطبيب لاستقبال حجوزات جديدة
+     */
+    public function isActiveForBooking(): bool
+    {
+        $activeStatuses = ['active', 'متاح', 'نشط', null, ''];
+        return in_array($this->status, $activeStatuses, true);
+    }
+
+    /**
+     * استرجاع روابط صور معرض العيادة الإضافية بعد معالجتها
+     *
+     * @return list<string>
+     */
+    public function getGalleryUrls(): array
+    {
+        $urls = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $raw = $this->getAttribute("image-{$i}");
+            if (!empty($raw)) {
+                $urls[] = self::resolveStorageImageUrl((string) $raw);
+            }
+        }
+        return array_values(array_unique($urls));
+    }
+
+    /**
+     * إرفاق روابط الصور الرئيسية وصور المعرض للكائن قبل تحويله إلى JSON
+     */
+    public function appendResolvedImages(): self
+    {
+        $this->image_url = $this->image_url;
+
+        for ($i = 1; $i <= 5; $i++) {
+            $raw = $this->getAttribute("image-{$i}");
+            if (!empty($raw)) {
+                $this->setAttribute("image_{$i}_url", self::resolveStorageImageUrl((string) $raw));
+            }
+        }
+
+        $this->setAttribute('gallery_urls', $this->getGalleryUrls());
+
+        return $this;
+    }
+
+    /**
      * تصفية الأطباء النشطين والمشتركين (دعم القيم العربية والإنجليزية)
      */
     public function scopeActiveAndSubscribed(Builder $query): Builder
@@ -155,6 +200,20 @@ class Doctor extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * ترتيب الأطباء ديناميكياً حسب الخيار المطلوب
+     */
+    public function scopeSortBy(Builder $query, ?string $sort, string $defaultColumn = 'name', string $defaultDirection = 'asc'): Builder
+    {
+        return match ($sort) {
+            'price_asc' => $query->orderBy('price', 'asc'),
+            'price_desc' => $query->orderBy('price', 'desc'),
+            'rating' => $query->orderByDesc('ratings_avg')->orderBy('name', 'asc'),
+            'latest' => $query->latest(),
+            default => $query->orderBy($defaultColumn, $defaultDirection),
+        };
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,16 +12,22 @@ use Illuminate\Http\Request;
 class AdminMedicienApiController extends Controller
 {
     /**
-     * قائمة الأدوية مع الترقيم والبحث والتصفية
+     * قائمة الأدوية مع الترقيم والبحث والتصفية والترتيب
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->integer('per_page', 10);
+        $perPage = $this->resolvePerPage($request, default: 10, max: 100);
 
         $medicines = Medicien::query()
-            ->filter($request->only(['search', 'type']), searchByType: true)
-            ->latest()
+            ->filter($request->only(['search', 'type', 'in_stock', 'low_stock']), searchByType: true)
+            ->sortBy($request->query('sort'), latestDefault: true)
             ->paginate($perPage);
+
+        $medicines->getCollection()->transform(function (Medicien $medicine) {
+            $medicine->image_url = $medicine->image_url;
+            $medicine->is_in_stock = $medicine->is_in_stock;
+            return $medicine;
+        });
 
         return $this->paginatedResponse($medicines);
     }
@@ -30,6 +38,8 @@ class AdminMedicienApiController extends Controller
     public function show($id): JsonResponse
     {
         $medicine = Medicien::findOrFail($id);
+        $medicine->image_url = $medicine->image_url;
+        $medicine->is_in_stock = $medicine->is_in_stock;
 
         return $this->successResponse([
             'data' => $medicine,
@@ -47,12 +57,14 @@ class AdminMedicienApiController extends Controller
             'propose' => 'required|string|max:225',
             'price' => 'required|numeric|min:0',
             'type' => 'required|string|max:225',
-            'count' => 'required|numeric|min:0',
+            'count' => 'required|integer|min:0',
         ]);
 
         $medicien = new Medicien(collect($validatedData)->except('image')->toArray());
         $medicien->image = $medicien->storeUploadedImage($request, 'image', 'medicines');
         $medicien->save();
+        $medicien->image_url = $medicien->image_url;
+        $medicien->is_in_stock = $medicien->is_in_stock;
 
         return $this->successResponse([
             'message' => 'تم إضافة الدواء بنجاح',
@@ -73,7 +85,7 @@ class AdminMedicienApiController extends Controller
             'propose' => 'sometimes|required|string|max:225',
             'price' => 'sometimes|required|numeric|min:0',
             'type' => 'sometimes|required|string|max:225',
-            'count' => 'sometimes|required|numeric|min:0',
+            'count' => 'sometimes|required|integer|min:0',
         ]);
 
         $medicien->fill(collect($validatedData)->except('image')->toArray());
@@ -83,6 +95,8 @@ class AdminMedicienApiController extends Controller
         }
 
         $medicien->save();
+        $medicien->image_url = $medicien->image_url;
+        $medicien->is_in_stock = $medicien->is_in_stock;
 
         return $this->successResponse([
             'message' => 'تم تحديث بيانات الدواء بنجاح',
@@ -96,12 +110,14 @@ class AdminMedicienApiController extends Controller
     public function updateStock(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
-            'count' => 'required|numeric|min:0',
+            'count' => 'required|integer|min:0',
         ]);
 
         $medicien = Medicien::findOrFail($id);
         $medicien->count = $validated['count'];
         $medicien->save();
+        $medicien->image_url = $medicien->image_url;
+        $medicien->is_in_stock = $medicien->is_in_stock;
 
         return $this->successResponse([
             'message' => 'تم تحديث المخزون بنجاح',

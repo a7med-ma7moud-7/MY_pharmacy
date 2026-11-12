@@ -17,8 +17,10 @@ class AdminAuthApiController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string',
         ]);
+
+        $credentials['email'] = strtolower(trim($credentials['email']));
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             /** @var User $user */

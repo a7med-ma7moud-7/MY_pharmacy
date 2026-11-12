@@ -17,9 +17,13 @@ class AuthApiController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
+        if ($request->has('email')) {
+            $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
@@ -45,8 +49,10 @@ class AuthApiController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string',
         ]);
+
+        $credentials['email'] = strtolower(trim($credentials['email']));
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             if ($request->hasSession()) {

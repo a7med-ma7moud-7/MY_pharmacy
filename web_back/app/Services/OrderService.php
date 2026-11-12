@@ -27,7 +27,7 @@ class OrderService
     }
 
     /**
-     * إنشاء طلب جديد مع التحقق الذري المجمع (Batch Query + Bulk Insert) داخل Transaction
+     * إنشاء طلب جديد مع التحقق الذري المجمع وحساب الأسعار حصرياً من قاعدة البيانات لمنع التلاعب
      *
      * @throws DomainException في حال عدم توفر الكمية المطلوبة لأي دواء
      */
@@ -42,11 +42,13 @@ class OrderService
                 $medicineId = isset($item->id) ? (int) $item->id : 0;
                 $quantity = max(1, (int) ($item->quantity ?? 1));
 
+                if ($medicineId <= 0) {
+                    throw new DomainException('بيانات أحد الأدوية في السلة غير صالحة.');
+                }
+
                 $normalizedItems[] = [
                     'id' => $medicineId,
                     'quantity' => $quantity,
-                    'price' => $item->price ?? null,
-                    'total' => $item->total ?? null,
                 ];
 
                 $requiredQuantities[$medicineId] = ($requiredQuantities[$medicineId] ?? 0) + $quantity;
@@ -72,8 +74,9 @@ class OrderService
                     );
                 }
 
-                $unitPrice = $entry['price'] !== null ? (float) $entry['price'] : (float) $medicine->price;
-                $lineTotal = $entry['total'] !== null ? (float) $entry['total'] : ($unitPrice * $entry['quantity']);
+                // الاعتماد الحصري على سعر قاعدة البيانات لمنع أي تلاعب من جهة العميل
+                $unitPrice = (float) $medicine->price;
+                $lineTotal = round($unitPrice * $entry['quantity'], 2);
 
                 $preparedItems[] = [
                     'medicine' => $medicine,
@@ -86,14 +89,16 @@ class OrderService
             }
 
             $order = Order::create([
-                'customer_name' => $customerData['customer_name'],
-                'customer_phone' => $customerData['customer_phone'],
-                'customer_email' => $customerData['customer_email'] ?? null,
-                'address' => $customerData['address'],
+                'customer_name' => trim((string) $customerData['customer_name']),
+                'customer_phone' => trim((string) $customerData['customer_phone']),
+                'customer_email' => !empty($customerData['customer_email'])
+                    ? strtolower(trim((string) $customerData['customer_email']))
+                    : null,
+                'address' => trim((string) $customerData['address']),
                 'delivery_method' => $customerData['delivery_method'],
                 'notes' => $customerData['notes'] ?? null,
                 'status' => 'pending',
-                'total_price' => $totalPrice,
+                'total_price' => round($totalPrice, 2),
             ]);
 
             $now = now();
@@ -109,8 +114,10 @@ class OrderService
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
+            }
 
-                $entry['medicine']->decrement('count', $entry['quantity']);
+            foreach ($requiredQuantities as $medicineId => $qtyToDeduct) {
+                $medicines->get($medicineId)?->decrement('count', $qtyToDeduct);
             }
 
             // إدراج مجمع (Bulk Insert) لعناصر الطلب في استعلام واحد
@@ -122,5 +129,66 @@ class OrderService
         User::notifyAdmins(new NewOrderNotification($order));
 
         return $order;
+    }
+
+    /**
+     * تحديث حالة الطلب مع مزامنة المخزون تلقائياً عند الإلغاء أو إعادة التفعيل
+     *
+     * @throws DomainException في حال عدم كفاية المخزون عند إعادة تفعيل طلب ملغي
+     */
+    public function updateOrderStatusWithStockSync(Order $order, string $newStatus): Order
+    {
+        return DB::transaction(function () use ($order, $newStatus) {
+            /** @var Order $lockedOrder */
+            $lockedOrder = Order::with('items')->lockForUpdate()->findOrFail($order->id);
+            $previousStatus = (string) $lockedOrder->status;
+
+            if ($previousStatus === $newStatus) {
+                return $lockedOrder->load('items.medicine');
+            }
+
+            $medicineQuantities = [];
+            foreach ($lockedOrder->items as $item) {
+                if ($item->medicine_id) {
+                    $medicineQuantities[(int) $item->medicine_id] =
+                        ($medicineQuantities[(int) $item->medicine_id] ?? 0) + (int) $item->quantity;
+                }
+            }
+
+            if (!empty($medicineQuantities)) {
+                $medicines = Medicien::whereIn('id', array_keys($medicineQuantities))
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                // إذا تم إلغاء طلب نشط -> إرجاع الكميات إلى المخزون
+                if ($previousStatus !== 'cancelled' && $newStatus === 'cancelled') {
+                    foreach ($medicineQuantities as $medId => $qty) {
+                        $medicines->get($medId)?->increment('count', $qty);
+                    }
+                }
+
+                // إذا أُعيد تفعيل طلب كان ملغياً -> التحقق من توفر الكميات وخصمها مجدداً
+                if ($previousStatus === 'cancelled' && $newStatus !== 'cancelled') {
+                    foreach ($medicineQuantities as $medId => $qty) {
+                        $medicine = $medicines->get($medId);
+                        if (!$medicine || (int) $medicine->count < $qty) {
+                            throw new DomainException(
+                                'لا يمكن إعادة تفعيل الطلب لعدم كفاية مخزون الدواء: ' . ($medicine ? $medicine->name : "#{$medId}")
+                            );
+                        }
+                    }
+
+                    foreach ($medicineQuantities as $medId => $qty) {
+                        $medicines->get($medId)?->decrement('count', $qty);
+                    }
+                }
+            }
+
+            $lockedOrder->status = $newStatus;
+            $lockedOrder->save();
+
+            return $lockedOrder->load('items.medicine');
+        });
     }
 }

@@ -129,6 +129,24 @@ export const UserList = () => {
         </button>
       </div>
 
+      {/* Quick Role Filter Tabs */}
+      <div className="status-tabs">
+        {[
+          { value: '', label: 'جميع الحسابات' },
+          { value: 'admin', label: 'المسؤولون' },
+          { value: 'user', label: 'العملاء والمستخدمون' },
+        ].map((tab) => (
+          <button
+            key={tab.value || 'all'}
+            type="button"
+            className={`status-tab ${roleFilter === tab.value ? 'active' : ''}`}
+            onClick={() => setRoleFilter(tab.value)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filters Box */}
       <div
         className="card"

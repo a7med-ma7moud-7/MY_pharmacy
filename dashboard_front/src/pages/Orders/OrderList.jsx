@@ -136,6 +136,26 @@ export const OrderList = () => {
         </button>
       </div>
 
+      {/* Quick Status Tabs */}
+      <div className="status-tabs">
+        {[
+          { value: '', label: 'جميع الطلبات' },
+          { value: 'pending', label: 'قيد الانتظار' },
+          { value: 'processing', label: 'جاري التجهيز' },
+          { value: 'completed', label: 'المكتملة' },
+          { value: 'cancelled', label: 'الملغية' },
+        ].map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setStatusFilter(tab.value)}
+            className={`status-tab ${statusFilter === tab.value ? 'active' : ''}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filters Box */}
       <div
         className="card"
@@ -241,11 +261,15 @@ export const OrderList = () => {
                       </td>
                       <td>
                         <strong style={{ color: 'var(--primary-color)', fontSize: '0.95rem' }}>
-                          {Number(order.total_price || 0).toLocaleString()} ر.س
+                          {Number(order.total_price || 0).toLocaleString()} ج.م
                         </strong>
                       </td>
                       <td>
-                        <Badge variant="info">{order.delivery_method || 'توصيل'}</Badge>
+                        <Badge variant="info">
+                          {order.delivery_method === 'pickup'
+                            ? 'استلام من الصيدلية'
+                            : 'توصيل للمنزل'}
+                        </Badge>
                       </td>
                       <td>
                         <select

@@ -36,6 +36,11 @@ class Medicien extends Model
         static::deleted($flushCache);
     }
 
+    public function setNameAttribute($value): void
+    {
+        $this->attributes['name'] = trim((string) $value);
+    }
+
     /**
      * استرجاع قائمة تصنيفات الأدوية مع التخزين المؤقت الذكي
      */
@@ -77,7 +82,30 @@ class Medicien extends Model
             $query->where('type', $filters['type']);
         }
 
+        if (!empty($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
+            $query->where('count', '>', 0);
+        }
+
+        if (!empty($filters['low_stock']) && filter_var($filters['low_stock'], FILTER_VALIDATE_BOOLEAN)) {
+            $query->whereBetween('count', [1, 5]);
+        }
+
         return $query;
+    }
+
+    /**
+     * ترتيب الأدوية ديناميكياً حسب الخيار المطلوب
+     */
+    public function scopeSortBy(Builder $query, ?string $sort, bool $latestDefault = false): Builder
+    {
+        return match ($sort) {
+            'price_asc' => $query->orderBy('price', 'asc'),
+            'price_desc' => $query->orderBy('price', 'desc'),
+            'stock_desc' => $query->orderBy('count', 'desc'),
+            'name' => $query->orderBy('name', 'asc'),
+            'latest' => $query->latest(),
+            default => $latestDefault ? $query->latest() : $query,
+        };
     }
 
     /**

@@ -1,25 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\OrderService;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AdminOrderApiController extends Controller
 {
+    public function __construct(
+        private readonly OrderService $orderService
+    ) {}
+
     /**
      * استعراض قائمة الطلبات مع الترقيم والبحث والتصفية
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->integer('per_page', 10);
+        $perPage = $this->resolvePerPage($request, default: 10, max: 100);
 
         $orders = Order::with('items.medicine')
-            ->filter($request->only(['status', 'search']))
+            ->filter($request->only(['status', 'search', 'delivery_method', 'from_date', 'to_date']))
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
@@ -27,11 +35,17 @@ class AdminOrderApiController extends Controller
     }
 
     /**
-     * تفاصيل طلب محدد مع محتوياته
+     * تفاصيل طلب محدد مع محتوياته وروابط صور الأدوية
      */
     public function show($id): JsonResponse
     {
         $order = Order::with('items.medicine')->findOrFail($id);
+
+        $order->items->each(function ($item) {
+            if ($item->medicine) {
+                $item->medicine->image_url = $item->medicine->image_url;
+            }
+        });
 
         return $this->successResponse([
             'data' => $order,
@@ -39,7 +53,7 @@ class AdminOrderApiController extends Controller
     }
 
     /**
-     * تحديث حالة الطلب
+     * تحديث حالة الطلب مع المزامنة الذرية التلقائية للمخزون عند الإلغاء أو إعادة التفعيل
      */
     public function updateStatus(Request $request, $id): JsonResponse
     {
@@ -48,13 +62,17 @@ class AdminOrderApiController extends Controller
         ]);
 
         $order = Order::findOrFail($id);
-        $order->status = $validated['status'];
-        $order->save();
 
-        return $this->successResponse([
-            'message' => 'تم تحديث حالة الطلب بنجاح',
-            'data' => $order->load('items.medicine'),
-        ]);
+        try {
+            $updatedOrder = $this->orderService->updateOrderStatusWithStockSync($order, $validated['status']);
+
+            return $this->successResponse([
+                'message' => 'تم تحديث حالة الطلب بنجاح',
+                'data' => $updatedOrder,
+            ]);
+        } catch (DomainException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
     }
 
     /**

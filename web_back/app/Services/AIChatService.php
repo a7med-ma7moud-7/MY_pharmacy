@@ -1,47 +1,67 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AIChatService
 {
-    private const SYSTEM_PROMPT = 'أنت المساعد الطبي الذكي لموقع صيدلية MY_pharmacy. أجب باللغة العربية باحترافية واختصار وقدم نصائح صحية مفيدة، واذكر دائماً أن هذه النصائح لا تغني عن استشارة الطبيب.';
+    private const SYSTEM_PROMPT = 'أنت المساعد الطبي والصيدلي الذكي لمنصة صيدليتي (MY_pharmacy). أجب باللغة العربية باحترافية ووضوح واختصار في نقاط منظمة عند الحاجة، وقدم إرشادات دوائية وصحية دقيقة، مع التذكير اللطيف بأن هذه المعلومات الإرشادية لا تغني عن الفحص الطبي المباشر.';
 
     private const FALLBACK_ANSWER = 'أهلاً بك في صيدلية MY_pharmacy! فريقنا الطبي والدوائي في خدمتك. يمكنك حجز استشارة أو التواصل معنا مباشرة لتقديم المشورة الطبية الأنسب لحالتك.';
+
+    private const CACHE_TTL_SECONDS = 900; // 15 minutes
 
     private const OPENROUTER_MODELS = [
         'google/gemma-3-12b-it:free',
         'google/gemma-3-27b-it:free',
         'meta-llama/llama-3.2-3b-instruct:free',
-        'openai/gpt-oss-20b:free',
         'meta-llama/llama-3.3-70b-instruct:free',
     ];
 
     /**
-     * إرسال سؤال المريض إلى نماذج الذكاء الاصطناعي المتاحة وإرجاع الإجابة
+     * إرسال سؤال المريض إلى نماذج الذكاء الاصطناعي المتاحة مع تخزين مؤقت ذكي للإجابات المتكررة
      */
     public function ask(string $question): string
     {
-        $client = new Client(['timeout' => 30, 'connect_timeout' => 10]);
+        $normalizedQuestion = trim(preg_replace('/\s+/u', ' ', $question) ?? $question);
+        if ($normalizedQuestion === '') {
+            return self::FALLBACK_ANSWER;
+        }
+
+        $cacheKey = 'ai_chat:v1:' . sha1(mb_strtolower($normalizedQuestion, 'UTF-8'));
+        $cachedAnswer = Cache::get($cacheKey);
+        if (is_string($cachedAnswer) && $cachedAnswer !== '') {
+            return $cachedAnswer;
+        }
+
+        $client = new Client([
+            'timeout' => 10,
+            'connect_timeout' => 4,
+        ]);
 
         $openrouterKey = config('openrouter.api_key');
         if ($this->isValidApiKey($openrouterKey)) {
-            $answer = $this->tryOpenRouter($client, $openrouterKey, $question);
-            if ($answer) {
+            $answer = $this->tryOpenRouter($client, (string) $openrouterKey, $normalizedQuestion);
+            if ($answer !== null) {
+                Cache::put($cacheKey, $answer, self::CACHE_TTL_SECONDS);
                 return $answer;
             }
         }
 
         $geminiKeys = array_filter(
             [config('gemini.api_key'), config('gemini.fallback_key')],
-            fn ($key) => $this->isValidApiKey($key)
+            fn ($key) => $this->isValidApiKey(is_string($key) ? $key : null)
         );
 
         foreach ($geminiKeys as $key) {
-            $answer = $this->tryGemini($client, $key, $question);
-            if ($answer) {
+            $answer = $this->tryGemini($client, (string) $key, $normalizedQuestion);
+            if ($answer !== null) {
+                Cache::put($cacheKey, $answer, self::CACHE_TTL_SECONDS);
                 return $answer;
             }
         }
@@ -80,9 +100,9 @@ class AIChatService
                 ]);
 
                 $data = json_decode($response->getBody()->getContents(), true);
-                $answer = $data['choices'][0]['message']['content'] ?? null;
+                $answer = trim((string) ($data['choices'][0]['message']['content'] ?? ''));
 
-                if (!empty($answer)) {
+                if ($answer !== '') {
                     return $answer;
                 }
             } catch (\Throwable $e) {
@@ -101,22 +121,24 @@ class AIChatService
                 [
                     'headers' => ['Content-Type' => 'application/json'],
                     'json' => [
+                        'systemInstruction' => [
+                            'parts' => [['text' => self::SYSTEM_PROMPT]],
+                        ],
                         'contents' => [[
                             'role' => 'user',
-                            'parts' => [['text' => self::SYSTEM_PROMPT . ' ' . $question]],
+                            'parts' => [['text' => $question]],
                         ]],
                     ],
                 ]
             );
 
             $data = json_decode($response->getBody()->getContents(), true);
-            $answer = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            $answer = trim((string) ($data['candidates'][0]['content']['parts'][0]['text'] ?? ''));
 
-            return !empty($answer) ? $answer : null;
+            return $answer !== '' ? $answer : null;
         } catch (\Throwable $e) {
             Log::error('AIChatService Gemini error: ' . $e->getMessage());
             return null;
         }
     }
 }
-

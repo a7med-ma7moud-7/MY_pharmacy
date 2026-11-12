@@ -187,7 +187,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
           </div>
 
           <div>
-            <label className="form-label required">سعر الكشف (ر.س)</label>
+            <label className="form-label required">سعر الكشف (ج.م)</label>
             <input
               type="number"
               step="0.01"
@@ -196,7 +196,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
               className="form-input"
               value={formData.price}
               onChange={handleChange}
-              placeholder="مثال: 150"
+              placeholder="مثال: 250"
             />
             {errors.price && <span className="field-error">{errors.price}</span>}
           </div>
@@ -209,7 +209,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
               className="form-input"
               value={formData.number}
               onChange={handleChange}
-              placeholder="مثال: 0501234567"
+              placeholder="مثال: 01012345678"
               dir="ltr"
             />
             {errors.number && <span className="field-error">{errors.number}</span>}
@@ -223,7 +223,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
               className="form-input"
               value={formData.location}
               onChange={handleChange}
-              placeholder="مثال: الرياض - حي الملز"
+              placeholder="مثال: القاهرة - مدينة نصر"
             />
             {errors.location && <span className="field-error">{errors.location}</span>}
           </div>

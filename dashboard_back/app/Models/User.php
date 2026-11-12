@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -39,6 +41,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'social_token',
+        'social_refresh_token',
+        'google_id',
+        'facebook_id',
     ];
 
     /**
@@ -52,6 +58,22 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Normalize email before saving.
+     */
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = strtolower(trim((string) $value));
+    }
+
+    /**
+     * Normalize user name before saving.
+     */
+    public function setNameAttribute($value): void
+    {
+        $this->attributes['name'] = trim((string) $value);
     }
 
     /**
@@ -96,7 +118,7 @@ class User extends Authenticatable
     }
 
     /**
-     * توليد رمز المصادقة الإداري (HMAC Token)
+     * توليد رمز المصادقة الإداري (HMAC Token) مرتبط ببصمة بيانات الحساب
      */
     public function generateAdminToken(): string
     {
@@ -110,7 +132,7 @@ class User extends Authenticatable
     }
 
     /**
-     * التحقق من رمز المصادقة الإداري واسترجاع المستخدم
+     * التحقق من رمز المصادقة الإداري واسترجاع المستخدم بزمن ثابت مقاوم لهجمات التوقيت
      */
     public static function verifyAdminToken(?string $bearerToken): ?self
     {
@@ -124,8 +146,11 @@ class User extends Authenticatable
         }
 
         [$userId, $providedHash] = explode('|', $decoded, 2);
-        $user = self::find($userId);
+        if (!ctype_digit((string) $userId)) {
+            return null;
+        }
 
+        $user = self::find((int) $userId);
         if (!$user) {
             return null;
         }
@@ -149,6 +174,7 @@ class User extends Authenticatable
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role ?? 'user',
+            'avatar' => $this->avatar,
         ];
 
         if ($includeCreatedAt) {

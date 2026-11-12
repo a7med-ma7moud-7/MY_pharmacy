@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,11 +12,11 @@ use Illuminate\Http\Request;
 class AdminAppointmentApiController extends Controller
 {
     /**
-     * استعراض قائمة الحجوزات مع التصفية والترقيم
+     * استعراض قائمة الحجوزات مع التصفية والترقيم الآمن
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->integer('per_page', 10);
+        $perPage = $this->resolvePerPage($request, default: 10, max: 100);
 
         $appointments = Appointment::with('doctor:id,name,specialty,price,location,number')
             ->filter($request->only(['status', 'doctor_id', 'date', 'search']))
@@ -37,7 +39,7 @@ class AdminAppointmentApiController extends Controller
     }
 
     /**
-     * تحديث حالة الحجز
+     * تحديث حالة الحجز مع التحقق من عدم تضارب الموعد عند إعادة تفعيل حجز ملغي
      */
     public function updateStatus(Request $request, $id): JsonResponse
     {
@@ -46,7 +48,29 @@ class AdminAppointmentApiController extends Controller
         ]);
 
         $appointment = Appointment::findOrFail($id);
-        $appointment->status = $validated['status'];
+        $newStatus = $validated['status'];
+
+        if (
+            $appointment->status === 'cancelled' &&
+            $newStatus !== 'cancelled' &&
+            $appointment->doctor_id &&
+            $appointment->appointment_date &&
+            $appointment->appointment_time
+        ) {
+            $dateStr = $appointment->appointment_date->format('Y-m-d');
+            $conflict = Appointment::where('doctor_id', $appointment->doctor_id)
+                ->whereDate('appointment_date', $dateStr)
+                ->where('appointment_time', $appointment->appointment_time)
+                ->where('status', '!=', 'cancelled')
+                ->where('id', '!=', $appointment->id)
+                ->exists();
+
+            if ($conflict) {
+                return $this->errorResponse('لا يمكن إعادة تفعيل هذا الحجز لأن الموعد محجوز لمريض آخر حالياً.', 422);
+            }
+        }
+
+        $appointment->status = $newStatus;
         $appointment->save();
 
         return $this->successResponse([

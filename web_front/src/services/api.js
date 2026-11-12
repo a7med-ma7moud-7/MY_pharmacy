@@ -1,7 +1,22 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+export const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL || API_BASE_URL
+).replace(/\/api(\/v1)?\/?$/, '');
+
+export const resolveStorageUrl = (path) => {
+  if (!path || typeof path !== 'string') return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const clean = path.replace(/^\/+/, '');
+  if (clean.startsWith('storage/') || clean.startsWith('asset/')) {
+    return `${BACKEND_URL}/${clean}`;
+  }
+  return `${BACKEND_URL}/storage/${clean}`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
+  baseURL: API_BASE_URL,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
@@ -35,6 +50,7 @@ export const ratingService = {
 
 export const aiService = {
   askAI: (question) => api.post('/ask-ai', { question }),
+  askQuestion: (question) => api.post('/ask-ai', { question }),
 };
 
 export const authService = {

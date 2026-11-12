@@ -12,14 +12,15 @@ use Illuminate\Http\Request;
 class MedicienApiController extends Controller
 {
     /**
-     * قائمة الأدوية مع الفلترة والبحث
+     * قائمة الأدوية مع الفلترة والبحث والترتيب الآمن
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int) $request->input('per_page', 8);
+        $perPage = $this->resolvePerPage($request, default: 8, max: 100);
 
         $medicines = Medicien::query()
-            ->filter($request->only(['search', 'type']))
+            ->filter($request->only(['search', 'type', 'in_stock', 'low_stock']))
+            ->sortBy($request->query('sort'))
             ->paginate($perPage);
 
         // إضافة رابط الصورة وحالة التوفر
@@ -36,7 +37,7 @@ class MedicienApiController extends Controller
     }
 
     /**
-     * تفاصيل دواء محدد
+     * تفاصيل دواء محدد مع أصناف مقترحة من نفس الفئة
      */
     public function show($id): JsonResponse
     {
@@ -47,10 +48,12 @@ class MedicienApiController extends Controller
         // أدوية مشابهة من نفس التصنيف
         $related = Medicien::where('type', $medicine->type)
             ->where('id', '!=', $medicine->id)
+            ->orderByDesc('count')
             ->limit(4)
             ->get()
             ->map(function (Medicien $item) {
                 $item->image_url = $item->image_url;
+                $item->is_in_stock = $item->is_in_stock;
                 return $item;
             });
 

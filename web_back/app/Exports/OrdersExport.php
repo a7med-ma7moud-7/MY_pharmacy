@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exports;
 
 use App\Models\Order;
@@ -11,7 +13,7 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
 {
     public function query()
     {
-        return Order::with('items')->orderBy('created_at', 'desc');
+        return Order::withCount('items')->orderBy('created_at', 'desc');
     }
 
     public function headings(): array
@@ -23,9 +25,10 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
             'البريد الإلكتروني',
             'طريقة التوصيل',
             'العنوان',
-            'المبلغ الإجمالي',
+            'عدد الأصناف',
+            'المبلغ الإجمالي (ج.م)',
             'الحالة',
-            'تاريخ الطلب'
+            'تاريخ الطلب',
         ];
     }
 
@@ -35,12 +38,13 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
             $order->id,
             $order->customer_name,
             $order->customer_phone,
-            $order->customer_email,
-            $order->delivery_method == 'delivery' ? 'توصيل للمنزل' : 'استلام من الصيدلية',
+            $order->customer_email ?? '—',
+            $order->delivery_method === 'delivery' ? 'توصيل للمنزل' : 'استلام من الصيدلية',
             $order->address,
-            $order->total_price,
-            $order->status,
-            $order->created_at->format('Y-m-d H:i')
+            (int) ($order->items_count ?? 0),
+            (float) $order->total_price,
+            $order->status_label,
+            $order->created_at?->format('Y-m-d H:i') ?? '—',
         ];
     }
 }

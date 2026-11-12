@@ -26,8 +26,8 @@ export default function Ratings() {
         const rawData = res.data?.data?.data || res.data?.data || res.data || [];
         const list = Array.isArray(rawData) ? rawData : [];
         setDoctors(list);
-        if (!selectedDoctorId && list.length > 0 && !queryDoctorId) {
-          setSelectedDoctorId(String(list[0].id));
+        if (list.length > 0 && !queryDoctorId) {
+          setSelectedDoctorId((prev) => prev || String(list[0].id));
         }
       })
       .catch((err) => {

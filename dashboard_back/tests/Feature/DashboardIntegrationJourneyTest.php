@@ -196,6 +196,24 @@ class DashboardIntegrationJourneyTest extends TestCase
                          ->assertJson(['success' => true, 'data' => ['status' => 'completed']]);
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'completed']);
 
+        // 5b. Admin cancels the order -> stock automatically restores from 95 back to 100
+        $cancelOrderResp = $this->withHeader('Authorization', 'Bearer ' . $token)
+                                ->patchJson('/api/v1/admin/orders/' . $order->id . '/status', [
+                                    'status' => 'cancelled',
+                                ]);
+        $cancelOrderResp->assertStatus(200)
+                        ->assertJson(['success' => true, 'data' => ['status' => 'cancelled']]);
+        $this->assertEquals(100, $medicine->fresh()->count);
+
+        // 5c. Admin re-activates cancelled order -> stock automatically re-deducts from 100 back to 95
+        $reactivateOrderResp = $this->withHeader('Authorization', 'Bearer ' . $token)
+                                    ->patchJson('/api/v1/admin/orders/' . $order->id . '/status', [
+                                        'status' => 'processing',
+                                    ]);
+        $reactivateOrderResp->assertStatus(200)
+                            ->assertJson(['success' => true, 'data' => ['status' => 'processing']]);
+        $this->assertEquals(95, $medicine->fresh()->count);
+
         // 6. Admin performs Quick Stock Adjustment to restock 50 more units
         $stockResp = $this->withHeader('Authorization', 'Bearer ' . $token)
                           ->patchJson('/api/v1/admin/medicines/' . $medId . '/stock', [
@@ -318,7 +336,15 @@ class DashboardIntegrationJourneyTest extends TestCase
                         ],
                     ]);
 
-        // 3. Safeguard: Admin cannot delete their own account
+        // 3. Safeguard: Admin cannot delete their own account or demote their own admin role
+        $demoteSelfResp = $this->withHeader('Authorization', 'Bearer ' . $token)
+                               ->putJson('/api/v1/admin/users/' . $admin->id, [
+                                   'role' => 'user',
+                               ]);
+        $demoteSelfResp->assertStatus(400)
+                       ->assertJson(['success' => false]);
+        $this->assertDatabaseHas('users', ['id' => $admin->id, 'role' => 'admin']);
+
         $deleteSelfResp = $this->withHeader('Authorization', 'Bearer ' . $token)
                                ->deleteJson('/api/v1/admin/users/' . $admin->id);
         $deleteSelfResp->assertStatus(400)

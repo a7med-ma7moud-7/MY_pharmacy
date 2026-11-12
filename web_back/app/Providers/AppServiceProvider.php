@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +26,21 @@ class AppServiceProvider extends ServiceProvider
         Blade::component('layouts.user', 'user-layout');
         $locale = session('locale', config('app.locale'));
         app()->setLocale($locale);
+
+        RateLimiter::for('api-public', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
+        RateLimiter::for('api-auth', function (Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
+
+        RateLimiter::for('api-ai', function (Request $request) {
+            return Limit::perMinute(25)->by($request->ip());
+        });
+
+        RateLimiter::for('api-write', function (Request $request) {
+            return Limit::perMinute(40)->by($request->ip());
+        });
     }
 }

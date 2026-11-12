@@ -1,200 +1,303 @@
-import React, { useState } from 'react';
-import { Bot, Send, AlertCircle, Sparkles, HelpCircle, Check, Copy, Loader2, ArrowRight } from 'lucide-react';
-import { askAi } from '../services/api';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+    Bot,
+    Send,
+    AlertCircle,
+    Sparkles,
+    Check,
+    Copy,
+    Loader2,
+    RotateCcw,
+    User,
+    Pill,
+    ShieldAlert,
+    HeartPulse,
+} from 'lucide-react';
+import { aiService } from '../services/api';
+
+const WELCOME_MSG = {
+    id: 'welcome',
+    sender: 'bot',
+    text: 'مرحباً بك في عيادة الصيدلي الذكي 🤖!\nيمكنك سؤالي عن الجرعات المناسبة، التفاعلات الدوائية، البدائل الآمنة، أو النصائح الصيدلانية العامة وسأجيبك فوراً.',
+    time: 'الآن',
+};
+
+const PROMPT_CATEGORIES = [
+    {
+        icon: Pill,
+        title: 'الجرعات والاستخدام',
+        prompt: 'ما هي الجرعة الآمنة للباراسيتامول للبالغين يومياً؟',
+    },
+    {
+        icon: ShieldAlert,
+        title: 'التداخلات الدوائية',
+        prompt: 'ما هي أهم النصائح لتجنب التفاعلات عند تناول المضادات الحيوية؟',
+    },
+    {
+        icon: HeartPulse,
+        title: 'حفظ وتخزين الأدوية',
+        prompt: 'ما هي أفضل طريقة لتخزين أدوية الإنسولين في المنزل؟',
+    },
+];
+
+const formatTime = () =>
+    new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+let msgSeq = 0;
+const nextMsgId = (prefix) => `${prefix}-${++msgSeq}`;
 
 export default function AIChat() {
-  const [question, setQuestion] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [answer, setAnswer] = useState(null);
-  const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
+    const [question, setQuestion] = useState('');
+    const [messages, setMessages] = useState([WELCOME_MSG]);
+    const [loading, setLoading] = useState(false);
+    const [copiedId, setCopiedId] = useState(null);
+    const endRef = useRef(null);
 
-  const suggestedQuestions = [
-    'ما هي الجرعة الآمنة للباراسيتامول للبالغين؟',
-    'ما الفرق بين أدوية الحساسية من الجيل الأول والثاني؟',
-    'نصائح صيدلانية لتناول المضادات الحيوية بفعالية',
-    'ما هي أفضل طريقة لتخزين أدوية الإنسولين في المنزل؟',
-  ];
+    useEffect(() => {
+        endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, loading]);
 
-  const handleSubmit = async (e, customQuery) => {
-    if (e) e.preventDefault();
-    const query = customQuery || question;
-    if (!query.trim()) return;
+    const handleSend = async (e, presetPrompt) => {
+        if (e) e.preventDefault();
+        const query = (presetPrompt ?? question).trim();
+        if (!query || loading) return;
 
-    if (customQuery) {
-      setQuestion(customQuery);
-    }
+        const userMsg = {
+            id: nextMsgId('u'),
+            sender: 'user',
+            text: query,
+            time: formatTime(),
+        };
 
-    setLoading(true);
-    setError(null);
-    setAnswer(null);
+        setMessages((prev) => [...prev, userMsg]);
+        if (!presetPrompt) setQuestion('');
+        setLoading(true);
 
-    try {
-      const res = await askAi(query);
-      if (res.data && res.data.answer) {
-        setAnswer(res.data.answer);
-      } else {
-        setAnswer(res.data?.message || 'تم استلام رد المساعد بنجاح');
-      }
-    } catch (err) {
-      console.error('AI Chat Error:', err);
-      setError(err.response?.data?.message || err.message || 'حدث خطأ أثناء التواصل مع مساعد الذكاء الاصطناعي');
-    } finally {
-      setLoading(false);
-    }
-  };
+        try {
+            const res = await aiService.askQuestion(query);
+            const replyText =
+                res.data?.answer ||
+                res.data?.reply ||
+                res.data?.message ||
+                'تم استلام سؤالك بنجاح.';
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: nextMsgId('b'),
+                    sender: 'bot',
+                    text: replyText,
+                    time: formatTime(),
+                },
+            ]);
+        } catch (err) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: nextMsgId('err'),
+                    sender: 'bot',
+                    isError: true,
+                    text:
+                        err.response?.data?.message ||
+                        'عذراً، تعذر الاتصال بالمساعد الذكي حالياً. يرجى المحاولة مرة أخرى.',
+                    time: formatTime(),
+                },
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleCopy = () => {
-    if (!answer) return;
-    navigator.clipboard.writeText(answer);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
+    const handleCopy = (id, text) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
 
-  return (
-    <div className="py-12 bg-slate-50 min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex p-3.5 bg-gradient-to-br from-[#0f6848] via-[#10ac84] to-[#0d9488] text-white rounded-3xl mb-4 shadow-xl">
-            <Bot className="w-8 h-8" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold font-almarai text-gray-900 mb-2">
-            مساعد الصيدلي الذكي (AI)
-          </h1>
-          <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto leading-relaxed m-0">
-            اطرح أي استفسار طبي أو دوائي وسيقوم مساعدنا الذكي بتقديم إرشادات ومعلومات صيدلانية فورية
-          </p>
-        </div>
-
-        {/* Main Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8 transition-all">
-          {/* Query Bar */}
-          <div className="p-6 bg-gradient-to-r from-emerald-50/60 to-teal-50/40 border-b border-gray-100">
-            <form onSubmit={(e) => handleSubmit(e)} className="flex items-center gap-2.5">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="اسأل عن أي شيء طبي: الجرعات، التفاعلات، الأعراض، أو البدائل..."
-                  required
-                  disabled={loading}
-                  className="w-full pr-4 pl-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none shadow-sm transition-all"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading || !question.trim()}
-                className="btn-main px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md disabled:opacity-40 active:scale-95 transition-all shrink-0"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 rtl:rotate-180" />
-                    <span className="hidden sm:inline">اسأل الآن</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Suggested Prompts */}
-            <div className="mt-4 pt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-gray-400 font-bold flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5 text-emerald-600" />
-                <span>أسئلة شائعة:</span>
-              </span>
-              {suggestedQuestions.map((q, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSubmit(null, q)}
-                  className="bg-white hover:bg-emerald-100/70 hover:text-emerald-900 text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200 shadow-2xs transition-all text-xs font-medium hover:scale-102"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Results Area */}
-          <div className="p-6 sm:p-8">
-            {loading && (
-              <div className="py-14 text-center text-gray-500 animate-fadeIn">
-                <div className="w-14 h-14 bg-emerald-100 text-[#0f6848] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce shadow-inner">
-                  <Sparkles className="w-7 h-7 text-emerald-600" />
-                </div>
-                <h4 className="font-extrabold text-gray-800 text-lg mb-1">
-                  جاري تحليل استفسارك وصياغة الرد الطبي...
-                </h4>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto m-0">
-                  يقوم المساعد الذكي بمراجعة البيانات الصيدلانية الموثقة لتوفير أفضل إرشاد ممكن.
-                </p>
-              </div>
-            )}
-
-            {error && (
-              <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm flex items-center gap-2.5 animate-fadeIn">
-                <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {answer && !loading && (
-              <div className="bg-gradient-to-br from-emerald-50/40 via-white to-teal-50/20 rounded-2xl border border-emerald-100 p-6 sm:p-7 shadow-sm animate-scaleIn">
-                <div className="flex items-center justify-between pb-4 border-b border-emerald-100/80 mb-5">
-                  <div className="flex items-center gap-2.5 text-[#0f6848] font-bold text-sm">
-                    <div className="p-1.5 bg-emerald-100 rounded-lg">
-                      <Sparkles className="w-4 h-4 text-emerald-700" />
+    return (
+        <div className="pb-14 bg-slate-50 min-h-screen">
+            {/* Hero Header */}
+            <div className="hero-mesh text-white py-10 mb-8 relative overflow-hidden">
+                <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 text-center sm:text-right flex-col sm:flex-row">
+                        <div className="w-16 h-16 rounded-3xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-xl">
+                            <Bot className="w-9 h-9 text-emerald-200" />
+                        </div>
+                        <div>
+                            <div className="inline-flex items-center gap-1.5 bg-white/15 px-3 py-0.5 rounded-full text-[11px] font-bold text-emerald-200 mb-1">
+                                <Sparkles className="w-3 h-3 text-amber-300" />
+                                <span>مدعوم بالذكاء الاصطناعي الطبي</span>
+                            </div>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold font-almarai text-white m-0">
+                                الصيدلي الذكي (AI)
+                            </h1>
+                        </div>
                     </div>
-                    <span className="text-base font-extrabold font-almarai">إجابة الصيدلي الذكي</span>
-                  </div>
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-emerald-700 bg-white px-3.5 py-1.5 rounded-xl border border-gray-200 shadow-2xs hover:border-emerald-300 transition-all active:scale-95"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-700 font-bold">تم النسخ</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-gray-400" />
-                        <span>نسخ الرد</span>
-                      </>
+
+                    {messages.length > 1 && (
+                        <button
+                            type="button"
+                            onClick={() => setMessages([WELCOME_MSG])}
+                            className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-xs font-bold text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                        >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>محادثة جديدة</span>
+                        </button>
                     )}
-                  </button>
+                </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                {/* Quick Prompt Cards */}
+                {messages.length === 1 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6 animate-fadeInUp">
+                        {PROMPT_CATEGORIES.map((item, idx) => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleSend(null, item.prompt)}
+                                    className="text-right p-4 bg-white rounded-2xl border border-slate-100 hover:border-[#0f6848]/35 hover:shadow-lg transition-all group cursor-pointer"
+                                >
+                                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#0f6848] flex items-center justify-center mb-2.5 group-hover:bg-[#0f6848] group-hover:text-white transition-colors">
+                                        <Icon className="w-4 h-4" />
+                                    </div>
+                                    <h4 className="text-xs font-extrabold text-slate-800 mb-1 font-almarai">
+                                        {item.title}
+                                    </h4>
+                                    <p className="text-[11px] text-slate-500 leading-relaxed m-0 line-clamp-2">
+                                        {item.prompt}
+                                    </p>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Chat Container */}
+                <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col h-[540px]">
+                    {/* Conversation Stream */}
+                    <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
+                        {messages.map((msg) => {
+                            const isUser = msg.sender === 'user';
+                            return (
+                                <div
+                                    key={msg.id}
+                                    className={`flex items-start gap-3 animate-fadeInUp ${
+                                        isUser ? 'flex-row' : 'flex-row-reverse'
+                                    }`}
+                                >
+                                    <div
+                                        className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
+                                            isUser
+                                                ? 'bg-[#0f6848] text-white'
+                                                : 'bg-emerald-100 text-[#0f6848]'
+                                        }`}
+                                    >
+                                        {isUser ? <User className="w-4 h-4" /> : <Bot className="w-5 h-5" />}
+                                    </div>
+
+                                    <div className="max-w-[82%] space-y-1">
+                                        <div
+                                            className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-line shadow-sm ${
+                                                isUser
+                                                    ? 'bg-gradient-to-br from-[#0f6848] to-[#14875e] text-white rounded-tr-none'
+                                                    : msg.isError
+                                                    ? 'bg-rose-50 text-rose-700 border border-rose-200 rounded-tl-none'
+                                                    : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                                            }`}
+                                        >
+                                            {msg.text}
+                                        </div>
+
+                                        <div
+                                            className={`flex items-center gap-3 text-[11px] text-slate-400 px-1 ${
+                                                isUser ? 'justify-start' : 'justify-end'
+                                            }`}
+                                        >
+                                            <span>{msg.time}</span>
+                                            {!isUser && !msg.isError && msg.id !== 'welcome' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCopy(msg.id, msg.text)}
+                                                    className="inline-flex items-center gap-1 text-slate-400 hover:text-[#0f6848] cursor-pointer"
+                                                >
+                                                    {copiedId === msg.id ? (
+                                                        <>
+                                                            <Check className="w-3 h-3 text-emerald-600" />
+                                                            <span className="text-emerald-600 font-bold">تم النسخ</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Copy className="w-3 h-3" />
+                                                            <span>نسخ</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {loading && (
+                            <div className="flex items-start gap-3 flex-row-reverse animate-fadeIn">
+                                <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-[#0f6848] flex items-center justify-center shrink-0">
+                                    <Bot className="w-5 h-5" />
+                                </div>
+                                <div className="bg-white border border-slate-100 px-5 py-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-3 text-xs font-bold text-slate-600">
+                                    <div className="flex gap-1">
+                                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span>
+                                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                                    </div>
+                                    <span>جاري مراجعة المراجع الصيدلانية وكتابة الإجابة...</span>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={endRef} />
+                    </div>
+
+                    {/* Input Composer */}
+                    <form
+                        onSubmit={(e) => handleSend(e)}
+                        className="p-4 bg-white border-t border-slate-100 flex items-center gap-2.5"
+                    >
+                        <input
+                            type="text"
+                            value={question}
+                            onChange={(e) => setQuestion(e.target.value)}
+                            disabled={loading}
+                            placeholder="اكتب استفسارك الطبي أو اسم الدواء هنا..."
+                            className="flex-1 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                        />
+                        <button
+                            type="submit"
+                            disabled={loading || !question.trim()}
+                            className="btn-main px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md disabled:opacity-40 cursor-pointer shrink-0"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    <span>إرسال</span>
+                                    <Send className="w-4 h-4 rtl:rotate-180" />
+                                </>
+                            )}
+                        </button>
+                    </form>
                 </div>
 
-                <div className="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line font-normal">
-                  {answer}
+                {/* Medical Disclaimer */}
+                <div className="mt-4 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/70 text-xs text-amber-900 flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">
+                        <strong>تنبيه طبي:</strong> المعلومات المقدمة من المساعد الذكي مخصصة للتثقيف والإرشاد الصيدلاني العام ولا تغني عن الكشف الطبي المباشر في الحالات الطارئة.
+                    </span>
                 </div>
-
-                <div className="mt-6 pt-4 border-t border-emerald-100/60 text-xs text-gray-500 flex items-start gap-2.5 bg-white/80 p-3.5 rounded-2xl border border-gray-100">
-                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">
-                    <strong>تنبيه طبي وقانوني:</strong> إجابات المساعد الذكي للأغراض التثقيفية والإرشادية فقط، ولا تغني مطلقاً عن الاستشارة المباشرة للطبيب المعالج أو الصيدلي المتخصص.
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {!answer && !loading && !error && (
-              <div className="py-16 text-center">
-                <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-400">
-                  <Bot className="w-10 h-10" />
-                </div>
-                <h3 className="text-base font-bold text-gray-700 mb-1">ابدأ استشارتك الآن</h3>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto m-0">
-                  اكتب سؤالك في الحقل أعلاه أو اضغط على أحد الأسئلة المقترحة للحصول على رد فوري
-                </p>
-              </div>
-            )}
-          </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

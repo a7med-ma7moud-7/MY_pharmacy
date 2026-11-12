@@ -21,6 +21,7 @@ Route::prefix('v1/admin')->group(function () {
     // Health Check Endpoint
     Route::get('/health', function () {
         return response()->json([
+            'success' => true,
             'status' => 'healthy',
             'timestamp' => now()->toISOString(),
             'app' => 'MY_pharmacy Admin API v1',
@@ -28,12 +29,12 @@ Route::prefix('v1/admin')->group(function () {
     });
 
     // Public Admin Auth Routes
-    Route::prefix('auth')->group(function () {
+    Route::prefix('auth')->middleware('throttle:admin-auth')->group(function () {
         Route::post('/login', [AdminAuthApiController::class, 'login']);
     });
 
     // Protected Admin Routes (Requires Admin Authentication & Role)
-    Route::middleware('is_admin_api')->group(function () {
+    Route::middleware(['is_admin_api', 'throttle:admin-api'])->group(function () {
 
         // Authenticated Session
         Route::prefix('auth')->group(function () {

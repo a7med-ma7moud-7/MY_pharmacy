@@ -141,7 +141,7 @@ export const AppointmentDetail = ({ isOpen, onClose, appointmentId }) => {
                 <div>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>سعر الكشف:</span>
                   <div style={{ fontWeight: 700, color: 'var(--primary-color)' }}>
-                    {appointment.doctor.price} ر.س
+                    {appointment.doctor.price} ج.م
                   </div>
                 </div>
 

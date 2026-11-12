@@ -1,8 +1,12 @@
 <?php
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 // Ensure App\ and Tests\ namespaces resolve directly from this dashboard_back application directory
 spl_autoload_register(function ($class) {
@@ -41,5 +45,21 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (ModelNotFoundException|NotFoundHttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'السجل المطلوب غير موجود أو تم حذفه.',
+                ], 404);
+            }
+        });
+
+        $exceptions->render(function (TooManyRequestsHttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تم تجاوز الحد المسموح من الطلبات، يرجى الانتظار لحظات والمحاولة مجدداً.',
+                ], 429);
+            }
+        });
     })->create();

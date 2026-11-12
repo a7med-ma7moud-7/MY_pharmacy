@@ -252,4 +252,114 @@ class ApiV1Test extends TestCase
                      'success' => false,
                  ]);
     }
+
+    public function test_order_creation_enforces_server_side_database_pricing(): void
+    {
+        $medicine = Medicien::create([
+            'name' => 'Augmentin 1g',
+            'type' => 'Antibiotics',
+            'price' => 120,
+            'count' => 10,
+            'propose' => 'Bacterial infections',
+            'image' => 'augmentin.png',
+        ]);
+
+        // Client attempts to tamper with price (sending 1 instead of 120)
+        $response = $this->postJson('/api/v1/orders', [
+            'cart_items' => [
+                [
+                    'id' => $medicine->id,
+                    'price' => 1,
+                    'quantity' => 3,
+                    'total' => 3,
+                ],
+            ],
+            'customer_name' => 'Price Integrity User',
+            'customer_phone' => '01011122233',
+            'address' => 'Cairo',
+            'delivery_method' => 'delivery',
+        ]);
+
+        $response->assertStatus(201)
+                 ->assertJson(['success' => true]);
+
+        // Server must charge 3 * 120 = 360, ignoring tampered client price
+        $this->assertDatabaseHas('orders', [
+            'customer_name' => 'Price Integrity User',
+            'total_price' => 360,
+        ]);
+        $this->assertEquals(7, $medicine->fresh()->count);
+    }
+
+    public function test_duplicate_appointment_slot_and_inactive_doctor_are_rejected(): void
+    {
+        $activeDoctor = Doctor::create([
+            'name' => 'Dr. Hany Samir',
+            'image' => 'doc_active.png',
+            'specialty' => 'Dermatology',
+            'price' => 300,
+            'number' => 123123123,
+            'location' => 'Cairo',
+            'tow_location' => 'Heliopolis',
+            'subscription' => 'subscribed',
+            'status' => 'active',
+        ]);
+
+        $inactiveDoctor = Doctor::create([
+            'name' => 'Dr. Inactive',
+            'image' => 'doc_inactive.png',
+            'specialty' => 'Dermatology',
+            'price' => 300,
+            'number' => 456456456,
+            'location' => 'Cairo',
+            'tow_location' => 'Maadi',
+            'subscription' => 'unsubscribed',
+            'status' => 'inactive',
+        ]);
+
+        $date = now()->addDays(3)->format('Y-m-d');
+
+        // First booking succeeds
+        $this->postJson('/api/v1/appointments', [
+            'patient_name' => 'Patient One',
+            'email' => 'p1@example.com',
+            'phone' => '01000000001',
+            'doctor_id' => $activeDoctor->id,
+            'appointment_date' => $date,
+            'appointment_time' => '07:00 PM',
+        ])->assertStatus(201);
+
+        // Duplicate slot booking returns 422
+        $this->postJson('/api/v1/appointments', [
+            'patient_name' => 'Patient Two',
+            'email' => 'p2@example.com',
+            'phone' => '01000000002',
+            'doctor_id' => $activeDoctor->id,
+            'appointment_date' => $date,
+            'appointment_time' => '07:00 PM',
+        ])->assertStatus(422)
+          ->assertJson(['success' => false]);
+
+        // Booking with inactive doctor returns 422
+        $this->postJson('/api/v1/appointments', [
+            'patient_name' => 'Patient Three',
+            'email' => 'p3@example.com',
+            'phone' => '01000000003',
+            'doctor_id' => $inactiveDoctor->id,
+            'appointment_date' => $date,
+            'appointment_time' => '08:00 PM',
+        ])->assertStatus(422)
+          ->assertJson(['success' => false]);
+    }
+
+    public function test_missing_api_resource_returns_clean_404_and_per_page_is_clamped(): void
+    {
+        $this->getJson('/api/v1/doctors/999999')
+             ->assertStatus(404)
+             ->assertJson(['success' => false]);
+
+        $listResp = $this->getJson('/api/v1/medicines?per_page=9999');
+        $listResp->assertStatus(200);
+        $this->assertEquals(100, $listResp->json('data.per_page'));
+    }
 }

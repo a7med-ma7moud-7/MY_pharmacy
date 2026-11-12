@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
@@ -17,7 +19,7 @@ class AdminUserApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->integer('per_page', 10);
+        $perPage = $this->resolvePerPage($request, default: 10, max: 100);
 
         $users = User::query()
             ->filter($request->only(['search', 'role']))
@@ -60,12 +62,12 @@ class AdminUserApiController extends Controller
 
         return $this->successResponse([
             'message' => 'تم إنشاء المستخدم بنجاح',
-            'data' => $user,
+            'data' => $user->toPublicArray(includeCreatedAt: true),
         ], 201);
     }
 
     /**
-     * تعديل بيانات المستخدم وصلاحياته
+     * تعديل بيانات المستخدم وصلاحياته (مع منع المسؤول من سحب صلاحية نفسه بالخطأ)
      */
     public function update(Request $request, $id): JsonResponse
     {
@@ -78,6 +80,10 @@ class AdminUserApiController extends Controller
             'role' => 'sometimes|required|in:admin,user',
         ]);
 
+        if (Auth::id() === $user->id && isset($validatedData['role']) && $validatedData['role'] !== 'admin') {
+            return $this->errorResponse('لا يمكنك إلغاء صلاحية المسؤول عن حسابك الشخصي الحالي.', 400);
+        }
+
         $user->fill(collect($validatedData)->only(['name', 'email', 'role'])->toArray());
 
         if (!empty($validatedData['password'])) {
@@ -88,7 +94,7 @@ class AdminUserApiController extends Controller
 
         return $this->successResponse([
             'message' => 'تم تحديث بيانات المستخدم بنجاح',
-            'data' => $user,
+            'data' => $user->toPublicArray(includeCreatedAt: true),
         ]);
     }
 

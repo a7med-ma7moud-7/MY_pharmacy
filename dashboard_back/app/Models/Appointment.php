@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -30,8 +32,21 @@ class Appointment extends Model
      * التحويلات التلقائية
      */
     protected $casts = [
-        'appointment_date' => 'date',
+        'appointment_date' => 'date:Y-m-d',
     ];
+
+    /**
+     * تنسيق اسم المريض والوقت قبل الحفظ
+     */
+    public function setPatientNameAttribute($value): void
+    {
+        $this->attributes['patient_name'] = trim((string) $value);
+    }
+
+    public function setAppointmentTimeAttribute($value): void
+    {
+        $this->attributes['appointment_time'] = trim((string) $value);
+    }
 
     /**
      * العلاقة مع الطبيب
@@ -42,15 +57,24 @@ class Appointment extends Model
     }
 
     /**
-     * التحقق من عدم وجود حجز لنفس الطبيب في نفس اليوم والوقت
+     * التحقق من عدم وجود حجز لنفس الطبيب في نفس اليوم والوقت (مع دعم القفل داخل الـ Transaction)
      */
-    public static function isSlotTaken(int|string $doctorId, string $appointmentDate, string $appointmentTime): bool
-    {
-        return self::where('doctor_id', $doctorId)
+    public static function isSlotTaken(
+        int|string $doctorId,
+        string $appointmentDate,
+        string $appointmentTime,
+        bool $lockRows = false
+    ): bool {
+        $query = self::where('doctor_id', $doctorId)
             ->whereDate('appointment_date', $appointmentDate)
-            ->where('appointment_time', $appointmentTime)
-            ->where('status', '!=', 'cancelled')
-            ->exists();
+            ->where('appointment_time', trim($appointmentTime))
+            ->where('status', '!=', 'cancelled');
+
+        if ($lockRows) {
+            $query->lockForUpdate();
+        }
+
+        return $query->exists();
     }
 
     /**

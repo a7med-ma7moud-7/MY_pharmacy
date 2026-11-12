@@ -1,17 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
+  const checkUser = useCallback(async () => {
     try {
       const res = await authService.getUser();
       if (res.data?.authenticated && res.data?.user) {
@@ -24,10 +20,38 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const login = async (credentials) => {
-    const res = await authService.login(credentials);
+  useEffect(() => {
+    let active = true;
+    authService
+      .getUser()
+      .then((res) => {
+        if (!active) return;
+        if (res.data?.authenticated && res.data?.user) {
+          setUser(res.data.user);
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => {
+        if (active) setUser(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const login = async (emailOrCredentials, password, remember = false) => {
+    const payload =
+      typeof emailOrCredentials === 'object' && emailOrCredentials !== null
+        ? emailOrCredentials
+        : { email: emailOrCredentials, password, remember };
+
+    const res = await authService.login(payload);
     if (res.data?.success && res.data?.user) {
       setUser(res.data.user);
       return res.data;
@@ -52,8 +76,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const isAdmin = Boolean(user?.role === 'admin' || user?.is_admin);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkUser }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, login, register, logout, checkUser }}>
       {children}
     </AuthContext.Provider>
   );

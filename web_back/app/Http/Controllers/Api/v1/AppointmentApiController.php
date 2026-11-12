@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Mail\AppointmentConfirmationMail;
 use App\Models\Appointment;
+use App\Models\Doctor;
 use App\Models\User;
 use App\Notifications\NewAppointmentNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AppointmentApiController extends Controller
 {
     /**
-     * حفظ حجز موعد جديد
+     * حفظ حجز موعد جديد داخل Transaction لمنع تضارب المواعيد المتزامنة
      */
     public function store(Request $request): JsonResponse
     {
@@ -25,19 +29,33 @@ class AppointmentApiController extends Controller
             'phone' => 'required|string|max:20',
             'doctor_id' => 'required|exists:doctors,id',
             'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required|string',
-            'notes' => 'nullable|string',
+            'appointment_time' => 'required|string|max:30',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
-        // التحقق من عدم وجود حجز لنفس الطبيب في نفس اليوم والوقت
-        if (Appointment::isSlotTaken($validated['doctor_id'], $validated['appointment_date'], $validated['appointment_time'])) {
-            return $this->errorResponse('هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.', 422);
+        $doctor = Doctor::findOrFail($validated['doctor_id']);
+        if (!$doctor->isActiveForBooking()) {
+            return $this->errorResponse('عذراً، هذا الطبيب غير متاح لاستقبال حجوزات جديدة حالياً.', 422);
         }
 
-        // إنشاء الحجز
-        $appointment = Appointment::create(array_merge($validated, [
-            'status' => 'pending',
-        ]));
+        $appointment = DB::transaction(function () use ($validated) {
+            if (Appointment::isSlotTaken(
+                $validated['doctor_id'],
+                $validated['appointment_date'],
+                $validated['appointment_time'],
+                lockRows: true
+            )) {
+                return null;
+            }
+
+            return Appointment::create(array_merge($validated, [
+                'status' => 'pending',
+            ]));
+        });
+
+        if (!$appointment) {
+            return $this->errorResponse('هذا الموعد محجوز بالفعل لهذا الطبيب. اختر وقتًا آخر.', 422);
+        }
 
         // إرسال إشعار للإدارة
         User::notifyAdmins(new NewAppointmentNotification($appointment));
@@ -56,8 +74,9 @@ class AppointmentApiController extends Controller
             'data' => [
                 'appointment_id' => $appointment->id,
                 'patient_name' => $appointment->patient_name,
-                'appointment_date' => $appointment->appointment_date,
+                'appointment_date' => $appointment->appointment_date?->format('Y-m-d') ?? $validated['appointment_date'],
                 'appointment_time' => $appointment->appointment_time,
+                'doctor_name' => $doctor->name,
                 'status' => $appointment->status,
             ],
         ], 201);

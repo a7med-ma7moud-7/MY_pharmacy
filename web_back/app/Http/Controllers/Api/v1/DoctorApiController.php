@@ -12,18 +12,18 @@ use Illuminate\Http\Request;
 class DoctorApiController extends Controller
 {
     /**
-     * قائمة الأطباء مع الفلترة والبحث وحساب التقييمات على مستوى SQL
+     * قائمة الأطباء مع الفلترة والبحث والترتيب وحساب التقييمات على مستوى SQL
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int) $request->input('per_page', 9);
+        $perPage = $this->resolvePerPage($request, default: 9, max: 100);
 
         $doctors = Doctor::query()
             ->activeAndSubscribed()
             ->filter($request->only(['search', 'specialty', 'location', 'tow_location']))
             ->withAvg('ratings as ratings_avg', 'rating')
             ->withCount('ratings')
-            ->orderBy('name', 'asc')
+            ->sortBy($request->query('sort'))
             ->paginate($perPage);
 
         // إضافة بيانات التقييم ورابط الصورة لكل طبيب بدون استعلامات إضافية
@@ -41,7 +41,7 @@ class DoctorApiController extends Controller
     }
 
     /**
-     * تفاصيل طبيب محدد مع تقييماته في استعلام واحد دون تكرار
+     * تفاصيل طبيب محدد مع تقييماته ومعرض صور العيادة المعالجة
      */
     public function show($id): JsonResponse
     {
@@ -58,7 +58,7 @@ class DoctorApiController extends Controller
         $doctor->setRelation('ratings', $ratings);
         $doctor->average_rating = $averageRating;
         $doctor->ratings_count = $ratingsCount;
-        $doctor->image_url = $doctor->image_url;
+        $doctor->appendResolvedImages();
 
         return $this->successResponse([
             'data' => [

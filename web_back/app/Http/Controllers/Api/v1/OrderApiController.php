@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
@@ -8,6 +10,7 @@ use App\Services\OrderService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class OrderApiController extends Controller
 {
@@ -25,9 +28,9 @@ class OrderApiController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
             'customer_email' => 'nullable|email|max:255',
-            'address' => 'required|string',
+            'address' => 'required|string|max:500',
             'delivery_method' => 'required|in:delivery,pickup',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         $cartItems = $this->orderService->parseCartItems($validated['cart_items']);
@@ -47,13 +50,15 @@ class OrderApiController extends Controller
                     'customer_phone' => $order->customer_phone,
                     'total' => $order->total_price,
                     'status' => $order->status,
-                    'created_at' => $order->created_at->format('Y-m-d H:i'),
+                    'status_label' => $order->status_label,
+                    'created_at' => $order->created_at?->format('Y-m-d H:i'),
                 ],
             ], 201);
         } catch (DomainException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         } catch (\Throwable $e) {
-            return $this->errorResponse('حدث خطأ أثناء حفظ الطلب: ' . $e->getMessage(), 500);
+            Log::error('Order creation error: ' . $e->getMessage());
+            return $this->errorResponse('حدث خطأ أثناء حفظ الطلب، يرجى المحاولة مرة أخرى.', 500);
         }
     }
 
@@ -63,13 +68,15 @@ class OrderApiController extends Controller
     public function check(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'phone' => 'required|string',
+            'order_id' => 'required|integer',
+            'phone' => 'required|string|max:30',
         ]);
+
+        $phone = trim($validated['phone']);
 
         $order = Order::with('items.medicine')
             ->where('id', $validated['order_id'])
-            ->where('customer_phone', $validated['phone'])
+            ->where('customer_phone', $phone)
             ->first();
 
         if (!$order) {
@@ -78,6 +85,12 @@ class OrderApiController extends Controller
                 404
             );
         }
+
+        $order->items->each(function ($item) {
+            if ($item->medicine) {
+                $item->medicine->image_url = $item->medicine->image_url;
+            }
+        });
 
         return $this->successResponse([
             'order' => $order,

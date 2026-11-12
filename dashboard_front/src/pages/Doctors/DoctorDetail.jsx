@@ -124,7 +124,7 @@ export const DoctorDetail = ({ isOpen, onClose, doctorId }) => {
               <DollarSign size={20} style={{ color: 'var(--primary-color)' }} />
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>سعر الكشف</span>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{doctor.price} ر.س</div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{doctor.price} ج.م</div>
               </div>
             </div>
 
