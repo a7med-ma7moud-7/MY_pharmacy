@@ -10,7 +10,8 @@ import {
   BarChart3,
   ExternalLink,
   LogOut,
-  Cross,
+  HeartPulse,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -67,15 +68,15 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
         right: 0,
         bottom: 0,
         width: isCollapsed ? '80px' : 'var(--sidebar-width)',
-        backgroundColor: '#0f172a',
+        background: 'linear-gradient(180deg, #06251b 0%, #091e17 55%, #06140f 100%)',
         color: '#ffffff',
         zIndex: 1045,
         display: 'flex',
         flexDirection: 'column',
         transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
-        boxShadow: '0 0 40px rgba(0, 0, 0, 0.3)',
-        borderLeft: '1px solid rgba(255, 255, 255, 0.06)',
+        boxShadow: '0 0 45px rgba(4, 34, 24, 0.38)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
         overflowX: 'hidden',
       }}>
         {/* Brand Header */}
@@ -85,31 +86,32 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
           alignItems: 'center',
           justifyContent: isCollapsed ? 'center' : 'space-between',
           padding: '0 20px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          background: 'linear-gradient(180deg, rgba(13, 148, 136, 0.08) 0%, transparent 100%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'linear-gradient(180deg, rgba(16, 172, 132, 0.14) 0%, transparent 100%)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               width: '42px',
               height: '42px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #0f6848, #10ac84)',
+              border: '1px solid rgba(255, 255, 255, 0.22)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 0 20px rgba(20, 184, 166, 0.3)',
+              color: '#a7f3d0',
+              boxShadow: '0 8px 22px rgba(16, 172, 132, 0.32)',
               transition: 'transform 0.3s ease',
             }}>
-              <Cross size={22} />
+              <HeartPulse size={22} />
             </div>
             {!isCollapsed && (
               <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.3px', margin: 0, color: '#f8fafc' }}>
+                <h2 style={{ fontSize: '1.18rem', fontWeight: 800, letterSpacing: '-0.2px', margin: 0, color: '#f8fafc', fontFamily: "'Almarai', 'Cairo', sans-serif" }}>
                   صيدليتي
                 </h2>
-                <span style={{ fontSize: '0.68rem', color: '#64748b', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Admin Portal
+                <span style={{ fontSize: '0.68rem', color: '#6ee7b7', display: 'block', fontWeight: 700, letterSpacing: '0.3px' }}>
+                  مركز الإدارة الموحد
                 </span>
               </div>
             )}
@@ -177,7 +179,7 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
           ))}
 
           {/* External Website Link */}
-          <div style={{ paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+          <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <a
               href="http://localhost:5173"
               target="_blank"
@@ -188,17 +190,38 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
                 justifyContent: isCollapsed ? 'center' : 'flex-start',
                 gap: '12px',
                 padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '0.85rem',
-                color: '#60a5fa',
+                borderRadius: '12px',
+                fontSize: '0.84rem',
+                fontWeight: 700,
+                color: '#6ee7b7',
+                background: 'rgba(16, 172, 132, 0.1)',
+                border: '1px solid rgba(110, 231, 183, 0.16)',
                 transition: 'all 0.2s',
                 textDecoration: 'none',
               }}
               title="زيارة الموقع العام"
             >
-              <ExternalLink size={18} />
-              {!isCollapsed && <span>زيارة الموقع العام</span>}
+              <ExternalLink size={17} />
+              {!isCollapsed && <span>معاينة الموقع العام</span>}
             </a>
+
+            {!isCollapsed && (
+              <div style={{
+                marginTop: '12px',
+                padding: '10px 12px',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.73rem',
+                color: '#cbd5e1',
+              }}>
+                <ShieldCheck size={15} style={{ color: '#34d399', flexShrink: 0 }} />
+                <span>المنظومة متصلة ومؤمّنة</span>
+              </div>
+            )}
           </div>
         </div>
 

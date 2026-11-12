@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../services/api';
 import { StatCard } from '../components/dashboard/StatCard';
-import { DonutChart } from '../components/dashboard/SimpleChart';
+import { DonutChart, DistributionList } from '../components/dashboard/SimpleChart';
 import { Badge } from '../components/common/Badge';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
@@ -139,8 +139,9 @@ export const Dashboard = () => {
             {/* Welcome Banner */}
             <div
                 style={{
-                    background: 'linear-gradient(135deg, #0f172a 0%, #134e4a 55%, #0f172a 100%)',
-                    borderRadius: 'var(--radius-xl)',
+                    background:
+                        'radial-gradient(circle at 18% 20%, rgba(16, 185, 129, 0.24) 0%, transparent 45%), linear-gradient(135deg, #06281c 0%, #0f6848 55%, #093d2b 100%)',
+                    borderRadius: '24px',
                     padding: '32px 36px',
                     color: '#ffffff',
                     display: 'flex',
@@ -148,7 +149,8 @@ export const Dashboard = () => {
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
                     gap: '20px',
-                    boxShadow: '0 10px 40px rgba(15, 23, 42, 0.2)',
+                    boxShadow: '0 16px 40px -10px rgba(6, 40, 28, 0.35)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                     position: 'relative',
                     overflow: 'hidden',
                     animation: 'fadeInUp 0.4s ease-out',
@@ -328,13 +330,27 @@ export const Dashboard = () => {
                 />
             </div>
 
-            {/* Visual Overview Chart Row */}
-            <DonutChart
-                title="توزيع مؤشرات النشاط في المنصة"
-                subtitle="مقارنة سريعة بين أصناف المخزون والأطباء والطلبات والحجوزات الحالية"
-                data={platformBreakdown}
-                centerLabel="سجل نشط"
-            />
+            {/* Dual Visual Analytics Row */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))',
+                    gap: '24px',
+                }}
+            >
+                <DonutChart
+                    title="توزيع مؤشرات النشاط في المنصة"
+                    subtitle="نسبة أصناف المخزون والأطباء والطلبات والحجوزات الحالية"
+                    data={platformBreakdown}
+                    centerLabel="سجل نشط"
+                />
+
+                <DistributionList
+                    title="تحليل الكثافة التشغيلية للأقسام"
+                    subtitle="مؤشر توازن العمليات الحية عبر وحدات الصيدلية والعيادات"
+                    data={platformBreakdown}
+                />
+            </div>
 
             {/* Recent Activity: 2 Column Layout */}
             <div

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import {
-    Cross,
+    HeartPulse,
     Mail,
     Lock,
     AlertCircle,
@@ -10,6 +10,8 @@ import {
     ShieldCheck,
     Eye,
     EyeOff,
+    CheckCircle2,
+    BarChart3,
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -108,37 +110,117 @@ export const Login = () => {
             <div
                 style={{
                     width: '100%',
-                    maxWidth: '450px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.97)',
-                    backdropFilter: 'blur(16px)',
-                    borderRadius: '24px',
-                    padding: '42px 38px',
-                    boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    maxWidth: '860px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                    backdropFilter: 'blur(18px)',
+                    borderRadius: '28px',
+                    boxShadow: '0 28px 70px -14px rgba(0, 0, 0, 0.55)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
                     animation: 'fadeInScale 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
                     position: 'relative',
                     zIndex: 2,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
+                    overflow: 'hidden',
                 }}
             >
+                {/* Executive Showcase Side */}
+                <div
+                    className="desktop-only"
+                    style={{
+                        background:
+                            'radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.28) 0%, transparent 50%), linear-gradient(145deg, #06281c 0%, #0f6848 60%, #0b4f36 100%)',
+                        color: '#ffffff',
+                        padding: '44px 36px',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        position: 'relative',
+                    }}
+                >
+                    <div>
+                        <div
+                            style={{
+                                width: '56px',
+                                height: '56px',
+                                borderRadius: '16px',
+                                background: 'rgba(255, 255, 255, 0.14)',
+                                border: '1px solid rgba(255, 255, 255, 0.25)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#6ee7b7',
+                                marginBottom: '24px',
+                            }}
+                        >
+                            <HeartPulse size={28} />
+                        </div>
+                        <h2
+                            style={{
+                                fontSize: '1.55rem',
+                                fontWeight: 800,
+                                margin: '0 0 12px',
+                                lineHeight: 1.35,
+                                fontFamily: "'Almarai', 'Cairo', sans-serif",
+                            }}
+                        >
+                            بوابة الإدارة المركزية لمنصة صيدليتي
+                        </h2>
+                        <p style={{ fontSize: '0.84rem', color: '#d1fae5', opacity: 0.9, lineHeight: 1.75, margin: 0 }}>
+                            تحكم كامل في مخزون الأدوية، طلبات التوصيل، جداول الأطباء والعيادات، والتقارير المالية اللحظية من لوحة موحدة.
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '32px' }}>
+                        {[
+                            { icon: BarChart3, text: 'مؤشرات مبيعات وتقارير تشغيلية فورية' },
+                            { icon: CheckCircle2, text: 'مزامنة لحظية للمخزون وحجوزات العيادات' },
+                            { icon: ShieldCheck, text: 'صلاحيات مشفرة وجلسات إدارة محمية' },
+                        ].map((feat, idx) => {
+                            const FeatIcon = feat.icon;
+                            return (
+                                <div
+                                    key={idx}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        padding: '11px 14px',
+                                        borderRadius: '14px',
+                                        background: 'rgba(255, 255, 255, 0.1)',
+                                        border: '1px solid rgba(255, 255, 255, 0.16)',
+                                        fontSize: '0.78rem',
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    <FeatIcon size={16} style={{ color: '#6ee7b7', flexShrink: 0 }} />
+                                    <span>{feat.text}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Form Column */}
+                <div style={{ padding: '42px 36px' }}>
                 {/* Brand Header */}
-                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <div
+                <div style={{ textAlign: 'right', marginBottom: '26px' }}>
+                    <span
                         style={{
-                            width: '66px',
-                            height: '66px',
-                            borderRadius: '18px',
-                            background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#ffffff',
-                            margin: '0 auto 16px',
-                            boxShadow: '0 12px 28px -6px rgba(20, 184, 166, 0.45)',
-                            animation: 'float 3.5s ease-in-out infinite',
+                            gap: '6px',
+                            padding: '4px 12px',
+                            borderRadius: '999px',
+                            backgroundColor: 'var(--primary-50)',
+                            color: 'var(--primary-600)',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            marginBottom: '10px',
                         }}
                     >
-                        <Cross size={34} />
-                    </div>
+                        <HeartPulse size={14} />
+                        <span>بوابة المشرفين</span>
+                    </span>
                     <h1
                         style={{
                             fontSize: '1.5rem',
@@ -147,10 +229,10 @@ export const Login = () => {
                             margin: '0 0 6px',
                         }}
                     >
-                        لوحة التحكم الإدارية
+                        تسجيل الدخول للإدارة
                     </h1>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                        بوابة الإدارة المركزية لمنظومة صيدليتي الإلكترونية
+                    <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', margin: 0 }}>
+                        أدخل بيانات حساب المشرف للمتابعة إلى لوحة التحكم
                     </p>
                 </div>
 
@@ -347,6 +429,7 @@ export const Login = () => {
                 >
                     <ShieldCheck size={16} style={{ color: 'var(--primary-color)' }} />
                     <span>منطقة إدارة مشفرة ومحمية ببروتوكول أمان موثوق</span>
+                </div>
                 </div>
             </div>
         </div>

@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Cairo:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary-50: #f0fdfa;
-  --primary-100: #ccfbf1;
-  --primary-200: #99f6e4;
-  --primary-500: #14b8a6;
-  --primary-600: #0d9488;
-  --primary-700: #0f766e;
-  --primary-800: #115e59;
-  --primary-900: #134e4a;
-  --primary-950: #042f2e;
+  --primary-50: #ecfdf5;
+  --primary-100: #d1fae5;
+  --primary-200: #a7f3d0;
+  --primary-500: #10ac84;
+  --primary-600: #0f6848;
+  --primary-700: #0b5239;
+  --primary-800: #083f2c;
+  --primary-900: #063223;
+  --primary-950: #042218;
 
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
@@ -28,7 +28,7 @@
   --info: #3b82f6;
 
   /* Semantic aliases used across pages & components */
-  --primary-color: #0d9488;
+  --primary-color: #0f6848;
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
@@ -62,7 +62,11 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc;
+  background-color: #f4f7f9;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(16, 172, 132, 0.06) 0%, transparent 38%),
+    radial-gradient(circle at 90% 85%, rgba(15, 104, 72, 0.05) 0%, transparent 40%);
+  background-attachment: fixed;
   color: var(--slate-800);
   direction: rtl;
   text-align: right;
@@ -245,16 +249,17 @@ input, select, textarea {
    =================================== */
 .card {
   background: #ffffff;
-  border: 1px solid var(--slate-200);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 14px 32px -8px rgba(15, 104, 72, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+  border-color: rgba(16, 172, 132, 0.28);
   transform: translateY(-2px);
 }
 

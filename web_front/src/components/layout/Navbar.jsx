@@ -17,6 +17,8 @@ import {
     LayoutDashboard,
     ChevronDown,
     HeartPulse,
+    Truck,
+    Sparkles,
 } from 'lucide-react';
 
 const DASHBOARD_URL = import.meta.env.VITE_DASHBOARD_URL || 'http://localhost:5174';
@@ -30,12 +32,17 @@ const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [scrollProgress, setScrollProgress] = useState(0);
+    const [showPromoBar, setShowPromoBar] = useState(true);
     const dropdownRef = useRef(null);
 
-    // Detect scroll for navbar elevation
+    // Detect scroll for navbar elevation & reading progress bar
     useEffect(() => {
         const handleScroll = () => {
-            setScrolled(window.scrollY > 16);
+            const y = window.scrollY;
+            setScrolled(y > 16);
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            setScrollProgress(docHeight > 0 ? Math.min(100, Math.round((y / docHeight) * 100)) : 0);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
@@ -78,13 +85,44 @@ const Navbar = () => {
     };
 
     return (
-        <header
-            className={`sticky top-0 z-50 transition-all duration-300 ${
-                scrolled
-                    ? 'bg-[#0b4f36]/95 backdrop-blur-xl shadow-xl shadow-emerald-950/15 border-b border-white/10'
-                    : 'bg-gradient-to-r from-[#093d2b] via-[#0f6848] to-[#127a54] shadow-md'
-            } text-white`}
-        >
+        <>
+            {/* Top Promotional Announcement Strip */}
+            {showPromoBar && (
+                <div className="bg-[#06281c] text-emerald-100/95 border-b border-white/10 text-[11px] sm:text-xs py-1.5 px-4 relative z-50">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-4 mx-auto sm:mx-0">
+                            <span className="inline-flex items-center gap-1.5 font-bold">
+                                <Truck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                                <span>توصيل مجاني للطلبات فوق 300 ج.م</span>
+                            </span>
+                            <span className="hidden md:inline text-white/25">|</span>
+                            <Link
+                                to="/ai-chat"
+                                className="hidden md:inline-flex items-center gap-1.5 text-emerald-200 hover:text-white font-semibold transition-colors"
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>استشر الصيدلي الذكي مجاناً 24/7</span>
+                            </Link>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowPromoBar(false)}
+                            aria-label="إغلاق الشريط الترويجي"
+                            className="text-emerald-300/70 hover:text-white p-0.5 rounded transition-colors cursor-pointer shrink-0"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <header
+                className={`sticky top-0 z-50 transition-all duration-300 ${
+                    scrolled
+                        ? 'bg-[#093d2b]/95 backdrop-blur-xl shadow-xl shadow-emerald-950/20 border-b border-white/10'
+                        : 'bg-gradient-to-r from-[#073323] via-[#0f6848] to-[#117a55] shadow-md'
+                } text-white`}
+            >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Brand Logo */}
@@ -315,7 +353,18 @@ const Navbar = () => {
                     </div>
                 </div>
             )}
-        </header>
+
+            {/* Smooth Scroll Reading Progress Line */}
+            {scrollProgress > 1 && (
+                <div className="h-[2.5px] w-full bg-black/15 overflow-hidden">
+                    <div
+                        style={{ width: `${scrollProgress}%` }}
+                        className="h-full bg-gradient-to-l from-amber-300 via-emerald-300 to-teal-400 transition-[width] duration-150 ease-out"
+                    />
+                </div>
+            )}
+            </header>
+        </>
     );
 };
 

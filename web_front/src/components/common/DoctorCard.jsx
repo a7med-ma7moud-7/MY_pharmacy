@@ -13,12 +13,16 @@ export const DoctorCard = ({ doctor, index = 0 }) => {
             className="h-full bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-[#0f6848]/10 hover:-translate-y-1.5 border border-slate-100 hover:border-[#0f6848]/25 overflow-hidden flex flex-col transition-all duration-300 group animate-fadeInUp"
         >
             {/* Doctor Header Banner */}
-            <div className="h-28 bg-gradient-to-br from-[#093d2b] via-[#0f6848] to-[#10ac84] relative overflow-hidden">
+            <div className="h-28 bg-gradient-to-br from-[#073323] via-[#0f6848] to-[#10ac84] relative overflow-hidden">
+                <div className="hero-grid-pattern absolute inset-0 opacity-60 pointer-events-none"></div>
                 <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
                 <div className="absolute -left-4 -top-4 w-20 h-20 bg-emerald-300/15 rounded-full pointer-events-none"></div>
                 <span className="absolute top-3.5 left-3.5 bg-white/95 text-[#0f6848] text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm backdrop-blur-md flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-500" />
                     {doctor.specialty}
+                </span>
+                <span className="absolute top-3.5 right-3.5 bg-black/25 text-emerald-100 border border-white/15 text-[10px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
+                    كشف: {doctor.price} ج.م
                 </span>
             </div>
 

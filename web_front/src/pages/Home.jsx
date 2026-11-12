@@ -6,6 +6,7 @@ import { medicineService, doctorService } from '../services/api';
 import Reveal from '../components/common/Reveal';
 import AnimatedCounter from '../components/common/AnimatedCounter';
 import MedicineCard from '../components/common/MedicineCard';
+import MedicineQuickView from '../components/common/MedicineQuickView';
 import DoctorCard from '../components/common/DoctorCard';
 import {
     Pill,
@@ -26,6 +27,11 @@ import {
     Truck,
     Stethoscope,
     Bot,
+    Star,
+    Quote,
+    CheckCircle2,
+    ShieldPlus,
+    Baby,
 } from 'lucide-react';
 
 const STATS = [
@@ -148,6 +154,72 @@ const FEATURES = [
     },
 ];
 
+const QUICK_CATEGORIES = [
+    {
+        label: 'مسكنات وخافض حرارة',
+        sub: 'أقراص ومستحضرات فورية',
+        to: '/medicines?type=أقراص',
+        icon: Pill,
+        tone: 'from-emerald-50 to-teal-50 text-[#0f6848] border-emerald-100',
+    },
+    {
+        label: 'فيتامينات ومناعة',
+        sub: 'مكملات وفوار يومي',
+        to: '/medicines?type=فوار',
+        icon: Sparkles,
+        tone: 'from-amber-50 to-orange-50 text-amber-700 border-amber-100',
+    },
+    {
+        label: 'مضادات وعلاجات',
+        sub: 'أدوية مرخصة وموثقة',
+        to: '/medicines',
+        icon: ShieldPlus,
+        tone: 'from-sky-50 to-cyan-50 text-sky-700 border-sky-100',
+    },
+    {
+        label: 'قلب وأوعية دموية',
+        sub: 'نخبة أطباء القلب',
+        to: '/doctors?specialty=قلب وأوعية دموية',
+        icon: HeartPulse,
+        tone: 'from-rose-50 to-pink-50 text-rose-700 border-rose-100',
+    },
+    {
+        label: 'طب الأطفال وحديثي الولادة',
+        sub: 'استشاريون معتمدون',
+        to: '/doctors?specialty=طب الأطفال',
+        icon: Baby,
+        tone: 'from-indigo-50 to-violet-50 text-indigo-700 border-indigo-100',
+    },
+    {
+        label: 'باطنة وجهاز هضمي',
+        sub: 'حجز عيادة فوري',
+        to: '/doctors?specialty=باطنة وجهاز هضمي',
+        icon: Stethoscope,
+        tone: 'from-teal-50 to-emerald-50 text-teal-700 border-teal-100',
+    },
+];
+
+const TESTIMONIALS = [
+    {
+        name: 'أ. سارة محمود',
+        role: 'طلب دواء موثق • القاهرة',
+        text: 'طلبت أدوية الضغط للوالد ووصلت في أقل من ساعة بتغليف ممتاز وتاريخ صلاحية واضح، وميزة تتبع الطلب لحظة بلحظة مريحة جداً.',
+        rating: 5,
+    },
+    {
+        name: 'م. كريم عبد الرحمن',
+        role: 'حجز عيادة مؤكد • الجيزة',
+        text: 'حجزت موعد كشف مع استشاري قلب في ثواني بدون تعقيد، وتذكرة الموعد كانت منظمة جداً والطبيب ممتاز ومواعيده دقيقة.',
+        rating: 5,
+    },
+    {
+        name: 'د. ندى طارق',
+        role: 'استشارة الصيدلي الذكي',
+        text: 'المساعد الصيدلاني الذكي أفادني فوراً في معرفة التداخلات الدوائية مع الفيتامينات قبل الشراء، تصميم المنصة راقي وسريع جداً.',
+        rating: 5,
+    },
+];
+
 const FAQS = [
     {
         q: 'هل جميع الأدوية المتوفرة في صيدليتي مرخصة وأصلية؟',
@@ -178,6 +250,7 @@ const Home = () => {
     const [featuredDoctors, setFeaturedDoctors] = useState([]);
     const [loadingFeatured, setLoadingFeatured] = useState(true);
     const [openFaq, setOpenFaq] = useState(0);
+    const [quickViewMed, setQuickViewMed] = useState(null);
 
     useEffect(() => {
         let mounted = true;
@@ -219,116 +292,223 @@ const Home = () => {
     return (
         <div className="overflow-hidden">
             {/* Hero Section */}
-            <section className="hero-mesh text-center relative overflow-hidden pt-16 pb-24 md:pt-20 md:pb-32">
+            <section className="hero-mesh relative overflow-hidden pt-12 pb-24 md:pt-16 md:pb-32">
                 <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
 
                 {/* Animated Floating Decorative Orbs */}
                 <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-3xl animate-blob pointer-events-none"></div>
                 <div className="absolute -bottom-24 -left-20 w-96 h-96 bg-teal-300/15 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
 
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 px-5 py-2 rounded-full text-white text-xs sm:text-sm font-bold mb-6 backdrop-blur-md shadow-lg animate-fadeIn">
-                        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                        <span>المنصة الرائدة للرعاية الصحية والصيدلية في مصر</span>
-                    </div>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+                        {/* Right Content Column */}
+                        <div className="lg:col-span-7 text-center lg:text-right">
+                            <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 px-4 py-1.5 rounded-full text-white text-xs sm:text-sm font-bold mb-5 backdrop-blur-md shadow-lg animate-fadeIn">
+                                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                                <span>المنصة الرائدة للرعاية الصحية والصيدلية في مصر</span>
+                            </div>
 
-                    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold font-almarai mb-6 leading-[1.25] text-white drop-shadow-md animate-fadeInUp">
-                        رعايتك الصحية وأدويتك <br />
-                        <span className="text-emerald-200">في مكان واحد بكل سهولة وأمان</span>
-                    </h1>
+                            <h1 className="text-3xl sm:text-5xl xl:text-[3.4rem] font-extrabold font-almarai mb-5 leading-[1.28] text-white drop-shadow-md animate-fadeInUp">
+                                رعايتك الصحية وأدويتك <br />
+                                <span className="text-emerald-200">في مكان واحد بكل سهولة وأمان</span>
+                            </h1>
 
-                    <p className="text-base sm:text-lg md:text-xl text-emerald-50/90 mb-9 font-normal leading-relaxed max-w-2xl mx-auto animate-fadeInUp">
-                        منصة صيدليتي توفر لك دليلاً شاملاً لأفضل الأطباء، وصيدلية متكاملة أونلاين، ومساعد ذكاء اصطناعي طبي يجيبك فوراً.
-                    </p>
+                            <p className="text-sm sm:text-base md:text-lg text-emerald-50/90 mb-7 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0 animate-fadeInUp">
+                                منصة صيدليتي توفر لك دليلاً شاملاً لأفضل الأطباء، وصيدلية متكاملة أونلاين، ومساعد ذكاء اصطناعي طبي يجيبك فوراً على مدار الساعة.
+                            </p>
 
-                    {/* Interactive Tabbed Search Box */}
-                    <div className="max-w-2xl mx-auto mb-8 bg-white/15 backdrop-blur-xl p-2.5 rounded-3xl border border-white/25 shadow-2xl animate-scaleIn">
-                        <div className="flex items-center gap-2 mb-2 px-1">
-                            <button
-                                type="button"
-                                onClick={() => setSearchMode('medicine')}
-                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                                    searchMode === 'medicine'
-                                        ? 'bg-white text-[#0f6848] shadow-sm'
-                                        : 'text-white/85 hover:bg-white/10'
-                                }`}
-                            >
-                                <Pill className="w-3.5 h-3.5" />
-                                <span>ابحث عن دواء</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setSearchMode('doctor')}
-                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                                    searchMode === 'doctor'
-                                        ? 'bg-white text-[#0f6848] shadow-sm'
-                                        : 'text-white/85 hover:bg-white/10'
-                                }`}
-                            >
-                                <Stethoscope className="w-3.5 h-3.5" />
-                                <span>ابحث عن طبيب</span>
-                            </button>
+                            {/* Interactive Tabbed Search Box */}
+                            <div className="max-w-2xl mx-auto lg:mx-0 mb-6 bg-white/15 backdrop-blur-xl p-2.5 rounded-3xl border border-white/25 shadow-2xl animate-scaleIn">
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchMode('medicine')}
+                                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                            searchMode === 'medicine'
+                                                ? 'bg-white text-[#0f6848] shadow-sm'
+                                                : 'text-white/85 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        <Pill className="w-3.5 h-3.5" />
+                                        <span>ابحث عن دواء</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchMode('doctor')}
+                                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                            searchMode === 'doctor'
+                                                ? 'bg-white text-[#0f6848] shadow-sm'
+                                                : 'text-white/85 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        <Stethoscope className="w-3.5 h-3.5" />
+                                        <span>ابحث عن طبيب</span>
+                                    </button>
+                                </div>
+
+                                <form
+                                    onSubmit={handleHeroSearch}
+                                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white rounded-2xl p-1.5 shadow-inner"
+                                >
+                                    <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
+                                        <Search className="w-5 h-5 text-emerald-600 shrink-0" />
+                                        <input
+                                            type="text"
+                                            value={heroQuery}
+                                            onChange={(e) => setHeroQuery(e.target.value)}
+                                            placeholder={
+                                                searchMode === 'medicine'
+                                                    ? 'اكتب اسم الدواء أو المادة الفعالة (مثل: بنادول، فيتامين سي)...'
+                                                    : 'اكتب اسم الطبيب أو التخصص الطبي (مثل: باطنة، أطفال، قلب)...'
+                                            }
+                                            className="w-full text-sm text-slate-800 placeholder:text-slate-400 bg-transparent focus:outline-none font-medium"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="btn-main px-7 py-3 rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                                    >
+                                        <span>ابحث الآن</span>
+                                        <ArrowLeft className="w-4 h-4" />
+                                    </button>
+                                </form>
+
+                                {/* Quick Popular Search Tags */}
+                                <div className="flex flex-wrap items-center gap-1.5 pt-2.5 px-1.5 text-[11px]">
+                                    <span className="text-emerald-200/90 font-bold ml-1">شائع الآن:</span>
+                                    {(searchMode === 'medicine'
+                                        ? ['بنادول', 'فيتامين سي', 'أوجمنتين', 'كونجستال']
+                                        : ['قلب وأوعية', 'طب الأطفال', 'باطنة', 'جلدية']
+                                    ).map((tag) => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => {
+                                                if (searchMode === 'medicine') {
+                                                    navigate(`/medicines?query=${encodeURIComponent(tag)}`);
+                                                } else {
+                                                    navigate(`/doctors?search=${encodeURIComponent(tag)}`);
+                                                }
+                                            }}
+                                            className="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/25 text-white border border-white/15 font-semibold transition-colors cursor-pointer"
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 mb-6">
+                                <Link
+                                    to="/medicines"
+                                    className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-7 py-3.5 rounded-full shadow-xl text-sm md:text-base transition-all inline-flex items-center gap-2.5"
+                                >
+                                    <Pill className="w-5 h-5 text-emerald-600" />
+                                    <span>تصفح الصيدلية كاملة</span>
+                                </Link>
+                                <Link
+                                    to="/doctors"
+                                    className="bg-white/10 backdrop-blur-md border-2 border-white/75 hover:bg-white hover:text-[#0f6848] active:scale-95 font-bold px-7 py-3.5 rounded-full text-sm md:text-base text-white transition-all inline-flex items-center gap-2.5 shadow-lg"
+                                >
+                                    <UserCheck className="w-5 h-5" />
+                                    <span>احجز موعد طبيب</span>
+                                </Link>
+                            </div>
+
+                            {/* Inline Trust Highlights */}
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 text-xs font-bold text-emerald-50/95">
+                                <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                                    <span>أدوية أصلية مرخصة 100%</span>
+                                </span>
+                                <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                                    <Truck className="w-4 h-4 text-teal-200" />
+                                    <span>توصيل منزلي سريع وآمن</span>
+                                </span>
+                                <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                                    <Bot className="w-4 h-4 text-amber-300" />
+                                    <span>استشارة الصيدلي الذكي 24/7</span>
+                                </span>
+                            </div>
                         </div>
 
-                        <form
-                            onSubmit={handleHeroSearch}
-                            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white rounded-2xl p-1.5 shadow-inner"
-                        >
-                            <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
-                                <Search className="w-5 h-5 text-emerald-600 shrink-0" />
-                                <input
-                                    type="text"
-                                    value={heroQuery}
-                                    onChange={(e) => setHeroQuery(e.target.value)}
-                                    placeholder={
-                                        searchMode === 'medicine'
-                                            ? 'اكتب اسم الدواء أو المادة الفعالة (مثل: بانادول، فيتامين سي)...'
-                                            : 'اكتب اسم الطبيب أو التخصص الطبي (مثل: باطنة، أطفال، جلدية)...'
-                                    }
-                                    className="w-full text-sm text-slate-800 placeholder:text-slate-400 bg-transparent focus:outline-none font-medium"
-                                />
+                        {/* Left Visual Interactive Showcase (Desktop) */}
+                        <div className="hidden lg:block lg:col-span-5 relative animate-fadeIn">
+                            <div className="relative mx-auto max-w-md">
+                                {/* Main Glass Medical Hub Card */}
+                                <div className="bg-white/12 backdrop-blur-2xl border border-white/25 rounded-3xl p-6 shadow-2xl text-white space-y-4">
+                                    <div className="flex items-center justify-between pb-3.5 border-b border-white/15">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 flex items-center justify-center shadow-lg">
+                                                <Bot className="w-6 h-6 text-white" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-extrabold text-white m-0">
+                                                    الصيدلي الذكي المباشر
+                                                </h3>
+                                                <span className="text-[11px] text-emerald-200 flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+                                                    متصل الآن للإجابة الفورية
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-extrabold bg-white/15 px-2.5 py-1 rounded-full border border-white/20">
+                                            AI 24/7
+                                        </span>
+                                    </div>
+
+                                    {/* Simulated Live Pharmacist Bubble */}
+                                    <div className="bg-white/95 text-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
+                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                                            <span className="text-[#0f6848] flex items-center gap-1">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                                إرشاد دوائي موثق
+                                            </span>
+                                            <span>خلال ثوانٍ</span>
+                                        </div>
+                                        <p className="text-xs text-slate-700 font-semibold leading-relaxed m-0">
+                                            &ldquo;يُفضّل تناول فيتامين سي الفوار بعد الإفطار، مع تجنب تجاوز الجرعة اليومية الموصى بها.&rdquo;
+                                        </p>
+                                    </div>
+
+                                    {/* Mini Dual Live Cards */}
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                        <Link
+                                            to="/orders/track"
+                                            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3.5 transition-all group"
+                                        >
+                                            <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                                <Truck className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-xs font-extrabold text-white">توصيل خلال 45 د</div>
+                                            <div className="text-[10px] text-emerald-100/80 mt-0.5">تتبع لحظي للشحنة</div>
+                                        </Link>
+
+                                        <Link
+                                            to="/appointments"
+                                            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3.5 transition-all group"
+                                        >
+                                            <div className="w-9 h-9 rounded-xl bg-emerald-300/20 text-emerald-200 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                                <Calendar className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-xs font-extrabold text-white">حجز عيادة فوري</div>
+                                            <div className="text-[10px] text-emerald-100/80 mt-0.5">+150 طبيب استشاري</div>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {/* Floating Rating Pill */}
+                                <div className=" -mt-4 mr-6 ml-auto w-fit bg-white text-slate-800 px-4 py-2.5 rounded-2xl shadow-xl border border-emerald-100 flex items-center gap-2.5 animate-float relative z-20">
+                                    <div className="flex items-center gap-0.5 text-amber-400">
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                        ))}
+                                    </div>
+                                    <span className="text-xs font-black text-slate-900">4.9/5</span>
+                                    <span className="text-[11px] font-bold text-slate-500">ثقة المرضى</span>
+                                </div>
                             </div>
-                            <button
-                                type="submit"
-                                className="btn-main px-7 py-3 rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                            >
-                                <span>ابحث الآن</span>
-                                <ArrowLeft className="w-4 h-4" />
-                            </button>
-                        </form>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-                        <Link
-                            to="/medicines"
-                            className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-7 py-3.5 rounded-full shadow-xl text-sm md:text-base transition-all inline-flex items-center gap-2.5"
-                        >
-                            <Pill className="w-5 h-5 text-emerald-600" />
-                            <span>تصفح الصيدلية كاملة</span>
-                        </Link>
-                        <Link
-                            to="/doctors"
-                            className="bg-white/10 backdrop-blur-md border-2 border-white/75 hover:bg-white hover:text-[#0f6848] active:scale-95 font-bold px-7 py-3.5 rounded-full text-sm md:text-base text-white transition-all inline-flex items-center gap-2.5 shadow-lg"
-                        >
-                            <UserCheck className="w-5 h-5" />
-                            <span>احجز موعد طبيب</span>
-                        </Link>
-                    </div>
-
-                    {/* Inline Trust Highlights */}
-                    <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-emerald-50/95">
-                        <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                            <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                            <span>أدوية أصلية مرخصة 100%</span>
-                        </span>
-                        <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                            <Truck className="w-4 h-4 text-teal-200" />
-                            <span>توصيل منزلي سريع وآمن</span>
-                        </span>
-                        <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                            <Bot className="w-4 h-4 text-amber-300" />
-                            <span>استشارة الصيدلي الذكي 24/7</span>
-                        </span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -366,6 +546,48 @@ const Home = () => {
                         </div>
                     </div>
                 </Reveal>
+            </section>
+
+            {/* Quick Medical Categories & Specialties Strip */}
+            <section className="pt-14 pb-4 bg-slate-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Reveal className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-lg sm:text-xl font-extrabold font-almarai text-slate-900 m-0">
+                                تصفح سريع حسب القسم أو التخصص
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-0.5 m-0">
+                                اختر الفئة المطلوبة للوصول المباشر إلى الأدوية أو الأطباء المتخصصين
+                            </p>
+                        </div>
+                    </Reveal>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                        {QUICK_CATEGORIES.map((cat, idx) => {
+                            const Icon = cat.icon;
+                            return (
+                                <Reveal key={idx} delay={idx * 55}>
+                                    <Link
+                                        to={cat.to}
+                                        className={`h-full p-4 rounded-2xl bg-gradient-to-br ${cat.tone} border hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group`}
+                                    >
+                                        <div className="w-10 h-10 rounded-xl bg-white shadow-xs flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Icon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="text-xs sm:text-sm font-extrabold font-almarai text-slate-900 leading-snug">
+                                                {cat.label}
+                                            </div>
+                                            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                                {cat.sub}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </Reveal>
+                            );
+                        })}
+                    </div>
+                </div>
             </section>
 
             {/* Quick Services Row */}
@@ -459,7 +681,8 @@ const Home = () => {
                                     <MedicineCard
                                         key={med.id}
                                         medicine={med}
-                                        onAddToCart={(m) => addToCart(m, 1)}
+                                        onAddToCart={(m, qty = 1) => addToCart(m, qty)}
+                                        onQuickView={setQuickViewMed}
                                         index={idx}
                                     />
                                 ))}
@@ -579,6 +802,59 @@ const Home = () => {
                 </div>
             </section>
 
+            {/* Verified Patient Testimonials */}
+            <section className="py-20 bg-white border-b border-slate-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Reveal className="text-center max-w-2xl mx-auto mb-14">
+                        <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full inline-block mb-3">
+                            ثقة آلاف المرضى
+                        </span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-almarai text-slate-900 mb-3">
+                            ماذا يقول عملاؤنا عن صيدليتي؟
+                        </h2>
+                        <p className="text-slate-500 text-sm sm:text-base m-0">
+                            تجارب حقيقية لعملاء استخدموا المنصة في طلب الأدوية وحجز العيادات والاستشارة الذكية
+                        </p>
+                    </Reveal>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {TESTIMONIALS.map((item, idx) => (
+                            <Reveal key={idx} delay={idx * 100}>
+                                <div className="h-full bg-slate-50/80 hover:bg-white rounded-3xl p-7 border border-slate-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative group">
+                                    <Quote className="w-10 h-10 text-emerald-500/12 absolute top-6 left-6 pointer-events-none group-hover:text-emerald-500/25 transition-colors" />
+                                    <div>
+                                        <div className="flex items-center gap-1 text-amber-400 mb-4">
+                                            {Array.from({ length: item.rating }).map((_, s) => (
+                                                <Star
+                                                    key={s}
+                                                    className="w-4 h-4 fill-amber-400 text-amber-400"
+                                                />
+                                            ))}
+                                        </div>
+                                        <p className="text-sm text-slate-700 leading-relaxed mb-6 font-medium">
+                                            &ldquo;{item.text}&rdquo;
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-3 pt-4 border-t border-slate-200/70">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0f6848] to-[#10ac84] text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                                            {item.name.replace(/^.\.\s*/, '').charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-extrabold text-slate-900 font-almarai">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-[11px] font-bold text-emerald-700">
+                                                {item.role}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Reveal>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* Interactive FAQ Accordion */}
             <section className="py-20 bg-white">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -694,6 +970,12 @@ const Home = () => {
                     </div>
                 </Reveal>
             </section>
+
+            <MedicineQuickView
+                medicine={quickViewMed}
+                onClose={() => setQuickViewMed(null)}
+                onAddToCart={(med, qty = 1) => addToCart(med, qty)}
+            />
         </div>
     );
 };

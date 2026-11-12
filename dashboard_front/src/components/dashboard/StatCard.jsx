@@ -209,6 +209,8 @@ export const StatCard = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    gap: '12px',
+                    flexWrap: 'wrap',
                     borderTop: '1px solid var(--slate-100)',
                     paddingTop: '12px',
                     marginTop: '8px',

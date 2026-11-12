@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Star, Check, Flame } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Star, Check, Flame, Eye } from 'lucide-react';
 import { MedicineArtwork } from './MedicalMedia';
 
-export const MedicineCard = ({ medicine, onAddToCart, index = 0 }) => {
+export const MedicineCard = ({ medicine, onAddToCart, onQuickView, index = 0 }) => {
     const [justAdded, setJustAdded] = useState(false);
 
     const stockCount = Number(medicine.count ?? 10);
@@ -19,8 +19,11 @@ export const MedicineCard = ({ medicine, onAddToCart, index = 0 }) => {
     return (
         <div
             style={{ animationDelay: `${(index % 8) * 0.06}s` }}
-            className="h-full bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-[#0f6848]/10 hover:-translate-y-1.5 border border-slate-100 hover:border-[#0f6848]/25 overflow-hidden flex flex-col transition-all duration-300 group animate-fadeInUp"
+            className="h-full bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:shadow-[#0f6848]/12 hover:-translate-y-1.5 border border-slate-100 hover:border-[#0f6848]/30 overflow-hidden flex flex-col transition-all duration-300 group animate-fadeInUp relative"
         >
+            {/* Subtle top hover accent bar */}
+            <div className="h-1 w-full bg-gradient-to-l from-[#0f6848] via-[#10ac84] to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
             {/* Image / Artwork and Badges */}
             <div className="relative bg-slate-50 h-48 overflow-hidden flex items-center justify-center">
                 <MedicineArtwork
@@ -28,6 +31,18 @@ export const MedicineCard = ({ medicine, onAddToCart, index = 0 }) => {
                     size="card"
                     className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
                 />
+
+                {onQuickView && (
+                    <button
+                        type="button"
+                        onClick={() => onQuickView(medicine)}
+                        title="معاينة سريعة للدواء"
+                        aria-label="معاينة سريعة للدواء"
+                        className="absolute bottom-3 left-3 z-20 w-9 h-9 rounded-xl bg-white/95 hover:bg-[#0f6848] text-slate-700 hover:text-white border border-slate-200/80 shadow-md flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 cursor-pointer"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
+                )}
 
                 <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
                     <span

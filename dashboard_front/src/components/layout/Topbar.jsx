@@ -40,6 +40,22 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
     const [currentDateTime, setCurrentDateTime] = useState('');
     const dropdownRef = useRef(null);
     const searchRef = useRef(null);
+    const searchInputRef = useRef(null);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                setShowQuickResults(true);
+            } else if (e.key === 'Escape') {
+                setShowQuickResults(false);
+                setShowDropdown(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     useEffect(() => {
         const updateDateTime = () => {
@@ -158,20 +174,21 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
             <div
                 ref={searchRef}
                 className="desktop-only"
-                style={{ position: 'relative', flex: '0 1 280px' }}
+                style={{ position: 'relative', flex: '0 1 320px' }}
             >
                 <div style={{ position: 'relative', width: '100%' }}>
                     <Search
                         size={15}
                         style={{
                             position: 'absolute',
-                            right: '12px',
+                            right: '13px',
                             top: '50%',
                             transform: 'translateY(-50%)',
                             color: 'var(--slate-400)',
                         }}
                     />
                     <input
+                        ref={searchInputRef}
                         type="text"
                         value={quickQuery}
                         onFocus={() => setShowQuickResults(true)}
@@ -182,7 +199,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         placeholder="انتقال سريع لقسم..."
                         style={{
                             width: '100%',
-                            padding: '7px 34px 7px 12px',
+                            padding: '8px 36px 8px 56px',
                             borderRadius: 'var(--radius-full)',
                             border: '1px solid var(--slate-200)',
                             backgroundColor: 'var(--slate-50)',
@@ -191,6 +208,25 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                             transition: 'all 0.2s ease',
                         }}
                     />
+                    <span
+                        style={{
+                            position: 'absolute',
+                            left: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            fontSize: '0.66rem',
+                            fontWeight: 700,
+                            color: 'var(--slate-400)',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid var(--slate-200)',
+                            borderRadius: '6px',
+                            padding: '1px 6px',
+                            pointerEvents: 'none',
+                            letterSpacing: '0.3px',
+                        }}
+                    >
+                        Ctrl K
+                    </span>
                 </div>
 
                 {showQuickResults && (

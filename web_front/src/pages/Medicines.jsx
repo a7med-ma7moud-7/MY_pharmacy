@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { medicineService } from '../services/api';
 import { useCart } from '../context/CartContext';
 import MedicineCard from '../components/common/MedicineCard';
+import MedicineQuickView from '../components/common/MedicineQuickView';
 import PaginationBar from '../components/common/PaginationBar';
 import Reveal from '../components/common/Reveal';
 import {
@@ -27,6 +28,7 @@ export const Medicines = () => {
     const [selectedType, setSelectedType] = useState(searchParams.get('type') || 'all');
     const [sortBy, setSortBy] = useState('default');
     const [inStockOnly, setInStockOnly] = useState(false);
+    const [quickViewMed, setQuickViewMed] = useState(null);
 
     useEffect(() => {
         let active = true;
@@ -96,8 +98,8 @@ export const Medicines = () => {
         setSearchParams({});
     };
 
-    const handleAddToCart = (medicine) => {
-        addToCart(medicine, 1);
+    const handleAddToCart = (medicine, qty = 1) => {
+        addToCart(medicine, qty);
     };
 
     const displayedMedicines = useMemo(() => {
@@ -330,6 +332,7 @@ export const Medicines = () => {
                                     key={medicine.id}
                                     medicine={medicine}
                                     onAddToCart={handleAddToCart}
+                                    onQuickView={setQuickViewMed}
                                     index={index}
                                 />
                             ))}
@@ -344,6 +347,12 @@ export const Medicines = () => {
                     </>
                 )}
             </div>
+
+            <MedicineQuickView
+                medicine={quickViewMed}
+                onClose={() => setQuickViewMed(null)}
+                onAddToCart={handleAddToCart}
+            />
         </div>
     );
 };
