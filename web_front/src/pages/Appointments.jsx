@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { appointmentService, doctorService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { DoctorAvatar, formatDoctorName } from '../components/common/MedicalMedia';
 import Reveal from '../components/common/Reveal';
 import {
     Calendar,
@@ -368,17 +369,16 @@ export const Appointments = () => {
                                 <div className="p-6 space-y-5">
                                     {selectedDoctor ? (
                                         <div className="flex items-center gap-3.5 pb-4 border-b border-slate-100">
-                                            <img
-                                                src={selectedDoctor.image_url || '/asset/1.png'}
-                                                alt={selectedDoctor.name}
-                                                onError={(e) => {
-                                                    e.currentTarget.src = '/asset/1.png';
-                                                }}
-                                                className="w-16 h-16 rounded-2xl object-cover border border-slate-100 bg-slate-50 shrink-0"
-                                            />
+                                            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0">
+                                                <DoctorAvatar
+                                                    doctor={selectedDoctor}
+                                                    size="md"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
                                             <div>
-                                                <h4 className="font-extrabold text-slate-900 text-base m-0">
-                                                    د. {selectedDoctor.name}
+                                                <h4 className="font-extrabold text-slate-900 text-base">
+                                                    {formatDoctorName(selectedDoctor.name)}
                                                 </h4>
                                                 <span className="text-xs font-bold text-emerald-700 block mt-0.5">
                                                     {selectedDoctor.specialty}

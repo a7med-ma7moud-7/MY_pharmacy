@@ -15,7 +15,7 @@ export const ScrollToTop = () => {
         const handleScroll = () => {
             const scrollTop = window.scrollY;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            setShowButton(scrollTop > 320);
+            setShowButton(scrollTop > 340);
             if (docHeight > 0) {
                 setProgress(Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)));
             } else {
@@ -38,7 +38,7 @@ export const ScrollToTop = () => {
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             aria-label="العودة لأعلى الصفحة"
             title="العودة لأعلى الصفحة"
-            className="fixed bottom-6 left-24 z-40 w-12 h-12 rounded-full bg-white/95 backdrop-blur-md text-[#0f6848] shadow-xl hover:bg-[#0f6848] hover:text-white hover:scale-110 active:scale-95 transition-all flex items-center justify-center animate-scaleIn cursor-pointer group"
+            className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-white/95 backdrop-blur-md text-[#0f6848] shadow-xl border border-slate-200/80 hover:bg-[#0f6848] hover:text-white hover:scale-110 active:scale-95 transition-all flex items-center justify-center animate-scaleIn cursor-pointer group"
         >
             <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 48 48">
                 <circle

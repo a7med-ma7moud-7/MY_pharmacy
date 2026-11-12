@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doctorService, ratingService, resolveStorageUrl } from '../services/api';
+import { DoctorAvatar, formatDoctorName } from '../components/common/MedicalMedia';
 import Reveal from '../components/common/Reveal';
 import {
     MapPin,
@@ -187,14 +188,13 @@ const DoctorDetail = () => {
                         <div className="px-6 md:px-10 pb-8 -mt-14 relative z-10">
                             <div className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-6">
                                 <div className="relative">
-                                    <img
-                                        src={doctor.image_url || '/asset/1.png'}
-                                        alt={doctor.name}
-                                        onError={(e) => {
-                                            e.currentTarget.src = '/asset/1.png';
-                                        }}
-                                        className="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-xl bg-white"
-                                    />
+                                    <div className="w-32 h-32 rounded-3xl border-4 border-white shadow-xl bg-white overflow-hidden">
+                                        <DoctorAvatar
+                                            doctor={doctor}
+                                            size="xl"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
                                     <span className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-xl border-2 border-white shadow">
                                         <Award className="w-4 h-4" />
                                     </span>
@@ -211,7 +211,7 @@ const DoctorDetail = () => {
                                     </div>
 
                                     <h1 className="text-2xl md:text-3xl font-extrabold font-almarai text-slate-900 mb-1">
-                                        د. {doctor.name}
+                                        {formatDoctorName(doctor.name)}
                                     </h1>
 
                                     <div className="flex items-center justify-center md:justify-start gap-1.5 text-amber-400">
@@ -445,7 +445,7 @@ const DoctorDetail = () => {
                                     disabled={submittingRating}
                                     className="btn-main w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    <Send className="w-4 h-4 rtl:rotate-180" />
+                                    <Send className="w-4 h-4 -scale-x-100" />
                                     <span>{submittingRating ? 'جاري الإرسال...' : 'إرسال التقييم'}</span>
                                 </button>
                             </form>

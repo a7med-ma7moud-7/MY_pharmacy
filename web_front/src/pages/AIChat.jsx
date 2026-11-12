@@ -51,10 +51,15 @@ export default function AIChat() {
     const [messages, setMessages] = useState([WELCOME_MSG]);
     const [loading, setLoading] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
-    const endRef = useRef(null);
+    const streamRef = useRef(null);
 
     useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (messages.length > 1 || loading) {
+            streamRef.current?.scrollTo({
+                top: streamRef.current.scrollHeight,
+                behavior: 'smooth',
+            });
+        }
     }, [messages, loading]);
 
     const handleSend = async (e, presetPrompt) => {
@@ -178,7 +183,10 @@ export default function AIChat() {
                 {/* Chat Container */}
                 <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col h-[540px]">
                     {/* Conversation Stream */}
-                    <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
+                    <div
+                        ref={streamRef}
+                        className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50"
+                    >
                         {messages.map((msg) => {
                             const isUser = msg.sender === 'user';
                             return (
@@ -257,7 +265,6 @@ export default function AIChat() {
                                 </div>
                             </div>
                         )}
-                        <div ref={endRef} />
                     </div>
 
                     {/* Input Composer */}
@@ -283,7 +290,7 @@ export default function AIChat() {
                             ) : (
                                 <>
                                     <span>إرسال</span>
-                                    <Send className="w-4 h-4 rtl:rotate-180" />
+                                    <Send className="w-4 h-4 -scale-x-100" />
                                 </>
                             )}
                         </button>

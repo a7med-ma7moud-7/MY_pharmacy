@@ -219,30 +219,20 @@ const Home = () => {
     return (
         <div className="overflow-hidden">
             {/* Hero Section */}
-            <section className="hero-mesh text-center relative overflow-hidden py-20 md:py-28">
+            <section className="hero-mesh text-center relative overflow-hidden pt-16 pb-24 md:pt-20 md:pb-32">
                 <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
 
                 {/* Animated Floating Decorative Orbs */}
                 <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-3xl animate-blob pointer-events-none"></div>
                 <div className="absolute -bottom-24 -left-20 w-96 h-96 bg-teal-300/15 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
 
-                {/* Floating Glass Badges (Desktop) */}
-                <div className="hidden xl:flex items-center gap-2.5 glass-dark px-4 py-2.5 rounded-2xl text-white text-xs font-bold absolute top-24 right-12 animate-float pointer-events-none">
-                    <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                    <span>أدوية أصلية معتمدة 100%</span>
-                </div>
-                <div className="hidden xl:flex items-center gap-2.5 glass-dark px-4 py-2.5 rounded-2xl text-white text-xs font-bold absolute bottom-28 left-12 animate-float-slow pointer-events-none">
-                    <Bot className="w-4 h-4 text-amber-300" />
-                    <span>مساعد طبي ذكي 24/7</span>
-                </div>
-
-                <div className="max-w-4xl mx-auto px-4 relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 px-5 py-2 rounded-full text-white text-xs sm:text-sm font-bold mb-7 backdrop-blur-md shadow-lg animate-fadeIn">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+                    <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 px-5 py-2 rounded-full text-white text-xs sm:text-sm font-bold mb-6 backdrop-blur-md shadow-lg animate-fadeIn">
                         <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
                         <span>المنصة الرائدة للرعاية الصحية والصيدلية في مصر</span>
                     </div>
 
-                    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold font-almarai mb-6 leading-tight text-white drop-shadow-md animate-fadeInUp">
+                    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold font-almarai mb-6 leading-[1.25] text-white drop-shadow-md animate-fadeInUp">
                         رعايتك الصحية وأدويتك <br />
                         <span className="text-emerald-200">في مكان واحد بكل سهولة وأمان</span>
                     </h1>
@@ -252,7 +242,7 @@ const Home = () => {
                     </p>
 
                     {/* Interactive Tabbed Search Box */}
-                    <div className="max-w-2xl mx-auto mb-9 bg-white/15 backdrop-blur-xl p-2.5 rounded-3xl border border-white/25 shadow-2xl animate-scaleIn">
+                    <div className="max-w-2xl mx-auto mb-8 bg-white/15 backdrop-blur-xl p-2.5 rounded-3xl border border-white/25 shadow-2xl animate-scaleIn">
                         <div className="flex items-center gap-2 mb-2 px-1">
                             <button
                                 type="button"
@@ -308,7 +298,7 @@ const Home = () => {
                         </form>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-center gap-4">
+                    <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                         <Link
                             to="/medicines"
                             className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-7 py-3.5 rounded-full shadow-xl text-sm md:text-base transition-all inline-flex items-center gap-2.5"
@@ -323,6 +313,22 @@ const Home = () => {
                             <UserCheck className="w-5 h-5" />
                             <span>احجز موعد طبيب</span>
                         </Link>
+                    </div>
+
+                    {/* Inline Trust Highlights */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-emerald-50/95">
+                        <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                            <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                            <span>أدوية أصلية مرخصة 100%</span>
+                        </span>
+                        <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                            <Truck className="w-4 h-4 text-teal-200" />
+                            <span>توصيل منزلي سريع وآمن</span>
+                        </span>
+                        <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                            <Bot className="w-4 h-4 text-amber-300" />
+                            <span>استشارة الصيدلي الذكي 24/7</span>
+                        </span>
                     </div>
                 </div>
             </section>
@@ -633,58 +639,60 @@ const Home = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 hero-mesh relative overflow-hidden text-white">
-                <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
-                <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-                    <Reveal direction="scale">
-                        <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/25 shadow-inner animate-float">
-                            <HeartPulse className="w-8 h-8 text-emerald-300" />
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-extrabold font-almarai mb-6 text-white drop-shadow-sm">
-                            {user
-                                ? `أهلاً بك يا ${user.name} في صيدليتي`
-                                : 'ابدأ في استخدام منصة صيدليتي اليوم'}
-                        </h2>
-                        <p className="text-base md:text-xl text-emerald-50/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-                            انضم الآن لآلاف المرضى والأطباء واستمتع بتجربة رعاية صحية رقمية استثنائية وسريعة.
-                        </p>
+            <section className="py-16 bg-slate-50 px-4 sm:px-6 lg:px-8">
+                <Reveal direction="scale" className="max-w-6xl mx-auto">
+                    <div className="hero-mesh rounded-3xl py-16 px-6 sm:px-12 text-center relative overflow-hidden text-white shadow-2xl">
+                        <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
+                        <div className="max-w-3xl mx-auto relative z-10">
+                            <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/25 shadow-inner animate-float">
+                                <HeartPulse className="w-8 h-8 text-emerald-300" />
+                            </div>
+                            <h2 className="text-3xl md:text-5xl font-extrabold font-almarai mb-5 text-white drop-shadow-sm">
+                                {user
+                                    ? `أهلاً بك يا ${user.name} في صيدليتي`
+                                    : 'ابدأ في استخدام منصة صيدليتي اليوم'}
+                            </h2>
+                            <p className="text-base md:text-lg text-emerald-50/90 mb-9 max-w-2xl mx-auto leading-relaxed">
+                                انضم الآن لآلاف المرضى والأطباء واستمتع بتجربة رعاية صحية رقمية استثنائية وسريعة.
+                            </p>
 
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                            {user ? (
-                                <>
-                                    <Link
-                                        to="/appointments"
-                                        className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-9 py-3.5 text-base md:text-lg rounded-full shadow-2xl transition-all inline-flex items-center gap-2"
-                                    >
-                                        <Calendar className="w-5 h-5 text-emerald-600" />
-                                        <span>احجز موعد كشف الآن</span>
-                                    </Link>
-                                    <Link
-                                        to="/orders/track"
-                                        className="bg-white/10 backdrop-blur-md border-2 border-white/80 hover:bg-white hover:text-[#0f6848] text-white font-bold px-9 py-3.5 text-base md:text-lg rounded-full transition-all active:scale-95 shadow-lg"
-                                    >
-                                        متابعة طلباتك
-                                    </Link>
-                                </>
-                            ) : (
-                                <>
-                                    <Link
-                                        to="/register"
-                                        className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-9 py-3.5 text-base md:text-lg rounded-full shadow-2xl transition-all"
-                                    >
-                                        سجّل حسابك الآن مجاناً
-                                    </Link>
-                                    <Link
-                                        to="/login"
-                                        className="bg-white/10 backdrop-blur-md border-2 border-white/80 hover:bg-white hover:text-[#0f6848] text-white font-bold px-9 py-3.5 text-base md:text-lg rounded-full transition-all active:scale-95 shadow-lg"
-                                    >
-                                        تسجيل الدخول
-                                    </Link>
-                                </>
-                            )}
+                            <div className="flex flex-wrap items-center justify-center gap-4">
+                                {user ? (
+                                    <>
+                                        <Link
+                                            to="/appointments"
+                                            className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-9 py-3.5 text-base rounded-full shadow-2xl transition-all inline-flex items-center gap-2"
+                                        >
+                                            <Calendar className="w-5 h-5 text-emerald-600" />
+                                            <span>احجز موعد كشف الآن</span>
+                                        </Link>
+                                        <Link
+                                            to="/orders/track"
+                                            className="bg-white/10 backdrop-blur-md border-2 border-white/80 hover:bg-white hover:text-[#0f6848] text-white font-bold px-9 py-3.5 text-base rounded-full transition-all active:scale-95 shadow-lg"
+                                        >
+                                            متابعة طلباتك
+                                        </Link>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link
+                                            to="/register"
+                                            className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-9 py-3.5 text-base rounded-full shadow-2xl transition-all"
+                                        >
+                                            سجّل حسابك الآن مجاناً
+                                        </Link>
+                                        <Link
+                                            to="/login"
+                                            className="bg-white/10 backdrop-blur-md border-2 border-white/80 hover:bg-white hover:text-[#0f6848] text-white font-bold px-9 py-3.5 text-base rounded-full transition-all active:scale-95 shadow-lg"
+                                        >
+                                            تسجيل الدخول
+                                        </Link>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </Reveal>
-                </div>
+                    </div>
+                </Reveal>
             </section>
         </div>
     );

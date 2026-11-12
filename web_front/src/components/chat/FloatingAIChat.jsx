@@ -71,17 +71,22 @@ const FloatingAIChat = () => {
                 <button
                     type="button"
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-tr from-[#093d2b] via-[#0f6848] to-[#10ac84] text-white shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group cursor-pointer border-0 animate-pulse-glow"
+                    className="fixed bottom-6 left-6 z-40 h-14 px-4 sm:px-5 rounded-full bg-gradient-to-tr from-[#093d2b] via-[#0f6848] to-[#10ac84] text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer animate-pulse-glow"
                     title="اسأل الصيدلي الذكي"
                 >
-                    <Bot className="w-7 h-7 relative z-10 group-hover:rotate-12 transition-transform" />
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white"></span>
+                    <div className="relative flex items-center justify-center">
+                        <Bot className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-300 rounded-full ring-2 ring-[#0f6848]"></span>
+                    </div>
+                    <span className="hidden sm:inline text-xs font-extrabold tracking-wide">
+                        الصيدلي الذكي
+                    </span>
                 </button>
             )}
 
             {/* Chat Window */}
             {isOpen && (
-                <div className="fixed bottom-6 left-6 z-50 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col h-[500px] animate-scaleIn">
+                <div className="fixed bottom-6 left-6 z-50 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col h-[500px] animate-scaleIn">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-[#093d2b] via-[#0f6848] to-[#10ac84] text-white p-4 flex items-center justify-between shadow-md">
                         <div className="flex items-center gap-2.5">
@@ -90,7 +95,7 @@ const FloatingAIChat = () => {
                                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-300 rounded-full border-2 border-[#0f6848]"></span>
                             </div>
                             <div>
-                                <h4 className="font-bold text-sm font-almarai flex items-center gap-1 m-0 text-white">
+                                <h4 className="font-bold text-sm font-almarai flex items-center gap-1 text-white">
                                     <span>الصيدلي الذكي</span>
                                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                                 </h4>
@@ -191,9 +196,9 @@ const FloatingAIChat = () => {
                         <button
                             type="submit"
                             disabled={loading || !message.trim()}
-                            className="bg-gradient-to-r from-[#0f6848] to-[#14875e] text-white p-2.5 rounded-xl disabled:opacity-40 transition-all hover:shadow-md active:scale-95 cursor-pointer border-0"
+                            className="bg-gradient-to-r from-[#0f6848] to-[#14875e] text-white p-2.5 rounded-xl disabled:opacity-40 transition-all hover:shadow-md active:scale-95 cursor-pointer"
                         >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-4 h-4 -scale-x-100" />
                         </button>
                     </form>
                 </div>

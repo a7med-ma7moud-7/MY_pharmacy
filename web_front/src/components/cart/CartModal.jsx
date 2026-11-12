@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { orderService } from '../../services/api';
+import { MedicineArtwork } from '../common/MedicalMedia';
 import {
     X,
     Trash2,
@@ -251,13 +252,10 @@ const CartModal = () => {
                                                 className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all"
                                             >
                                                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                    <img
-                                                        src={item.image_url || '/asset/1.png'}
-                                                        alt={item.name}
-                                                        onError={(e) => {
-                                                            e.currentTarget.src = '/asset/1.png';
-                                                        }}
-                                                        className="w-12 h-12 rounded-xl object-cover bg-white border border-slate-100 shrink-0"
+                                                    <MedicineArtwork
+                                                        medicine={item}
+                                                        size="thumb"
+                                                        className="w-12 h-12 rounded-xl object-contain bg-white border border-slate-100 shrink-0"
                                                     />
                                                     <div className="min-w-0 flex-1">
                                                         <h4 className="font-bold text-slate-800 text-sm truncate m-0">

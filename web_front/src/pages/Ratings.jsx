@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Star, CheckCircle2, AlertCircle, User, ArrowRight, Loader2, Send } from 'lucide-react';
+import { Star, CheckCircle2, AlertCircle, ArrowRight, Loader2, Send } from 'lucide-react';
 import { getDoctors, submitRating } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { DoctorAvatar, formatDoctorName } from '../components/common/MedicalMedia';
 
 export default function Ratings() {
   const [searchParams] = useSearchParams();
@@ -140,23 +141,16 @@ export default function Ratings() {
               {/* Doctor Preview Card */}
               {selectedDoctor && (
                 <div className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-100 flex items-center gap-3 animate-fadeIn">
-                  {selectedDoctor.image_url ? (
-                    <img
-                      src={selectedDoctor.image_url}
-                      alt={selectedDoctor.name}
-                      onError={(e) => {
-                        e.currentTarget.src = '/asset/1.png';
-                      }}
-                      className="w-12 h-12 rounded-xl object-cover border border-white shadow-sm shrink-0"
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-white shadow-sm shrink-0">
+                    <DoctorAvatar
+                      doctor={selectedDoctor}
+                      size="sm"
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <div className="w-12 h-12 rounded-xl bg-main text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
-                      <User className="w-6 h-6" />
-                    </div>
-                  )}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-800 text-sm mb-0.5 truncate">
-                      د. {selectedDoctor.name}
+                    <h4 className="font-bold text-slate-800 text-sm mb-0.5 truncate">
+                      {formatDoctorName(selectedDoctor.name)}
                     </h4>
                     <span className="text-xs text-gray-500">
                       {selectedDoctor.specialty || 'طبيب استشاري'}{' '}
@@ -230,7 +224,7 @@ export default function Ratings() {
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 rtl:rotate-180" />
+                    <Send className="w-4 h-4 -scale-x-100" />
                     <span>إرسال التقييم الآن</span>
                   </>
                 )}

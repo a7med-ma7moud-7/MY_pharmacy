@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { medicineService } from '../services/api';
 import { useCart } from '../context/CartContext';
 import MedicineCard from '../components/common/MedicineCard';
+import { MedicineArtwork } from '../components/common/MedicalMedia';
 import Reveal from '../components/common/Reveal';
 import {
     Pill,
@@ -115,14 +116,11 @@ const MedicineDetail = () => {
                     <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                             {/* Image */}
-                            <div className="bg-gradient-to-b from-slate-50 to-slate-100/70 rounded-3xl p-8 flex items-center justify-center border border-slate-100 group overflow-hidden relative">
-                                <img
-                                    src={medicine.image_url || '/asset/1.png'}
-                                    alt={medicine.name}
-                                    onError={(e) => {
-                                        e.currentTarget.src = '/asset/1.png';
-                                    }}
-                                    className="max-h-72 object-contain group-hover:scale-110 transition-transform duration-500"
+                            <div className="bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 group overflow-hidden relative min-h-[280px]">
+                                <MedicineArtwork
+                                    medicine={medicine}
+                                    size="detail"
+                                    className="max-h-72 object-contain p-6 group-hover:scale-105 transition-transform duration-500"
                                 />
                             </div>
 
