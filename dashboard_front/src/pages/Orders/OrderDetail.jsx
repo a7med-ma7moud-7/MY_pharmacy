@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
 import { Badge } from '../../components/common/Badge';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { User, Truck } from 'lucide-react';
@@ -92,23 +93,17 @@ export const OrderDetail = ({ isOpen, onClose, orderId, onStatusChange }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>حالة الطلب:</span>
-                                <select
-                                    className="form-input"
-                                    style={{
-                                        padding: '5px 10px',
-                                        fontSize: '0.82rem',
-                                        fontWeight: 700,
-                                        width: 'auto',
-                                        borderRadius: 'var(--radius-sm)',
-                                    }}
+                                <CustomSelect
+                                    variant="pill"
                                     value={currentStatus}
-                                    onChange={(e) => handleUpdateStatus(e.target.value)}
-                                >
-                                    <option value="pending">قيد الانتظار</option>
-                                    <option value="processing">جاري التجهيز</option>
-                                    <option value="completed">مكتمل ومسلّم</option>
-                                    <option value="cancelled">ملغي</option>
-                                </select>
+                                    onChange={(val) => handleUpdateStatus(val)}
+                                    options={[
+                                        { value: 'pending', label: 'قيد الانتظار' },
+                                        { value: 'processing', label: 'جاري التجهيز' },
+                                        { value: 'completed', label: 'مكتمل ومسلّم' },
+                                        { value: 'cancelled', label: 'ملغي' },
+                                    ]}
+                                />
                             </div>
 
                             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-color)' }}>

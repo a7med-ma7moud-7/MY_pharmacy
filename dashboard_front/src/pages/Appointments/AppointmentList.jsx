@@ -12,6 +12,8 @@ import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Dialog } from '../../components/common/Dialog';
+import { SearchInput } from '../../components/common/SearchInput';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { useNotification } from '../../context/NotificationContext';
 import { AppointmentDetail } from './AppointmentDetail';
 
@@ -144,41 +146,27 @@ export const AppointmentList = () => {
         }}
       >
         {/* Search */}
-        <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <div
-            style={{
-              position: 'absolute',
-              right: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Search size={18} />
-          </div>
-          <input
-            type="text"
-            className="form-input"
-            style={{ paddingRight: '38px' }}
-            placeholder="البحث باسم المريض، رقم الهاتف، أو اسم الطبيب..."
+        <div style={{ flex: '1 1 240px' }}>
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
+            placeholder="البحث باسم المريض، رقم الهاتف، أو اسم الطبيب..."
           />
         </div>
 
         {/* Status Filter */}
-        <div style={{ minWidth: '160px' }}>
-          <select
-            className="form-input"
+        <div style={{ minWidth: '180px' }}>
+          <CustomSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">جميع الحالات</option>
-            <option value="pending">قيد الانتظار</option>
-            <option value="confirmed">المواعيد المؤكدة</option>
-            <option value="completed">الكشوفات المكتملة</option>
-            <option value="cancelled">الملغية</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+              { value: '', label: 'جميع الحالات' },
+              { value: 'pending', label: 'قيد الانتظار' },
+              { value: 'confirmed', label: 'المواعيد المؤكدة' },
+              { value: 'completed', label: 'الكشوفات المكتملة' },
+              { value: 'cancelled', label: 'الملغية' },
+            ]}
+          />
         </div>
 
         {/* Date Filter */}
@@ -266,14 +254,11 @@ export const AppointmentList = () => {
                       </td>
                       <td>
                         {/* Interactive Status Changer */}
-                        <select
-                          className="form-input"
-                          style={{
-                            padding: '4px 8px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            borderRadius: 'var(--radius-sm)',
-                            width: 'auto',
+                        <CustomSelect
+                          variant="pill"
+                          value={app.status || 'pending'}
+                          onChange={(val) => handleStatusChange(app.id, val)}
+                          triggerStyle={{
                             borderColor:
                               app.status === 'confirmed'
                                 ? 'var(--success-color)'
@@ -283,14 +268,13 @@ export const AppointmentList = () => {
                                 ? 'var(--danger-color)'
                                 : 'var(--warning-color)',
                           }}
-                          value={app.status || 'pending'}
-                          onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                        >
-                          <option value="pending">قيد الانتظار</option>
-                          <option value="confirmed">تأكيد الموعد</option>
-                          <option value="completed">كشف مكتمل</option>
-                          <option value="cancelled">إلغاء الحجز</option>
-                        </select>
+                          options={[
+                            { value: 'pending', label: 'قيد الانتظار' },
+                            { value: 'confirmed', label: 'تأكيد الموعد' },
+                            { value: 'completed', label: 'كشف مكتمل' },
+                            { value: 'cancelled', label: 'إلغاء الحجز' },
+                          ]}
+                        />
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>

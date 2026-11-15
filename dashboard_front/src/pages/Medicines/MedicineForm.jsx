@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
@@ -153,17 +154,24 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
             <label className="form-label required">الشكل الدوائي (النوع)</label>
-            <select name="type" className="form-input" value={formData.type} onChange={handleChange}>
-              <option value="أقراص">أقراص (Tablets)</option>
-              <option value="كبسولات">كبسولات (Capsules)</option>
-              <option value="شراب">شراب (Syrup)</option>
-              <option value="حقن">حقن (Injections)</option>
-              <option value="مرهم / كريم">مرهم / كريم (Ointment)</option>
-              <option value="قطرات">قطرات (Drops)</option>
-              <option value="بخاخ">بخاخ (Spray)</option>
-              <option value="فوار">فوار (Effervescent)</option>
-              <option value="أخرى">أخرى</option>
-            </select>
+            <CustomSelect
+              value={formData.type}
+              onChange={(val) => {
+                setFormData((prev) => ({ ...prev, type: val }));
+                if (errors.type) setErrors((prev) => ({ ...prev, type: null }));
+              }}
+              options={[
+                { value: 'أقراص', label: 'أقراص (Tablets)' },
+                { value: 'كبسولات', label: 'كبسولات (Capsules)' },
+                { value: 'شراب', label: 'شراب (Syrup)' },
+                { value: 'حقن', label: 'حقن (Injections)' },
+                { value: 'مرهم / كريم', label: 'مرهم / كريم (Ointment)' },
+                { value: 'قطرات', label: 'قطرات (Drops)' },
+                { value: 'بخاخ', label: 'بخاخ (Spray)' },
+                { value: 'فوار', label: 'فوار (Effervescent)' },
+                { value: 'أخرى', label: 'أخرى' },
+              ]}
+            />
             {errors.type && <span className="field-error">{errors.type}</span>}
           </div>
 

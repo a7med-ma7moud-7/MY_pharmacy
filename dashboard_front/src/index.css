@@ -629,6 +629,213 @@ input, select, textarea {
 }
 
 /* ===================================
+   UNIFIED SEARCH INPUT
+   =================================== */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: 12px;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.search-box:hover {
+  border-color: var(--slate-300);
+  background: #ffffff;
+}
+
+.search-box:focus-within {
+  background: #ffffff;
+  border-color: var(--primary-600);
+  box-shadow: 0 0 0 4px rgba(15, 104, 72, 0.12), 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.search-box-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--slate-400);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.search-box:focus-within .search-box-icon {
+  color: var(--primary-600);
+}
+
+.search-box-input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 42px 10px 16px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--slate-800);
+  outline: none;
+}
+
+.search-box-input::placeholder {
+  color: var(--slate-400);
+  font-weight: 400;
+}
+
+.search-box-input.has-clear {
+  padding-left: 38px;
+}
+
+.search-box-clear {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: var(--slate-200);
+  color: var(--slate-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.search-box-clear:hover {
+  background: var(--slate-300);
+  color: var(--slate-900);
+}
+
+/* ===================================
+   CUSTOM DROPDOWN (SELECT)
+   =================================== */
+.custom-select-trigger {
+  width: 100%;
+  height: 44px;
+  padding: 8px 14px;
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--slate-800);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: right;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.custom-select-trigger:hover:not(:disabled) {
+  border-color: var(--slate-300);
+  background: #ffffff;
+}
+
+.custom-select-trigger.is-open,
+.custom-select-trigger:focus-visible {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--primary-600);
+  box-shadow: 0 0 0 4px rgba(15, 104, 72, 0.12), 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.custom-select-trigger.is-pill {
+  height: 34px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  width: auto;
+  min-width: 132px;
+}
+
+.custom-select-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.custom-select-chevron {
+  color: var(--slate-400);
+  transition: transform 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.custom-select-trigger.is-open .custom-select-chevron {
+  transform: rotate(180deg);
+  color: var(--primary-600);
+}
+
+.custom-select-menu {
+  position: fixed;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 14px 36px -4px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.06);
+  max-height: 260px;
+  overflow-y: auto;
+  direction: rtl;
+  animation: selectFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes selectFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-select-option {
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--slate-700);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: right;
+  transition: all 0.15s ease;
+}
+
+.custom-select-option:hover {
+  background: var(--slate-100);
+  color: var(--slate-900);
+}
+
+.custom-select-option.is-selected {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  font-weight: 700;
+}
+
+/* ===================================
    MODALS
    =================================== */
 .modal-backdrop {

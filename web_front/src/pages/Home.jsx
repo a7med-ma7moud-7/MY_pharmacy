@@ -108,9 +108,40 @@ const Home = () => {
 
     return (
         <div className="overflow-hidden">
-            {/* Clean Minimalist Hero Section */}
-            <section className="hero-mesh relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-28">
-                <div className="hero-grid-pattern absolute inset-0 opacity-60 pointer-events-none"></div>
+            {/* Elevated Layered Hero Section */}
+            <section className="hero-mesh relative overflow-hidden pt-16 pb-24 sm:pt-24 sm:pb-32">
+                {/* Architectural Grid + Masked Fade */}
+                <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
+
+                {/* Soft Ambient Aurora Orbs */}
+                <div
+                    className="absolute -top-24 -right-20 w-[420px] h-[420px] rounded-full pointer-events-none blur-3xl opacity-35 animate-pulse"
+                    style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)', animationDuration: '7s' }}
+                />
+                <div
+                    className="absolute -bottom-28 -left-24 w-[460px] h-[460px] rounded-full pointer-events-none blur-3xl opacity-30 animate-pulse"
+                    style={{ background: 'radial-gradient(circle, #2dd4bf 0%, transparent 70%)', animationDuration: '9s' }}
+                />
+
+                {/* Subtle Decorative Glass Rings & Medical Pulse Line */}
+                <div className="absolute top-10 left-12 w-56 h-56 rounded-full border border-white/10 pointer-events-none hidden lg:block"></div>
+                <div className="absolute top-16 left-18 w-44 h-44 rounded-full border border-emerald-200/10 pointer-events-none hidden lg:block"></div>
+                <div className="absolute bottom-14 right-14 w-64 h-64 rounded-full border border-white/10 pointer-events-none hidden lg:block"></div>
+
+                <svg
+                    className="absolute inset-x-0 top-1/2 -translate-y-1/2 w-full h-36 opacity-[0.07] pointer-events-none"
+                    viewBox="0 0 1440 160"
+                    fill="none"
+                    preserveAspectRatio="none"
+                >
+                    <path
+                        d="M0 90 H380 L415 55 L445 125 L475 30 L505 110 L530 90 H910 L945 55 L975 125 L1005 30 L1035 110 L1060 90 H1440"
+                        stroke="#a7f3d0"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
 
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
                     <h1 className="text-3xl sm:text-5xl font-extrabold font-almarai mb-4 leading-[1.3] text-white animate-fadeInUp">

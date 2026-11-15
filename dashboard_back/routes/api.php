@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\v1\Admin\AdminAiChatApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminAppointmentApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminAuthApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminDashboardApiController;
@@ -74,6 +75,10 @@ Route::prefix('v1/admin')->group(function () {
 
         // Reports & Analytics
         Route::get('/reports', [AdminReportsApiController::class, 'index']);
+
+        // AI Chats (Read-Only)
+        Route::get('/ai-chats', [AdminAiChatApiController::class, 'index']);
+        Route::get('/ai-chats/{id}', [AdminAiChatApiController::class, 'show'])->whereNumber('id');
 
         // Users Management
         Route::get('/users', [AdminUserApiController::class, 'index']);

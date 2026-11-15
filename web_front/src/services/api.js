@@ -49,8 +49,12 @@ export const ratingService = {
 };
 
 export const aiService = {
-  askAI: (question) => api.post('/ask-ai', { question }),
-  askQuestion: (question) => api.post('/ask-ai', { question }),
+  askAI: (question, chatId = null) =>
+    api.post('/ask-ai', { question, ...(chatId ? { chat_id: chatId } : {}) }),
+  askQuestion: (question, chatId = null) =>
+    api.post('/ask-ai', { question, ...(chatId ? { chat_id: chatId } : {}) }),
+  getChats: () => api.get('/ai-chats'),
+  getChat: (id) => api.get(`/ai-chats/${id}`),
 };
 
 export const authService = {

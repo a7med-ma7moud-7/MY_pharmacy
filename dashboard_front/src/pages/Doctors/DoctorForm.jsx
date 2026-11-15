@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
@@ -242,18 +243,26 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
 
           <div>
             <label className="form-label required">حالة الطبيب</label>
-            <select name="status" className="form-input" value={formData.status} onChange={handleChange}>
-              <option value="active">نشط (متاح للحجز)</option>
-              <option value="inactive">غير نشط (معطل مؤقتاً)</option>
-            </select>
+            <CustomSelect
+              value={formData.status}
+              onChange={(val) => setFormData((prev) => ({ ...prev, status: val }))}
+              options={[
+                { value: 'active', label: 'نشط (متاح للحجز)' },
+                { value: 'inactive', label: 'غير نشط (معطل مؤقتاً)' },
+              ]}
+            />
           </div>
 
           <div>
             <label className="form-label required">حالة الاشتراك</label>
-            <select name="subscription" className="form-input" value={formData.subscription} onChange={handleChange}>
-              <option value="subscribed">مشترك بالمنظومة</option>
-              <option value="not_subscribed">غير مشترك</option>
-            </select>
+            <CustomSelect
+              value={formData.subscription}
+              onChange={(val) => setFormData((prev) => ({ ...prev, subscription: val }))}
+              options={[
+                { value: 'subscribed', label: 'مشترك بالمنظومة' },
+                { value: 'not_subscribed', label: 'غير مشترك' },
+              ]}
+            />
           </div>
         </div>
 

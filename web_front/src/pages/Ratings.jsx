@@ -4,6 +4,7 @@ import { Star, CheckCircle2, AlertCircle, ArrowRight, Loader2, Send } from 'luci
 import { getDoctors, submitRating } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { DoctorAvatar, formatDoctorName } from '../components/common/MedicalMedia';
+import CustomSelect from '../components/common/CustomSelect';
 
 export default function Ratings() {
   const [searchParams] = useSearchParams();
@@ -122,20 +123,19 @@ export default function Ratings() {
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
                   اختر الطبيب المراد تقييمه <span className="text-rose-500">*</span>
                 </label>
-                <select
-                  id="doctorSelect"
+                <CustomSelect
                   value={selectedDoctorId}
-                  onChange={(e) => setSelectedDoctorId(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                >
-                  <option value="">-- اضغط لاختيار الطبيب --</option>
-                  {doctors.map((doc) => (
-                    <option key={doc.id} value={doc.id}>
-                      د. {doc.name} {doc.specialty ? `(${doc.specialty})` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedDoctorId(val)}
+                  placeholder="-- اضغط لاختيار الطبيب --"
+                  className="px-3.5 py-2.5 bg-slate-50 hover:bg-white border border-gray-200 rounded-xl text-sm"
+                  options={[
+                    { value: '', label: '-- اضغط لاختيار الطبيب --' },
+                    ...doctors.map((doc) => ({
+                      value: String(doc.id),
+                      label: `د. ${doc.name}${doc.specialty ? ` (${doc.specialty})` : ''}`,
+                    })),
+                  ]}
+                />
               </div>
 
               {/* Doctor Preview Card */}

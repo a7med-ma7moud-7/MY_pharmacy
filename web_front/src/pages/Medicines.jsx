@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import MedicineCard from '../components/common/MedicineCard';
 import MedicineQuickView from '../components/common/MedicineQuickView';
 import PaginationBar from '../components/common/PaginationBar';
+import CustomSelect from '../components/common/CustomSelect';
 import Reveal from '../components/common/Reveal';
 import {
     Pill,
@@ -182,18 +183,15 @@ export const Medicines = () => {
                                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                                     التصنيف الدوائي
                                 </label>
-                                <select
+                                <CustomSelect
                                     value={selectedType}
-                                    onChange={(e) => setSelectedType(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white transition-all"
-                                >
-                                    <option value="all">كل الأنواع والتصنيفات</option>
-                                    {types.map((type, idx) => (
-                                        <option key={idx} value={type}>
-                                            {type}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setSelectedType(val)}
+                                    className="px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white hover:border-slate-300"
+                                    options={[
+                                        { value: 'all', label: 'كل الأنواع والتصنيفات' },
+                                        ...types.map((type) => ({ value: type, label: type })),
+                                    ]}
+                                />
                             </div>
 
                             <div className="md:col-span-3 flex items-center gap-2">
@@ -264,16 +262,19 @@ export const Medicines = () => {
 
                                     <div className="flex items-center gap-2">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                                        <select
-                                            value={sortBy}
-                                            onChange={(e) => setSortBy(e.target.value)}
-                                            className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none focus:border-emerald-500"
-                                        >
-                                            <option value="default">الترتيب الافتراضي</option>
-                                            <option value="price_asc">الأقل سعراً</option>
-                                            <option value="price_desc">الأعلى سعراً</option>
-                                            <option value="name">أبجدياً (أ - ي)</option>
-                                        </select>
+                                        <div className="min-w-[165px]">
+                                            <CustomSelect
+                                                value={sortBy}
+                                                onChange={(val) => setSortBy(val)}
+                                                className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 hover:bg-white"
+                                                options={[
+                                                    { value: 'default', label: 'الترتيب الافتراضي' },
+                                                    { value: 'price_asc', label: 'الأقل سعراً' },
+                                                    { value: 'price_desc', label: 'الأعلى سعراً' },
+                                                    { value: 'name', label: 'أبجدياً (أ - ي)' },
+                                                ]}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

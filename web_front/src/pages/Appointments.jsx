@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { appointmentService, doctorService } from '../services/api';
+import CustomSelect from '../components/common/CustomSelect';
 import { useAuth } from '../context/AuthContext';
 import { DoctorAvatar, formatDoctorName } from '../components/common/MedicalMedia';
 import Reveal from '../components/common/Reveal';
@@ -246,20 +247,21 @@ export const Appointments = () => {
                                             <label className="block text-xs font-bold text-slate-700 mb-1.5">
                                                 اختر الطبيب المعالج <span className="text-rose-500">*</span>
                                             </label>
-                                            <select
-                                                name="doctor_id"
-                                                required
+                                            <CustomSelect
                                                 value={effectiveDoctorId}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white transition-all"
-                                            >
-                                                <option value="">-- اضغط لاختيار الطبيب --</option>
-                                                {doctors.map((d) => (
-                                                    <option key={d.id} value={d.id}>
-                                                        د. {d.name} ({d.specialty}) - {d.price} ج.م
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                onChange={(val) =>
+                                                    handleInputChange({ target: { name: 'doctor_id', value: val } })
+                                                }
+                                                placeholder="-- اضغط لاختيار الطبيب --"
+                                                className="px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white hover:border-slate-300"
+                                                options={[
+                                                    { value: '', label: '-- اضغط لاختيار الطبيب --' },
+                                                    ...doctors.map((d) => ({
+                                                        value: String(d.id),
+                                                        label: `د. ${d.name} (${d.specialty}) - ${d.price} ج.م`,
+                                                    })),
+                                                ]}
+                                            />
                                         </div>
                                     </div>
 

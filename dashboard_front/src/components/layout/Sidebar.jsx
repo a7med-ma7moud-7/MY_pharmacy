@@ -12,6 +12,7 @@ import {
   LogOut,
   HeartPulse,
   ShieldCheck,
+  Bot,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   ]},
   { section: 'الخدمات والعمليات', items: [
     { name: 'الحجوزات الطبية', path: '/appointments', icon: CalendarDays },
+    { name: 'شاتس الـ AI', path: '/ai-chats', icon: Bot },
     { name: 'التقارير والإحصائيات', path: '/reports', icon: BarChart3 },
   ]},
 ];

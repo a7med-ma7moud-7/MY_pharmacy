@@ -15,6 +15,8 @@ import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Dialog } from '../../components/common/Dialog';
+import { SearchInput } from '../../components/common/SearchInput';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { useNotification } from '../../context/NotificationContext';
 import { DoctorForm } from './DoctorForm';
 import { DoctorDetail } from './DoctorDetail';
@@ -155,39 +157,25 @@ export const DoctorList = () => {
         }}
       >
         {/* Search */}
-        <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <div
-            style={{
-              position: 'absolute',
-              right: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Search size={18} />
-          </div>
-          <input
-            type="text"
-            className="form-input"
-            style={{ paddingRight: '38px' }}
-            placeholder="البحث باسم الطبيب، التخصص، أو الهاتف..."
+        <div style={{ flex: '1 1 240px' }}>
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
+            placeholder="البحث باسم الطبيب، التخصص، أو الهاتف..."
           />
         </div>
 
         {/* Status Filter */}
-        <div style={{ minWidth: '150px' }}>
-          <select
-            className="form-input"
+        <div style={{ minWidth: '175px' }}>
+          <CustomSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">جميع الحالات</option>
-            <option value="active">الأطباء النشطين</option>
-            <option value="inactive">غير النشطين</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+              { value: '', label: 'جميع الحالات' },
+              { value: 'active', label: 'الأطباء النشطين' },
+              { value: 'inactive', label: 'غير النشطين' },
+            ]}
+          />
         </div>
 
         {/* Specialty Filter */}

@@ -261,12 +261,9 @@ const DoctorDetail = () => {
                                 {doctor.number && (
                                     <div>
                                         <span className="text-xs text-slate-400 font-bold block mb-1">رقم العيادة</span>
-                                        <span
-                                            className="font-bold text-slate-800 flex items-center gap-1.5"
-                                            dir="ltr"
-                                        >
+                                        <span className="font-bold text-slate-800 flex items-center gap-1.5">
                                             <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-                                            <span>{doctor.number}</span>
+                                            <span dir="ltr">{doctor.number}</span>
                                         </span>
                                     </div>
                                 )}

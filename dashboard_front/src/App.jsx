@@ -15,6 +15,7 @@ import { AppointmentList } from './pages/Appointments/AppointmentList';
 import { OrderList } from './pages/Orders/OrderList';
 import { ReportsView } from './pages/Reports/ReportsView';
 import { UserList } from './pages/Users/UserList';
+import { AiChatList } from './pages/AiChats/AiChatList';
 
 export function App() {
   return (
@@ -34,6 +35,7 @@ export function App() {
               <Route path="/appointments" element={<AppointmentList />} />
               <Route path="/orders" element={<OrderList />} />
               <Route path="/reports" element={<ReportsView />} />
+              <Route path="/ai-chats" element={<AiChatList />} />
               <Route path="/users" element={<UserList />} />
             </Route>
 

@@ -47,6 +47,8 @@ Route::prefix('v1')->middleware('throttle:api-public')->group(function () {
 
     // AI Chat API
     Route::post('/ask-ai', [AIChatApiController::class, 'ask'])->middleware('throttle:api-ai');
+    Route::get('/ai-chats', [AIChatApiController::class, 'index']);
+    Route::get('/ai-chats/{id}', [AIChatApiController::class, 'show'])->whereNumber('id');
 
     // Authentication API
     Route::prefix('auth')->middleware('throttle:api-auth')->group(function () {

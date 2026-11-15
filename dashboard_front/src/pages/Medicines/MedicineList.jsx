@@ -17,6 +17,8 @@ import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Dialog } from '../../components/common/Dialog';
+import { SearchInput } from '../../components/common/SearchInput';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { useNotification } from '../../context/NotificationContext';
 import { MedicineForm } from './MedicineForm';
 import { MedicineDetail } from './MedicineDetail';
@@ -191,43 +193,29 @@ export const MedicineList = () => {
         }}
       >
         {/* Search */}
-        <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <div
-            style={{
-              position: 'absolute',
-              right: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Search size={18} />
-          </div>
-          <input
-            type="text"
-            className="form-input"
-            style={{ paddingRight: '38px' }}
-            placeholder="البحث باسم الدواء، الاستخدام، أو الشكل..."
+        <div style={{ flex: '1 1 240px' }}>
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
+            placeholder="البحث باسم الدواء، الاستخدام، أو الشكل..."
           />
         </div>
 
         {/* Type Filter */}
-        <div style={{ minWidth: '160px' }}>
-          <select
-            className="form-input"
+        <div style={{ minWidth: '185px' }}>
+          <CustomSelect
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="">جميع الأشكال الدوائية</option>
-            <option value="أقراص">أقراص</option>
-            <option value="كبسولات">كبسولات</option>
-            <option value="شراب">شراب</option>
-            <option value="حقن">حقن</option>
-            <option value="مرهم / كريم">مرهم / كريم</option>
-            <option value="قطرات">قطرات</option>
-          </select>
+            onChange={(val) => setTypeFilter(val)}
+            options={[
+              { value: '', label: 'جميع الأشكال الدوائية' },
+              { value: 'أقراص', label: 'أقراص' },
+              { value: 'كبسولات', label: 'كبسولات' },
+              { value: 'شراب', label: 'شراب' },
+              { value: 'حقن', label: 'حقن' },
+              { value: 'مرهم / كريم', label: 'مرهم / كريم' },
+              { value: 'قطرات', label: 'قطرات' },
+            ]}
+          />
         </div>
 
         <button

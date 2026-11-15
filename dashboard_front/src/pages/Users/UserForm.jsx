@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '../../components/common/Dialog';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { adminApi } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { Loader2 } from 'lucide-react';
@@ -136,10 +137,14 @@ export const UserForm = ({ isOpen, onClose, user, onSuccess }) => {
 
         <div>
           <label className="form-label required">الدور والصلاحية</label>
-          <select name="role" className="form-input" value={formData.role} onChange={handleChange}>
-            <option value="user">مستخدم / عميل عادي</option>
-            <option value="admin">مسؤول لوحة التحكم (Admin)</option>
-          </select>
+          <CustomSelect
+            value={formData.role}
+            onChange={(val) => setFormData((prev) => ({ ...prev, role: val }))}
+            options={[
+              { value: 'user', label: 'مستخدم / عميل عادي' },
+              { value: 'admin', label: 'مسؤول لوحة التحكم (Admin)' },
+            ]}
+          />
         </div>
 
         <div>

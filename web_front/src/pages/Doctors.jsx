@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { doctorService } from '../services/api';
 import DoctorCard from '../components/common/DoctorCard';
 import PaginationBar from '../components/common/PaginationBar';
+import CustomSelect from '../components/common/CustomSelect';
 import Reveal from '../components/common/Reveal';
 import {
     Search,
@@ -194,36 +195,30 @@ export const Doctors = () => {
                                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                                     التخصص الطبي
                                 </label>
-                                <select
+                                <CustomSelect
                                     value={selectedSpecialty}
-                                    onChange={(e) => setSelectedSpecialty(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white transition-all"
-                                >
-                                    <option value="كل التخصصات">كل التخصصات</option>
-                                    {filters.specialties.map((s, idx) => (
-                                        <option key={idx} value={s}>
-                                            {s}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setSelectedSpecialty(val)}
+                                    className="px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white hover:border-slate-300"
+                                    options={[
+                                        { value: 'كل التخصصات', label: 'كل التخصصات' },
+                                        ...filters.specialties.map((s) => ({ value: s, label: s })),
+                                    ]}
+                                />
                             </div>
 
                             <div className="md:col-span-3">
                                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                                     المحافظة
                                 </label>
-                                <select
+                                <CustomSelect
                                     value={selectedLocation}
-                                    onChange={(e) => setSelectedLocation(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white transition-all"
-                                >
-                                    <option value="">كل المحافظات</option>
-                                    {filters.locations.map((loc, idx) => (
-                                        <option key={idx} value={loc}>
-                                            {loc}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setSelectedLocation(val)}
+                                    className="px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white hover:border-slate-300"
+                                    options={[
+                                        { value: '', label: 'كل المحافظات' },
+                                        ...filters.locations.map((loc) => ({ value: loc, label: loc })),
+                                    ]}
+                                />
                             </div>
 
                             <div className="md:col-span-2 flex items-center gap-2">
@@ -285,17 +280,20 @@ export const Doctors = () => {
 
                                 <div className="flex items-center gap-2">
                                     <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                                    <span className="font-bold text-slate-600">ترتيب حسب:</span>
-                                    <select
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value)}
-                                        className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none focus:border-emerald-500"
-                                    >
-                                        <option value="default">الافتراضي</option>
-                                        <option value="rating">الأعلى تقييماً</option>
-                                        <option value="price_asc">الأقل سعر كشف</option>
-                                        <option value="price_desc">الأعلى سعر كشف</option>
-                                    </select>
+                                    <span className="font-bold text-slate-600 shrink-0">ترتيب حسب:</span>
+                                    <div className="min-w-[155px]">
+                                        <CustomSelect
+                                            value={sortBy}
+                                            onChange={(val) => setSortBy(val)}
+                                            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 hover:bg-white"
+                                            options={[
+                                                { value: 'default', label: 'الافتراضي' },
+                                                { value: 'rating', label: 'الأعلى تقييماً' },
+                                                { value: 'price_asc', label: 'الأقل سعر كشف' },
+                                                { value: 'price_desc', label: 'الأعلى سعر كشف' },
+                                            ]}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}

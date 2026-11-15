@@ -142,16 +142,21 @@
   /* ===== Modern Hero Background ===== */
   .hero-mesh {
     background:
-      radial-gradient(circle at 18% 20%, rgba(16, 185, 129, 0.28) 0%, transparent 45%),
-      radial-gradient(circle at 85% 75%, rgba(20, 184, 166, 0.22) 0%, transparent 50%),
-      linear-gradient(135deg, #063726 0%, #0f6848 52%, #0d7a58 100%);
+      radial-gradient(ellipse 65% 55% at 15% 18%, rgba(52, 211, 153, 0.32) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 60% at 88% 78%, rgba(20, 184, 166, 0.28) 0%, transparent 65%),
+      radial-gradient(ellipse 45% 40% at 52% 0%, rgba(110, 231, 183, 0.18) 0%, transparent 70%),
+      linear-gradient(135deg, #04291d 0%, #094933 45%, #0f6848 80%, #117d5b 100%);
     position: relative;
     overflow: hidden;
   }
 
   .hero-grid-pattern {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.11) 1px, transparent 1px);
-    background-size: 28px 28px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 35%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 35%, transparent 100%);
   }
 
   /* ===== Glassmorphism Cards ===== */

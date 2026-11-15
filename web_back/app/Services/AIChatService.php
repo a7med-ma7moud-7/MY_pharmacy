@@ -43,19 +43,37 @@ class AIChatService
      */
     public function ask(string $question): string
     {
+        return $this->askWithContext($question)['answer'];
+    }
+
+    /**
+     * إرسال سؤال المريض وإرجاع الإجابة مع الروابط والبطاقات القابلة للنقر للأدوية والأطباء المطابقين في النظام
+     *
+     * @return array{answer: string, suggestions: array{medicines: array<int, array<string, mixed>>, doctors: array<int, array<string, mixed>>}}
+     */
+    public function askWithContext(string $question): array
+    {
         $normalizedQuestion = trim(preg_replace('/\s+/u', ' ', $question) ?? $question);
         if ($normalizedQuestion === '') {
-            return $this->buildWelcomeGuide();
-        }
-
-        $cacheKey = 'ai_chat:v2:' . sha1(mb_strtolower($normalizedQuestion, 'UTF-8'));
-        $cachedAnswer = Cache::get($cacheKey);
-        if (is_string($cachedAnswer) && $cachedAnswer !== '') {
-            return $cachedAnswer;
+            return [
+                'answer' => $this->buildWelcomeGuide(),
+                'suggestions' => ['medicines' => [], 'doctors' => []],
+            ];
         }
 
         $matchingMedicines = $this->findRelevantMedicines($normalizedQuestion);
         $matchingDoctors = $this->findRelevantDoctors($normalizedQuestion);
+        $suggestions = $this->formatSuggestions($matchingMedicines, $matchingDoctors);
+
+        $cacheKey = 'ai_chat:v2:' . sha1(mb_strtolower($normalizedQuestion, 'UTF-8'));
+        $cachedAnswer = Cache::get($cacheKey);
+        if (is_string($cachedAnswer) && $cachedAnswer !== '') {
+            return [
+                'answer' => $cachedAnswer,
+                'suggestions' => $suggestions,
+            ];
+        }
+
         $dbContext = $this->formatDatabaseContext($matchingMedicines, $matchingDoctors);
 
         $client = new Client([
@@ -69,7 +87,10 @@ class AIChatService
             $answer = $this->tryOpenRouter($client, (string) $openrouterKey, $normalizedQuestion, $dbContext);
             if ($answer !== null) {
                 Cache::put($cacheKey, $answer, self::CACHE_TTL_SECONDS);
-                return $answer;
+                return [
+                    'answer' => $answer,
+                    'suggestions' => $suggestions,
+                ];
             }
         }
 
@@ -82,11 +103,17 @@ class AIChatService
             $answer = $this->tryGemini($client, (string) $key, $normalizedQuestion, $dbContext);
             if ($answer !== null) {
                 Cache::put($cacheKey, $answer, self::CACHE_TTL_SECONDS);
-                return $answer;
+                return [
+                    'answer' => $answer,
+                    'suggestions' => $suggestions,
+                ];
             }
         }
 
-        return $this->buildSmartLocalAnswer($normalizedQuestion, $matchingMedicines, $matchingDoctors);
+        return [
+            'answer' => $this->buildSmartLocalAnswer($normalizedQuestion, $matchingMedicines, $matchingDoctors),
+            'suggestions' => $suggestions,
+        ];
     }
 
     /**
@@ -263,26 +290,35 @@ class AIChatService
         try {
             $specialtyHint = $this->inferSpecialtyFromQuestion($question);
             $keywords = $this->extractKeywords($question);
+            $validKeywords = array_values(array_filter($keywords, fn ($kw) => mb_strlen($kw, 'UTF-8') >= 3));
 
-            if ($specialtyHint === null && !$this->mentionsDoctorIntent($question)) {
+            if ($specialtyHint === null && !$this->mentionsDoctorIntent($question) && $validKeywords === []) {
                 return collect();
             }
 
-            return Doctor::query()
-                ->activeAndSubscribed()
-                ->where(function ($query) use ($specialtyHint, $keywords) {
+            $query = Doctor::query()->activeAndSubscribed();
+
+            if ($specialtyHint === null && !$this->mentionsDoctorIntent($question)) {
+                // البحث المباشر باسم الطبيب أو تخصصه حتى بدون كلمة "دكتور"
+                $query->where(function ($q) use ($validKeywords) {
+                    foreach ($validKeywords as $kw) {
+                        $q->orWhere('name', 'like', "%{$kw}%")
+                          ->orWhere('specialty', 'like', "%{$kw}%");
+                    }
+                });
+            } else {
+                $query->where(function ($q) use ($specialtyHint, $validKeywords) {
                     if ($specialtyHint !== null) {
-                        $query->orWhere('specialty', 'like', "%{$specialtyHint}%");
+                        $q->orWhere('specialty', 'like', "%{$specialtyHint}%");
                     }
-                    foreach ($keywords as $kw) {
-                        if (mb_strlen($kw, 'UTF-8') >= 3) {
-                            $query->orWhere('name', 'like', "%{$kw}%")
-                                ->orWhere('specialty', 'like', "%{$kw}%");
-                        }
+                    foreach ($validKeywords as $kw) {
+                        $q->orWhere('name', 'like', "%{$kw}%")
+                          ->orWhere('specialty', 'like', "%{$kw}%");
                     }
-                })
-                ->limit(2)
-                ->get();
+                });
+            }
+
+            return $query->limit(3)->get();
         } catch (\Throwable) {
             return collect();
         }
@@ -308,6 +344,33 @@ class AIChatService
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * تجهيز بطاقات الأدوية والأطباء القابلة للنقر للانتقال المباشر لصفحاتهم في الموقع
+     *
+     * @return array{medicines: array<int, array<string, mixed>>, doctors: array<int, array<string, mixed>>}
+     */
+    private function formatSuggestions(Collection $medicines, Collection $doctors): array
+    {
+        return [
+            'medicines' => $medicines->map(fn (Medicien $med) => [
+                'id' => $med->id,
+                'name' => $med->name,
+                'type' => $med->type,
+                'price' => (float) $med->price,
+                'in_stock' => (int) $med->count > 0,
+                'url' => "/medicines/{$med->id}",
+            ])->values()->all(),
+            'doctors' => $doctors->map(fn (Doctor $doc) => [
+                'id' => $doc->id,
+                'name' => $doc->name,
+                'specialty' => $doc->specialty,
+                'price' => (float) $doc->price,
+                'location' => $doc->location,
+                'url' => "/doctors/{$doc->id}",
+            ])->values()->all(),
+        ];
     }
 
     /**

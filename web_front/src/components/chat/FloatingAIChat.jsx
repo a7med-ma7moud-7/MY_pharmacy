@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { aiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import AiSuggestionCards from './AiSuggestionCards';
 import { Bot, X, Send, Sparkles, RotateCcw, Maximize2 } from 'lucide-react';
 
 const INITIAL_MESSAGE = {
@@ -48,11 +50,19 @@ const renderFormattedText = (text) => {
 
 const FloatingAIChat = () => {
     const location = useLocation();
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([INITIAL_MESSAGE]);
+    const [chatId, setChatId] = useState(null);
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        if (!user) {
+            setChatId(null);
+        }
+    }, [user]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,12 +85,22 @@ const FloatingAIChat = () => {
         setLoading(true);
 
         try {
-            const res = await aiService.askQuestion(userText);
+            const res = await aiService.askQuestion(userText, user ? chatId : null);
             const reply =
                 res.data?.answer ||
                 res.data?.reply ||
                 'عذراً، لم أتمكن من معالجة السؤال حالياً.';
-            setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    sender: 'bot',
+                    text: reply,
+                    suggestions: res.data?.suggestions || null,
+                },
+            ]);
+            if (user && res.data?.chat_id) {
+                setChatId(res.data.chat_id);
+            }
         } catch (err) {
             const errMsg =
                 err.response?.data?.answer ||
@@ -141,7 +161,7 @@ const FloatingAIChat = () => {
                             </Link>
                             <button
                                 type="button"
-                                onClick={() => setMessages([INITIAL_MESSAGE])}
+                                onClick={() => { setMessages([INITIAL_MESSAGE]); setChatId(null); }}
                                 className="p-1.5 hover:bg-white/20 rounded-xl transition-colors text-white/90 hover:text-white cursor-pointer"
                                 title="محادثة جديدة"
                             >
@@ -172,7 +192,16 @@ const FloatingAIChat = () => {
                                         : 'bg-white text-slate-800 border border-slate-100 shadow-sm rounded-tl-none'
                                         }`}
                                 >
-                                    {msg.sender === 'user' ? msg.text : renderFormattedText(msg.text)}
+                                    {msg.sender === 'user' ? msg.text : (
+                                        <>
+                                            {renderFormattedText(msg.text)}
+                                            <AiSuggestionCards
+                                                suggestions={msg.suggestions}
+                                                compact
+                                                onNavigate={() => setIsOpen(false)}
+                                            />
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))}

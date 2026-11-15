@@ -12,6 +12,8 @@ import { Badge } from '../../components/common/Badge';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
+import { SearchInput } from '../../components/common/SearchInput';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { useNotification } from '../../context/NotificationContext';
 import { OrderDetail } from './OrderDetail';
 
@@ -168,41 +170,27 @@ export const OrderList = () => {
         }}
       >
         {/* Search */}
-        <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <div
-            style={{
-              position: 'absolute',
-              right: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Search size={18} />
-          </div>
-          <input
-            type="text"
-            className="form-input"
-            style={{ paddingRight: '38px' }}
-            placeholder="البحث برقم الطلب، اسم العميل، أو الهاتف..."
+        <div style={{ flex: '1 1 240px' }}>
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
+            placeholder="البحث برقم الطلب، اسم العميل، أو الهاتف..."
           />
         </div>
 
         {/* Status Filter */}
-        <div style={{ minWidth: '160px' }}>
-          <select
-            className="form-input"
+        <div style={{ minWidth: '185px' }}>
+          <CustomSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">جميع الحالات</option>
-            <option value="pending">طلبات قيد الانتظار</option>
-            <option value="processing">جاري التجهيز</option>
-            <option value="completed">الطلبات المكتملة</option>
-            <option value="cancelled">الملغية</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+              { value: '', label: 'جميع الحالات' },
+              { value: 'pending', label: 'طلبات قيد الانتظار' },
+              { value: 'processing', label: 'جاري التجهيز' },
+              { value: 'completed', label: 'الطلبات المكتملة' },
+              { value: 'cancelled', label: 'الملغية' },
+            ]}
+          />
         </div>
 
         <button
@@ -272,14 +260,11 @@ export const OrderList = () => {
                         </Badge>
                       </td>
                       <td>
-                        <select
-                          className="form-input"
-                          style={{
-                            padding: '4px 8px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            borderRadius: 'var(--radius-sm)',
-                            width: 'auto',
+                        <CustomSelect
+                          variant="pill"
+                          value={order.status || 'pending'}
+                          onChange={(val) => handleStatusChange(order.id, val)}
+                          triggerStyle={{
                             borderColor:
                               order.status === 'completed'
                                 ? 'var(--success-color)'
@@ -289,14 +274,13 @@ export const OrderList = () => {
                                 ? 'var(--danger-color)'
                                 : 'var(--warning-color)',
                           }}
-                          value={order.status || 'pending'}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        >
-                          <option value="pending">قيد الانتظار</option>
-                          <option value="processing">جاري التجهيز</option>
-                          <option value="completed">مكتمل ومسلّم</option>
-                          <option value="cancelled">ملغي</option>
-                        </select>
+                          options={[
+                            { value: 'pending', label: 'قيد الانتظار' },
+                            { value: 'processing', label: 'جاري التجهيز' },
+                            { value: 'completed', label: 'مكتمل ومسلّم' },
+                            { value: 'cancelled', label: 'ملغي' },
+                          ]}
+                        />
                       </td>
                       <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {order.created_at ? new Date(order.created_at).toLocaleDateString('ar-EG') : '—'}

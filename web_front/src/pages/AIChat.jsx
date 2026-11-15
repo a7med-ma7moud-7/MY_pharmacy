@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
     Bot,
     Send,
@@ -12,8 +13,14 @@ import {
     Pill,
     ShieldAlert,
     HeartPulse,
+    MessageSquare,
+    Plus,
+    Clock,
+    LogIn,
 } from 'lucide-react';
 import { aiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import AiSuggestionCards from '../components/chat/AiSuggestionCards';
 
 const WELCOME_MSG = {
     id: 'welcome',
@@ -40,8 +47,20 @@ const PROMPT_CATEGORIES = [
     },
 ];
 
-const formatTime = () =>
-    new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+const formatTime = (isoString) => {
+    const date = isoString ? new Date(isoString) : new Date();
+    return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatDateShort = (isoString) => {
+    if (!isoString) return '';
+    return new Date(isoString).toLocaleDateString('ar-EG', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};
 
 let msgSeq = 0;
 const nextMsgId = (prefix) => `${prefix}-${++msgSeq}`;
@@ -79,11 +98,73 @@ const renderFormattedText = (text) => {
 };
 
 export default function AIChat() {
+    const { user } = useAuth();
     const [question, setQuestion] = useState('');
     const [messages, setMessages] = useState([WELCOME_MSG]);
     const [loading, setLoading] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
+    const [chats, setChats] = useState([]);
+    const [chatsLoading, setChatsLoading] = useState(false);
+    const [activeChatId, setActiveChatId] = useState(null);
+    const [loadingChatMessages, setLoadingChatMessages] = useState(false);
     const streamRef = useRef(null);
+
+    const fetchUserChats = useCallback(async () => {
+        if (!user) {
+            setChats([]);
+            return;
+        }
+        setChatsLoading(true);
+        try {
+            const res = await aiService.getChats();
+            if (res.data?.success) {
+                setChats(res.data.chats || []);
+            }
+        } catch {
+            // Silently ignore if unauthorized
+        } finally {
+            setChatsLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            fetchUserChats();
+        } else {
+            setChats([]);
+            setActiveChatId(null);
+            setMessages([WELCOME_MSG]);
+        }
+    }, [user, fetchUserChats]);
+
+    const handleSelectChat = async (chatId) => {
+        if (loading || loadingChatMessages || chatId === activeChatId) return;
+        setLoadingChatMessages(true);
+        try {
+            const res = await aiService.getChat(chatId);
+            const chat = res.data?.chat;
+            if (chat) {
+                setActiveChatId(chat.id);
+                const mapped = (chat.messages || []).map((m) => ({
+                    id: `db-${m.id}`,
+                    sender: m.sender,
+                    text: m.text,
+                    suggestions: m.suggestions || null,
+                    time: formatTime(m.created_at),
+                }));
+                setMessages(mapped.length > 0 ? mapped : [WELCOME_MSG]);
+            }
+        } catch {
+            // Ignore error
+        } finally {
+            setLoadingChatMessages(false);
+        }
+    };
+
+    const handleNewChat = () => {
+        setActiveChatId(null);
+        setMessages([WELCOME_MSG]);
+    };
 
     useEffect(() => {
         if (messages.length > 1 || loading) {
@@ -111,7 +192,7 @@ export default function AIChat() {
         setLoading(true);
 
         try {
-            const res = await aiService.askQuestion(query);
+            const res = await aiService.askQuestion(query, user ? activeChatId : null);
             const replyText =
                 res.data?.answer ||
                 res.data?.reply ||
@@ -123,9 +204,15 @@ export default function AIChat() {
                     id: nextMsgId('b'),
                     sender: 'bot',
                     text: replyText,
+                    suggestions: res.data?.suggestions || null,
                     time: formatTime(),
                 },
             ]);
+
+            if (user && res.data?.chat_id) {
+                setActiveChatId(res.data.chat_id);
+                fetchUserChats();
+            }
         } catch (err) {
             setMessages((prev) => [
                 ...prev,
@@ -155,7 +242,7 @@ export default function AIChat() {
             {/* Hero Header */}
             <div className="hero-mesh text-white py-10 mb-8 relative overflow-hidden">
                 <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className={`${user ? 'max-w-6xl' : 'max-w-4xl'} mx-auto px-4 sm:px-6 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4`}>
                     <div className="flex items-center gap-4 text-center sm:text-right flex-col sm:flex-row">
                         <div className="w-16 h-16 rounded-3xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-xl">
                             <Bot className="w-9 h-9 text-emerald-200" />
@@ -171,10 +258,10 @@ export default function AIChat() {
                         </div>
                     </div>
 
-                    {messages.length > 1 && (
+                    {(messages.length > 1 || activeChatId) && (
                         <button
                             type="button"
-                            onClick={() => setMessages([WELCOME_MSG])}
+                            onClick={handleNewChat}
                             className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-xs font-bold text-white flex items-center gap-1.5 transition-all cursor-pointer"
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
@@ -184,7 +271,95 @@ export default function AIChat() {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <div className={`${user ? 'max-w-6xl' : 'max-w-4xl'} mx-auto px-4 sm:px-6`}>
+                <div className={user ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' : ''}>
+                    {/* User's Saved Chats Sidebar (Logged-in users only) */}
+                    {user && (
+                        <aside className="lg:col-span-4 lg:sticky lg:top-24 bg-white rounded-3xl shadow-lg border border-slate-100 p-5">
+                            <div className="flex items-center justify-between gap-2 pb-3.5 mb-3.5 border-b border-slate-100">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#0f6848] flex items-center justify-center shrink-0">
+                                        <MessageSquare className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-extrabold text-slate-800 font-almarai m-0">
+                                            محادثاتي السابقة
+                                        </h2>
+                                        <p className="text-[11px] text-slate-400 m-0">
+                                            سجل محادثاتك الخاصة
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleNewChat}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-[#0f6848] text-[#0f6848] hover:text-white text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>جديد</span>
+                                </button>
+                            </div>
+
+                            {chatsLoading ? (
+                                <div className="py-10 flex flex-col items-center justify-center text-slate-400 gap-2">
+                                    <Loader2 className="w-5 h-5 animate-spin text-[#0f6848]" />
+                                    <span className="text-xs">جاري تحميل محادثاتك...</span>
+                                </div>
+                            ) : chats.length === 0 ? (
+                                <div className="py-8 px-3 text-center text-xs text-slate-400 leading-relaxed">
+                                    لا توجد محادثات سابقة بعد. ابدأ بسؤال الصيدلي الذكي وسيتم حفظ المحادثة هنا تلقائياً.
+                                </div>
+                            ) : (
+                                <div className="space-y-2.5 max-h-[460px] overflow-y-auto pl-1">
+                                    {chats.map((chat) => {
+                                        const isActive = chat.id === activeChatId;
+                                        return (
+                                            <button
+                                                key={chat.id}
+                                                type="button"
+                                                onClick={() => handleSelectChat(chat.id)}
+                                                className={`w-full text-right p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                                                    isActive
+                                                        ? 'bg-emerald-50/90 border-[#0f6848]/40 shadow-sm'
+                                                        : 'bg-slate-50/60 border-slate-100 hover:bg-slate-50 hover:border-slate-200'
+                                                }`}
+                                            >
+                                                <div className="text-xs font-bold text-slate-800 line-clamp-2 mb-2">
+                                                    {chat.title}
+                                                </div>
+                                                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {formatDateShort(chat.last_message_at || chat.created_at)}
+                                                    </span>
+                                                    <span className="px-2 py-0.5 rounded-md bg-white border border-slate-100 font-bold text-slate-600">
+                                                        {chat.messages_count ?? 0} رسالة
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </aside>
+                    )}
+
+                    {/* Main Chat Area */}
+                    <div className={user ? 'lg:col-span-8' : ''}>
+                        {!user && (
+                            <div className="mb-4 px-4 py-2.5 rounded-2xl bg-white/85 backdrop-blur-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 shadow-sm">
+                                <span>
+                                    أنت في <strong>وضع الضيف</strong> — لا يتم حفظ المحادثات. سجل دخولك لحفظ سجل محادثاتك والرجوع إليها.
+                                </span>
+                                <Link
+                                    to="/login"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0f6848] hover:bg-[#0b5037] text-white font-bold transition-colors shrink-0"
+                                >
+                                    <LogIn className="w-3.5 h-3.5" />
+                                    <span>تسجيل الدخول</span>
+                                </Link>
+                            </div>
+                        )}
                 {/* Quick Prompt Cards */}
                 {messages.length === 1 && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6 animate-fadeInUp">
@@ -219,7 +394,14 @@ export default function AIChat() {
                         ref={streamRef}
                         className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50"
                     >
-                        {messages.map((msg) => {
+                        {loadingChatMessages && (
+                            <div className="py-12 flex items-center justify-center gap-2 text-xs text-slate-500">
+                                <Loader2 className="w-4 h-4 animate-spin text-[#0f6848]" />
+                                <span>جاري تحميل رسائل المحادثة...</span>
+                            </div>
+                        )}
+
+                        {!loadingChatMessages && messages.map((msg) => {
                             const isUser = msg.sender === 'user';
                             return (
                                 <div
@@ -250,6 +432,10 @@ export default function AIChat() {
                                         >
                                             {isUser ? msg.text : renderFormattedText(msg.text)}
                                         </div>
+
+                                        {!isUser && !msg.isError && msg.suggestions && (
+                                            <AiSuggestionCards suggestions={msg.suggestions} />
+                                        )}
 
                                         <div
                                             className={`flex items-center gap-3 text-[11px] text-slate-400 px-1 ${
@@ -335,6 +521,8 @@ export default function AIChat() {
                     <span className="leading-relaxed">
                         <strong>تنبيه طبي:</strong> المعلومات المقدمة من المساعد الذكي مخصصة للتثقيف والإرشاد الصيدلاني العام ولا تغني عن الكشف الطبي المباشر في الحالات الطارئة.
                     </span>
+                </div>
+                    </div>
                 </div>
             </div>
         </div>

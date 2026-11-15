@@ -14,6 +14,8 @@ import { Pagination } from '../../components/common/Pagination';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Dialog } from '../../components/common/Dialog';
+import { SearchInput } from '../../components/common/SearchInput';
+import { CustomSelect } from '../../components/common/CustomSelect';
 import { useNotification } from '../../context/NotificationContext';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { UserForm } from './UserForm';
@@ -159,39 +161,25 @@ export const UserList = () => {
         }}
       >
         {/* Search */}
-        <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <div
-            style={{
-              position: 'absolute',
-              right: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Search size={18} />
-          </div>
-          <input
-            type="text"
-            className="form-input"
-            style={{ paddingRight: '38px' }}
-            placeholder="البحث باسم المستخدم أو البريد الإلكتروني..."
+        <div style={{ flex: '1 1 240px' }}>
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
+            placeholder="البحث باسم المستخدم أو البريد الإلكتروني..."
           />
         </div>
 
         {/* Role Filter */}
-        <div style={{ minWidth: '160px' }}>
-          <select
-            className="form-input"
+        <div style={{ minWidth: '210px' }}>
+          <CustomSelect
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            <option value="">جميع الصلاحيات والأدوار</option>
-            <option value="admin">المسؤولين (Admins)</option>
-            <option value="user">العملاء والمستخدمين (Users)</option>
-          </select>
+            onChange={(val) => setRoleFilter(val)}
+            options={[
+              { value: '', label: 'جميع الصلاحيات والأدوار' },
+              { value: 'admin', label: 'المسؤولين (Admins)' },
+              { value: 'user', label: 'العملاء والمستخدمين (Users)' },
+            ]}
+          />
         </div>
 
         <button
