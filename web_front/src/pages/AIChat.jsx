@@ -46,6 +46,38 @@ const formatTime = () =>
 let msgSeq = 0;
 const nextMsgId = (prefix) => `${prefix}-${++msgSeq}`;
 
+const renderFormattedText = (text) => {
+    if (!text) return null;
+    const parts = String(text).split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+                <strong key={i} className="font-extrabold text-slate-900">
+                    {part.slice(2, -2)}
+                </strong>
+            );
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+            return (
+                <code
+                    key={i}
+                    className="px-1.5 py-0.5 rounded-md bg-emerald-50 text-[#0f6848] font-bold text-xs"
+                >
+                    {part.slice(1, -1)}
+                </code>
+            );
+        }
+        if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+            return (
+                <span key={i} className="text-slate-600 font-medium">
+                    {part.slice(1, -1)}
+                </span>
+            );
+        }
+        return <React.Fragment key={i}>{part}</React.Fragment>;
+    });
+};
+
 export default function AIChat() {
     const [question, setQuestion] = useState('');
     const [messages, setMessages] = useState([WELCOME_MSG]);
@@ -216,7 +248,7 @@ export default function AIChat() {
                                                     : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
                                             }`}
                                         >
-                                            {msg.text}
+                                            {isUser ? msg.text : renderFormattedText(msg.text)}
                                         </div>
 
                                         <div

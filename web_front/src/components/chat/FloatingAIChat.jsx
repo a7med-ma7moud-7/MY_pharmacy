@@ -14,6 +14,38 @@ const QUICK_PROMPTS = [
     'بدائل المسكنات لمرضى المعدة',
 ];
 
+const renderFormattedText = (text) => {
+    if (!text) return null;
+    const parts = String(text).split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+                <strong key={i} className="font-extrabold">
+                    {part.slice(2, -2)}
+                </strong>
+            );
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+            return (
+                <code
+                    key={i}
+                    className="px-1 py-0.5 rounded bg-emerald-50 text-[#0f6848] font-bold"
+                >
+                    {part.slice(1, -1)}
+                </code>
+            );
+        }
+        if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+            return (
+                <span key={i} className="text-slate-600 font-medium">
+                    {part.slice(1, -1)}
+                </span>
+            );
+        }
+        return <React.Fragment key={i}>{part}</React.Fragment>;
+    });
+};
+
 const FloatingAIChat = () => {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
@@ -131,18 +163,16 @@ const FloatingAIChat = () => {
                         {messages.map((msg, idx) => (
                             <div
                                 key={idx}
-                                className={`flex animate-fadeInUp ${
-                                    msg.sender === 'user' ? 'justify-start' : 'justify-end'
-                                }`}
+                                className={`flex animate-fadeInUp ${msg.sender === 'user' ? 'justify-start' : 'justify-end'
+                                    }`}
                             >
                                 <div
-                                    className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
-                                        msg.sender === 'user'
-                                            ? 'bg-gradient-to-r from-[#0f6848] to-[#14875e] text-white rounded-tr-none shadow-sm'
-                                            : 'bg-white text-slate-800 border border-slate-100 shadow-sm rounded-tl-none'
-                                    }`}
+                                    className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${msg.sender === 'user'
+                                        ? 'bg-gradient-to-r from-[#0f6848] to-[#14875e] text-white rounded-tr-none shadow-sm'
+                                        : 'bg-white text-slate-800 border border-slate-100 shadow-sm rounded-tl-none'
+                                        }`}
                                 >
-                                    {msg.text}
+                                    {msg.sender === 'user' ? msg.text : renderFormattedText(msg.text)}
                                 </div>
                             </div>
                         ))}
