@@ -10,6 +10,7 @@ import Footer from './components/layout/Footer';
 import CartModal from './components/cart/CartModal';
 import FloatingAIChat from './components/chat/FloatingAIChat';
 import ScrollToTop from './components/common/ScrollToTop';
+import SilkAmbientBg from './components/common/SilkAmbientBg';
 
 // Pages
 import Home from './pages/Home';
@@ -26,7 +27,7 @@ import Register from './pages/Register';
 
 function NotFound() {
   return (
-    <div className="py-20 px-4 text-center bg-slate-50 min-h-[70vh] flex flex-col items-center justify-center animate-fadeIn">
+    <div className="py-20 px-4 text-center bg-transparent min-h-[70vh] flex flex-col items-center justify-center animate-fadeIn">
       <div className="w-24 h-24 rounded-3xl bg-emerald-100 text-[#0f6848] flex items-center justify-center mb-6 shadow-inner animate-float">
         <Compass className="w-12 h-12" />
       </div>
@@ -54,7 +55,8 @@ export default function App() {
       <CartProvider>
         <Router>
           <ScrollToTop />
-          <div className="flex flex-col min-h-screen bg-slate-50">
+          <div className="relative isolate flex flex-col min-h-screen bg-transparent">
+            <SilkAmbientBg />
             <Navbar />
 
             <main className="flex-1">

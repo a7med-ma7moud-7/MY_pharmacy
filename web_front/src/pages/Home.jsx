@@ -4,238 +4,55 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { medicineService, doctorService } from '../services/api';
 import Reveal from '../components/common/Reveal';
-import AnimatedCounter from '../components/common/AnimatedCounter';
 import MedicineCard from '../components/common/MedicineCard';
 import MedicineQuickView from '../components/common/MedicineQuickView';
 import DoctorCard from '../components/common/DoctorCard';
 import {
     Pill,
-    FileText,
-    BarChart3,
-    Users,
-    Bell,
-    Smartphone,
     UserCheck,
-    Sparkles,
-    Clock,
-    ShieldCheck,
-    HeartPulse,
     ArrowLeft,
-    Calendar,
     Search,
     ChevronDown,
-    Truck,
     Stethoscope,
     Bot,
-    Star,
-    Quote,
-    CheckCircle2,
-    ShieldPlus,
-    Baby,
 } from 'lucide-react';
 
-const STATS = [
-    {
-        numeric: 150,
-        prefix: '+',
-        suffix: '',
-        label: 'طبيب واستشاري معتمد',
-        icon: UserCheck,
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50',
-    },
-    {
-        numeric: 1200,
-        prefix: '+',
-        suffix: '',
-        label: 'دواء ومستحضر مرخص',
-        icon: Pill,
-        color: 'text-teal-600',
-        bg: 'bg-teal-50',
-    },
-    {
-        numeric: 24,
-        prefix: '',
-        suffix: '/7',
-        label: 'استشارات بالذكاء الاصطناعي',
-        icon: Clock,
-        color: 'text-cyan-600',
-        bg: 'bg-cyan-50',
-    },
-    {
-        numeric: 100,
-        prefix: '',
-        suffix: '%',
-        label: 'أدوية أصلية وموثقة',
-        icon: ShieldCheck,
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50',
-    },
-];
-
-const SERVICES = [
-    {
-        icon: UserCheck,
-        title: 'نخبة الأطباء والاستشاريين',
-        desc: 'احجز موعد كشفك مع كبار الأطباء في كافة التخصصات الطبية، واستفد من تقييمات وتجارب المرضى الحقيقية بكل شفافية.',
-        linkTo: '/doctors',
-        linkText: 'تصفح الأطباء وحجز موعد',
-        iconBg: 'from-emerald-100 to-teal-50',
-    },
+const CORE_SERVICES = [
     {
         icon: Pill,
-        title: 'صيدلية متكاملة أونلاين',
-        desc: 'جميع الأدوية الأصلية والمستلزمات الطبية متوفرة بأسعار معتمدة، مع خيارات توصيل منزلي سريع وآمن حتى باب بيتك.',
+        title: 'صيدلية الأدوية',
+        desc: 'اطلب أدويتك الأصلية والمرخصة مع توصيل سريع حتى باب المنزل.',
         linkTo: '/medicines',
-        linkText: 'تصفح قائمة الأدوية',
-        iconBg: 'from-teal-100 to-cyan-50',
+        linkText: 'تصفح الأدوية',
     },
     {
-        icon: Sparkles,
-        title: 'الصيدلي الذكي (AI) 24/7',
-        desc: 'استفسر في أي لحظة عن الجرعات، التفاعلات الدوائية، أو البدائل، وسيقوم المساعد الذكي بإرشادك فوراً وبدقة.',
-        linkTo: '/ai-chat',
-        linkText: 'ابدأ الاستشارة الذكية',
-        iconBg: 'from-cyan-100 to-emerald-50',
-    },
-];
-
-const HOW_IT_WORKS = [
-    {
-        step: '01',
-        icon: Search,
-        title: 'ابحث واختر بسهولة',
-        desc: 'ابحث عن الدواء المطلوب بالاسم التجاري أو العلمي، أو اختر الطبيب المتخصص حسب محافظتك وتقييمات المرضى.',
+        icon: UserCheck,
+        title: 'حجز عيادات الأطباء',
+        desc: 'اختر الطبيب المناسب حسب التخصص والمحافظة واحجز موعدك مباشرة.',
+        linkTo: '/doctors',
+        linkText: 'تصفح الأطباء',
     },
     {
-        step: '02',
         icon: Bot,
-        title: 'استشر وتأكد فوراً',
-        desc: 'اسأل الصيدلي الذكي مجاناً على مدار الساعة للتأكد من الجرعات المناسبة أو التداخلات الدوائية قبل الطلب.',
-    },
-    {
-        step: '03',
-        icon: Truck,
-        title: 'استلم أو احجز في دقائق',
-        desc: 'أكمل طلبك ليصلك حتى باب منزلك مع تتبع لحظي، أو احصل على تذكرة حجز فورية لموعد عيادتك.',
-    },
-];
-
-const FEATURES = [
-    {
-        icon: Pill,
-        title: 'إدارة المخزون الذكية',
-        desc: 'تتبع مخزون الأدوية بسهولة وتلقي تنبيهات عند انخفاض المخزون لضمان توافر الأدوية دائمًا للمرضى.',
-    },
-    {
-        icon: FileText,
-        title: 'الوصفات الطبية الإلكترونية',
-        desc: 'سجل وتتبع الوصفات الطبية والتأكد من صرف الأدوية الصحيحة للمرضى بدقة وبشكل آمن تماماً.',
-    },
-    {
-        icon: BarChart3,
-        title: 'تقارير وإحصائيات دقيقة',
-        desc: 'مراقبة أداء الصيدلية من خلال تقارير مفصلة ورسوم بيانية تساعدك في اتخاذ القرارات المناسبة.',
-    },
-    {
-        icon: Users,
-        title: 'سجل طبي متكامل للعملاء',
-        desc: 'تسجيل بيانات العملاء وتاريخهم الطبي وتقديم خدمة شخصية راقية بناءً على معرفة احتياجاتهم الصحية.',
-    },
-    {
-        icon: Bell,
-        title: 'نظام التنبيهات الفوري',
-        desc: 'تنبيهات تلقائية للمواعيد وتواريخ انتهاء الصلاحية ومتابعة الشحنات والطلبات اليومية بكل يسر.',
-    },
-    {
-        icon: Smartphone,
-        title: 'منصة متوافقة مع كل الأجهزة',
-        desc: 'وصول سهل وسريع لمنصتك من أي مكان وفي أي وقت عبر الهاتف المحمول أو التابلت أو الحاسوب.',
-    },
-];
-
-const QUICK_CATEGORIES = [
-    {
-        label: 'مسكنات وخافض حرارة',
-        sub: 'أقراص ومستحضرات فورية',
-        to: '/medicines?type=أقراص',
-        icon: Pill,
-        tone: 'from-emerald-50 to-teal-50 text-[#0f6848] border-emerald-100',
-    },
-    {
-        label: 'فيتامينات ومناعة',
-        sub: 'مكملات وفوار يومي',
-        to: '/medicines?type=فوار',
-        icon: Sparkles,
-        tone: 'from-amber-50 to-orange-50 text-amber-700 border-amber-100',
-    },
-    {
-        label: 'مضادات وعلاجات',
-        sub: 'أدوية مرخصة وموثقة',
-        to: '/medicines',
-        icon: ShieldPlus,
-        tone: 'from-sky-50 to-cyan-50 text-sky-700 border-sky-100',
-    },
-    {
-        label: 'قلب وأوعية دموية',
-        sub: 'نخبة أطباء القلب',
-        to: '/doctors?specialty=قلب وأوعية دموية',
-        icon: HeartPulse,
-        tone: 'from-rose-50 to-pink-50 text-rose-700 border-rose-100',
-    },
-    {
-        label: 'طب الأطفال وحديثي الولادة',
-        sub: 'استشاريون معتمدون',
-        to: '/doctors?specialty=طب الأطفال',
-        icon: Baby,
-        tone: 'from-indigo-50 to-violet-50 text-indigo-700 border-indigo-100',
-    },
-    {
-        label: 'باطنة وجهاز هضمي',
-        sub: 'حجز عيادة فوري',
-        to: '/doctors?specialty=باطنة وجهاز هضمي',
-        icon: Stethoscope,
-        tone: 'from-teal-50 to-emerald-50 text-teal-700 border-teal-100',
-    },
-];
-
-const TESTIMONIALS = [
-    {
-        name: 'أ. سارة محمود',
-        role: 'طلب دواء موثق • القاهرة',
-        text: 'طلبت أدوية الضغط للوالد ووصلت في أقل من ساعة بتغليف ممتاز وتاريخ صلاحية واضح، وميزة تتبع الطلب لحظة بلحظة مريحة جداً.',
-        rating: 5,
-    },
-    {
-        name: 'م. كريم عبد الرحمن',
-        role: 'حجز عيادة مؤكد • الجيزة',
-        text: 'حجزت موعد كشف مع استشاري قلب في ثواني بدون تعقيد، وتذكرة الموعد كانت منظمة جداً والطبيب ممتاز ومواعيده دقيقة.',
-        rating: 5,
-    },
-    {
-        name: 'د. ندى طارق',
-        role: 'استشارة الصيدلي الذكي',
-        text: 'المساعد الصيدلاني الذكي أفادني فوراً في معرفة التداخلات الدوائية مع الفيتامينات قبل الشراء، تصميم المنصة راقي وسريع جداً.',
-        rating: 5,
+        title: 'الصيدلي الذكي',
+        desc: 'اسأل مجاناً عن الجرعات أو التداخلات الدوائية واحصل على إجابة فورية.',
+        linkTo: '/ai-chat',
+        linkText: 'ابدأ المحادثة',
     },
 ];
 
 const FAQS = [
     {
-        q: 'هل جميع الأدوية المتوفرة في صيدليتي مرخصة وأصلية؟',
-        a: 'نعم بالتأكيد، جميع الأدوية والمستحضرات الطبية المعروضة على المنصة مرخصة من وزارة الصحة المصرية ومستمدة من الموزعين المعتمدين رسمياً.',
+        q: 'هل جميع الأدوية المتوفرة مرخصة وأصلية؟',
+        a: 'نعم، جميع الأدوية المعروضة مرخصة من وزارة الصحة المصرية ومن موزعين معتمدين رسمياً.',
     },
     {
-        q: 'كيف يمكنني متابعة حالة طلب الأدوية الخاص بي؟',
-        a: 'فور إتمام الطلب ستحصل على رقم طلب (Order ID)، ويمكنك إدخاله مع رقم هاتفك في صفحة "تتبع طلبك" لمتابعة حالة تجهيز وتوصيل الطلب خطوة بخطوة.',
+        q: 'كيف أتابع حالة طلب الأدوية الخاص بي؟',
+        a: 'بعد إتمام الطلب تحصل على رقم الطلب، ويمكنك متابعته في أي وقت من صفحة "تتبع طلبك" برقم الطلب ورقم الهاتف.',
     },
     {
-        q: 'هل خدمة الصيدلي الذكي بالذكاء الاصطناعي مجانية؟',
-        a: 'نعم، خدمة الصيدلي الذكي متاحة مجاناً على مدار 24 ساعة للإجابة الفورية عن استفسارات الجرعات والأعراض الجانبية والنصائح الدوائية العامة.',
-    },
-    {
-        q: 'هل يمكنني حجز موعد مع طبيب بدون دفع إلكتروني مسبق؟',
-        a: 'نعم، يمكنك اختيار الطبيب وتحديد التاريخ والوقت المناسبين وتأكيد الحجز مباشرة عبر المنصة، مع الدفع في العيادة عند الحضور.',
+        q: 'هل حجز موعد الطبيب يتطلب دفع إلكتروني مسبق؟',
+        a: 'لا، الحجز يتم مجاناً عبر المنصة ويكون الدفع مباشرة في العيادة عند الحضور.',
     },
 ];
 
@@ -291,297 +108,115 @@ const Home = () => {
 
     return (
         <div className="overflow-hidden">
-            {/* Hero Section */}
-            <section className="hero-mesh relative overflow-hidden pt-12 pb-24 md:pt-16 md:pb-32">
-                <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
+            {/* Clean Minimalist Hero Section */}
+            <section className="hero-mesh relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-28">
+                <div className="hero-grid-pattern absolute inset-0 opacity-60 pointer-events-none"></div>
 
-                {/* Animated Floating Decorative Orbs */}
-                <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-3xl animate-blob pointer-events-none"></div>
-                <div className="absolute -bottom-24 -left-20 w-96 h-96 bg-teal-300/15 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
+                    <h1 className="text-3xl sm:text-5xl font-extrabold font-almarai mb-4 leading-[1.3] text-white animate-fadeInUp">
+                        رعايتك الصحية وأدويتك{' '}
+                        <span className="text-emerald-200">في مكان واحد</span>
+                    </h1>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-                        {/* Right Content Column */}
-                        <div className="lg:col-span-7 text-center lg:text-right">
-                            <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 px-4 py-1.5 rounded-full text-white text-xs sm:text-sm font-bold mb-5 backdrop-blur-md shadow-lg animate-fadeIn">
-                                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                                <span>المنصة الرائدة للرعاية الصحية والصيدلية في مصر</span>
-                            </div>
+                    <p className="text-sm sm:text-lg text-emerald-50/90 mb-9 font-normal leading-relaxed max-w-xl mx-auto animate-fadeInUp">
+                        ابحث عن دوائك واطلبه لباب المنزل، أو احجز موعدك مع نخبة الأطباء المعتمدين بسهولة.
+                    </p>
 
-                            <h1 className="text-3xl sm:text-5xl xl:text-[3.4rem] font-extrabold font-almarai mb-5 leading-[1.28] text-white drop-shadow-md animate-fadeInUp">
-                                رعايتك الصحية وأدويتك <br />
-                                <span className="text-emerald-200">في مكان واحد بكل سهولة وأمان</span>
-                            </h1>
-
-                            <p className="text-sm sm:text-base md:text-lg text-emerald-50/90 mb-7 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0 animate-fadeInUp">
-                                منصة صيدليتي توفر لك دليلاً شاملاً لأفضل الأطباء، وصيدلية متكاملة أونلاين، ومساعد ذكاء اصطناعي طبي يجيبك فوراً على مدار الساعة.
-                            </p>
-
-                            {/* Interactive Tabbed Search Box */}
-                            <div className="max-w-2xl mx-auto lg:mx-0 mb-6 bg-white/15 backdrop-blur-xl p-2.5 rounded-3xl border border-white/25 shadow-2xl animate-scaleIn">
-                                <div className="flex items-center gap-2 mb-2 px-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchMode('medicine')}
-                                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                                            searchMode === 'medicine'
-                                                ? 'bg-white text-[#0f6848] shadow-sm'
-                                                : 'text-white/85 hover:bg-white/10'
-                                        }`}
-                                    >
-                                        <Pill className="w-3.5 h-3.5" />
-                                        <span>ابحث عن دواء</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchMode('doctor')}
-                                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                                            searchMode === 'doctor'
-                                                ? 'bg-white text-[#0f6848] shadow-sm'
-                                                : 'text-white/85 hover:bg-white/10'
-                                        }`}
-                                    >
-                                        <Stethoscope className="w-3.5 h-3.5" />
-                                        <span>ابحث عن طبيب</span>
-                                    </button>
-                                </div>
-
-                                <form
-                                    onSubmit={handleHeroSearch}
-                                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white rounded-2xl p-1.5 shadow-inner"
-                                >
-                                    <div className="flex items-center gap-2.5 flex-1 px-3 py-1.5">
-                                        <Search className="w-5 h-5 text-emerald-600 shrink-0" />
-                                        <input
-                                            type="text"
-                                            value={heroQuery}
-                                            onChange={(e) => setHeroQuery(e.target.value)}
-                                            placeholder={
-                                                searchMode === 'medicine'
-                                                    ? 'اكتب اسم الدواء أو المادة الفعالة (مثل: بنادول، فيتامين سي)...'
-                                                    : 'اكتب اسم الطبيب أو التخصص الطبي (مثل: باطنة، أطفال، قلب)...'
-                                            }
-                                            className="w-full text-sm text-slate-800 placeholder:text-slate-400 bg-transparent focus:outline-none font-medium"
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        className="btn-main px-7 py-3 rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                                    >
-                                        <span>ابحث الآن</span>
-                                        <ArrowLeft className="w-4 h-4" />
-                                    </button>
-                                </form>
-
-                                {/* Quick Popular Search Tags */}
-                                <div className="flex flex-wrap items-center gap-1.5 pt-2.5 px-1.5 text-[11px]">
-                                    <span className="text-emerald-200/90 font-bold ml-1">شائع الآن:</span>
-                                    {(searchMode === 'medicine'
-                                        ? ['بنادول', 'فيتامين سي', 'أوجمنتين', 'كونجستال']
-                                        : ['قلب وأوعية', 'طب الأطفال', 'باطنة', 'جلدية']
-                                    ).map((tag) => (
-                                        <button
-                                            key={tag}
-                                            type="button"
-                                            onClick={() => {
-                                                if (searchMode === 'medicine') {
-                                                    navigate(`/medicines?query=${encodeURIComponent(tag)}`);
-                                                } else {
-                                                    navigate(`/doctors?search=${encodeURIComponent(tag)}`);
-                                                }
-                                            }}
-                                            className="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/25 text-white border border-white/15 font-semibold transition-colors cursor-pointer"
-                                        >
-                                            {tag}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 mb-6">
-                                <Link
-                                    to="/medicines"
-                                    className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-7 py-3.5 rounded-full shadow-xl text-sm md:text-base transition-all inline-flex items-center gap-2.5"
-                                >
-                                    <Pill className="w-5 h-5 text-emerald-600" />
-                                    <span>تصفح الصيدلية كاملة</span>
-                                </Link>
-                                <Link
-                                    to="/doctors"
-                                    className="bg-white/10 backdrop-blur-md border-2 border-white/75 hover:bg-white hover:text-[#0f6848] active:scale-95 font-bold px-7 py-3.5 rounded-full text-sm md:text-base text-white transition-all inline-flex items-center gap-2.5 shadow-lg"
-                                >
-                                    <UserCheck className="w-5 h-5" />
-                                    <span>احجز موعد طبيب</span>
-                                </Link>
-                            </div>
-
-                            {/* Inline Trust Highlights */}
-                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 text-xs font-bold text-emerald-50/95">
-                                <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                                    <span>أدوية أصلية مرخصة 100%</span>
-                                </span>
-                                <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                                    <Truck className="w-4 h-4 text-teal-200" />
-                                    <span>توصيل منزلي سريع وآمن</span>
-                                </span>
-                                <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                                    <Bot className="w-4 h-4 text-amber-300" />
-                                    <span>استشارة الصيدلي الذكي 24/7</span>
-                                </span>
-                            </div>
+                    {/* Clean Single Search Box */}
+                    <div className="max-w-2xl mx-auto bg-white rounded-2xl p-2 shadow-2xl animate-scaleIn">
+                        <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-slate-100 px-1">
+                            <button
+                                type="button"
+                                onClick={() => setSearchMode('medicine')}
+                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                    searchMode === 'medicine'
+                                        ? 'bg-emerald-50 text-[#0f6848]'
+                                        : 'text-slate-500 hover:bg-slate-50'
+                                }`}
+                            >
+                                <Pill className="w-3.5 h-3.5" />
+                                <span>الأدوية</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSearchMode('doctor')}
+                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                    searchMode === 'doctor'
+                                        ? 'bg-emerald-50 text-[#0f6848]'
+                                        : 'text-slate-500 hover:bg-slate-50'
+                                }`}
+                            >
+                                <Stethoscope className="w-3.5 h-3.5" />
+                                <span>الأطباء</span>
+                            </button>
                         </div>
 
-                        {/* Left Visual Interactive Showcase (Desktop) */}
-                        <div className="hidden lg:block lg:col-span-5 relative animate-fadeIn">
-                            <div className="relative mx-auto max-w-md">
-                                {/* Main Glass Medical Hub Card */}
-                                <div className="bg-white/12 backdrop-blur-2xl border border-white/25 rounded-3xl p-6 shadow-2xl text-white space-y-4">
-                                    <div className="flex items-center justify-between pb-3.5 border-b border-white/15">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 flex items-center justify-center shadow-lg">
-                                                <Bot className="w-6 h-6 text-white" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-extrabold text-white m-0">
-                                                    الصيدلي الذكي المباشر
-                                                </h3>
-                                                <span className="text-[11px] text-emerald-200 flex items-center gap-1.5">
-                                                    <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                                                    متصل الآن للإجابة الفورية
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <span className="text-[10px] font-extrabold bg-white/15 px-2.5 py-1 rounded-full border border-white/20">
-                                            AI 24/7
-                                        </span>
-                                    </div>
-
-                                    {/* Simulated Live Pharmacist Bubble */}
-                                    <div className="bg-white/95 text-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
-                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                                            <span className="text-[#0f6848] flex items-center gap-1">
-                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                                إرشاد دوائي موثق
-                                            </span>
-                                            <span>خلال ثوانٍ</span>
-                                        </div>
-                                        <p className="text-xs text-slate-700 font-semibold leading-relaxed m-0">
-                                            &ldquo;يُفضّل تناول فيتامين سي الفوار بعد الإفطار، مع تجنب تجاوز الجرعة اليومية الموصى بها.&rdquo;
-                                        </p>
-                                    </div>
-
-                                    {/* Mini Dual Live Cards */}
-                                    <div className="grid grid-cols-2 gap-3 pt-1">
-                                        <Link
-                                            to="/orders/track"
-                                            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3.5 transition-all group"
-                                        >
-                                            <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                                <Truck className="w-4 h-4" />
-                                            </div>
-                                            <div className="text-xs font-extrabold text-white">توصيل خلال 45 د</div>
-                                            <div className="text-[10px] text-emerald-100/80 mt-0.5">تتبع لحظي للشحنة</div>
-                                        </Link>
-
-                                        <Link
-                                            to="/appointments"
-                                            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-3.5 transition-all group"
-                                        >
-                                            <div className="w-9 h-9 rounded-xl bg-emerald-300/20 text-emerald-200 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                                <Calendar className="w-4 h-4" />
-                                            </div>
-                                            <div className="text-xs font-extrabold text-white">حجز عيادة فوري</div>
-                                            <div className="text-[10px] text-emerald-100/80 mt-0.5">+150 طبيب استشاري</div>
-                                        </Link>
-                                    </div>
-                                </div>
-
-                                {/* Floating Rating Pill */}
-                                <div className=" -mt-4 mr-6 ml-auto w-fit bg-white text-slate-800 px-4 py-2.5 rounded-2xl shadow-xl border border-emerald-100 flex items-center gap-2.5 animate-float relative z-20">
-                                    <div className="flex items-center gap-0.5 text-amber-400">
-                                        {[1, 2, 3, 4, 5].map((i) => (
-                                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                                        ))}
-                                    </div>
-                                    <span className="text-xs font-black text-slate-900">4.9/5</span>
-                                    <span className="text-[11px] font-bold text-slate-500">ثقة المرضى</span>
-                                </div>
+                        <form
+                            onSubmit={handleHeroSearch}
+                            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+                        >
+                            <div className="flex items-center gap-2.5 flex-1 px-3 py-2">
+                                <Search className="w-5 h-5 text-slate-400 shrink-0" />
+                                <input
+                                    type="text"
+                                    value={heroQuery}
+                                    onChange={(e) => setHeroQuery(e.target.value)}
+                                    placeholder={
+                                        searchMode === 'medicine'
+                                            ? 'ابحث باسم الدواء (مثال: بنادول، فيتامين سي)...'
+                                            : 'ابحث باسم الطبيب أو التخصص (مثال: باطنة، أطفال)...'
+                                    }
+                                    className="w-full text-sm text-slate-800 placeholder:text-slate-400 bg-transparent focus:outline-none font-medium"
+                                />
                             </div>
-                        </div>
+                            <button
+                                type="submit"
+                                className="btn-main px-8 py-3 rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                            >
+                                <span>بحث</span>
+                                <ArrowLeft className="w-4 h-4" />
+                            </button>
+                        </form>
+                    </div>
+
+                    {/* Subtle Minimal Metrics Line */}
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-emerald-100/90 font-semibold">
+                        <span>+1,200 دواء مرخص</span>
+                        <span className="hidden sm:inline text-white/30">•</span>
+                        <span>+150 طبيب معتمد</span>
+                        <span className="hidden sm:inline text-white/30">•</span>
+                        <span>استشارة ذكية مجانية 24/7</span>
                     </div>
                 </div>
             </section>
 
-            {/* Trust Stats Counter Strip */}
-            <section className="relative z-20 -mt-10 sm:-mt-12 px-4">
-                <Reveal direction="up">
-                    <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-8">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {STATS.map((s, idx) => {
-                                const Icon = s.icon;
-                                return (
-                                    <div
-                                        key={idx}
-                                        className="flex flex-col items-center text-center pt-2 md:pt-0 group"
-                                    >
-                                        <div
-                                            className={`p-3.5 ${s.bg} rounded-2xl mb-3 group-hover:scale-110 transition-transform duration-300 shadow-sm`}
-                                        >
-                                            <Icon className={`w-6 h-6 ${s.color}`} />
-                                        </div>
-                                        <div className="text-2xl sm:text-3xl font-black text-slate-900 font-almarai tracking-tight">
-                                            <AnimatedCounter
-                                                end={s.numeric}
-                                                prefix={s.prefix}
-                                                suffix={s.suffix}
-                                            />
-                                        </div>
-                                        <div className="text-xs sm:text-sm text-slate-500 font-bold mt-1">
-                                            {s.label}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </Reveal>
-            </section>
-
-            {/* Quick Medical Categories & Specialties Strip */}
-            <section className="pt-14 pb-4 bg-slate-50">
+            {/* Core Services (3 Clean Cards) */}
+            <section className="py-16 bg-transparent">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Reveal className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-lg sm:text-xl font-extrabold font-almarai text-slate-900 m-0">
-                                تصفح سريع حسب القسم أو التخصص
-                            </h2>
-                            <p className="text-xs text-slate-500 mt-0.5 m-0">
-                                اختر الفئة المطلوبة للوصول المباشر إلى الأدوية أو الأطباء المتخصصين
-                            </p>
-                        </div>
-                    </Reveal>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-                        {QUICK_CATEGORIES.map((cat, idx) => {
-                            const Icon = cat.icon;
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {CORE_SERVICES.map((srv, idx) => {
+                            const Icon = srv.icon;
                             return (
-                                <Reveal key={idx} delay={idx * 55}>
+                                <Reveal key={idx} delay={idx * 80}>
                                     <Link
-                                        to={cat.to}
-                                        className={`h-full p-4 rounded-2xl bg-gradient-to-br ${cat.tone} border hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group`}
+                                        to={srv.linkTo}
+                                        className="h-full p-7 rounded-3xl bg-white/95 backdrop-blur-xs border border-white/80 shadow-sm hover:shadow-lg hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
                                     >
-                                        <div className="w-10 h-10 rounded-xl bg-white shadow-xs flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                            <Icon className="w-5 h-5" />
-                                        </div>
                                         <div>
-                                            <div className="text-xs sm:text-sm font-extrabold font-almarai text-slate-900 leading-snug">
-                                                {cat.label}
+                                            <div className="w-12 h-12 bg-emerald-50 text-[#0f6848] rounded-2xl flex items-center justify-center mb-5 group-hover:bg-[#0f6848] group-hover:text-white transition-colors">
+                                                <Icon className="w-6 h-6" />
                                             </div>
-                                            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
-                                                {cat.sub}
-                                            </div>
+                                            <h2 className="font-extrabold text-slate-900 text-lg mb-2 font-almarai">
+                                                {srv.title}
+                                            </h2>
+                                            <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                                                {srv.desc}
+                                            </p>
                                         </div>
+                                        <span className="text-[#0f6848] font-bold text-xs inline-flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+                                            <span>{srv.linkText}</span>
+                                            <ArrowLeft className="w-4 h-4" />
+                                        </span>
                                     </Link>
                                 </Reveal>
                             );
@@ -590,74 +225,25 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Quick Services Row */}
-            <section className="py-20 bg-slate-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Reveal className="text-center max-w-2xl mx-auto mb-14">
-                        <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full tracking-wider mb-3 inline-block">
-                            الخدمات المتاحة
-                        </span>
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-almarai text-slate-900 mb-3">
-                            خدماتنا الطبية المتكاملة
-                        </h2>
-                        <p className="text-slate-500 text-sm sm:text-base leading-relaxed m-0">
-                            نوفر لك حلولاً فورية وموثوقة لتلبية كافة احتياجاتك العلاجية والصحية
-                        </p>
-                    </Reveal>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {SERVICES.map((srv, idx) => {
-                            const Icon = srv.icon;
-                            return (
-                                <Reveal key={idx} delay={idx * 110}>
-                                    <div className="h-full p-8 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-[#0f6848]/10 hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between group">
-                                        <div>
-                                            <div
-                                                className={`w-16 h-16 bg-gradient-to-br ${srv.iconBg} text-[#0f6848] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-inner`}
-                                            >
-                                                <Icon className="w-8 h-8 text-[#0f6848]" />
-                                            </div>
-                                            <h3 className="font-extrabold text-slate-900 text-xl mb-3 font-almarai">
-                                                {srv.title}
-                                            </h3>
-                                            <p className="text-sm text-slate-600 leading-relaxed mb-6">
-                                                {srv.desc}
-                                            </p>
-                                        </div>
-                                        <Link
-                                            to={srv.linkTo}
-                                            className="text-[#0f6848] font-extrabold text-sm inline-flex items-center gap-2 group-hover:gap-3 transition-all"
-                                        >
-                                            <span>{srv.linkText}</span>
-                                            <ArrowLeft className="w-4 h-4 transition-transform" />
-                                        </Link>
-                                    </div>
-                                </Reveal>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* Live Featured Medicines */}
+            {/* Featured Medicines */}
             {(loadingFeatured || featuredMedicines.length > 0) && (
-                <section className="py-20 bg-white">
+                <section className="py-16 bg-white/30 backdrop-blur-[2px] border-t border-white/60">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+                        <Reveal className="flex items-center justify-between gap-4 mb-10">
                             <div>
-                                <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full inline-block mb-3">
-                                    الأكثر طلباً
-                                </span>
-                                <h2 className="text-2xl sm:text-3xl font-extrabold font-almarai text-slate-900 m-0">
-                                    أحدث الأدوية والمستلزمات الطبية
+                                <h2 className="text-xl sm:text-2xl font-extrabold font-almarai text-slate-900 m-0">
+                                    أحدث الأدوية المتوفرة
                                 </h2>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-1 m-0">
+                                    أدوية أصلية جاهزة للطلب والتوصيل السريع
+                                </p>
                             </div>
                             <Link
                                 to="/medicines"
-                                className="btn-outline-main px-5 py-2.5 rounded-xl text-xs font-extrabold inline-flex items-center gap-2 self-start sm:self-auto"
+                                className="btn-outline-main px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shrink-0"
                             >
-                                <span>عرض كل الأدوية</span>
-                                <ArrowLeft className="w-4 h-4" />
+                                <span>عرض الكل</span>
+                                <ArrowLeft className="w-3.5 h-3.5" />
                             </Link>
                         </Reveal>
 
@@ -692,66 +278,25 @@ const Home = () => {
                 </section>
             )}
 
-            {/* How It Works Section */}
-            <section className="py-20 bg-gradient-to-b from-slate-50 to-emerald-50/30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Reveal className="text-center max-w-2xl mx-auto mb-14">
-                        <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full inline-block mb-3">
-                            خطوات بسيطة
-                        </span>
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-almarai text-slate-900 mb-3">
-                            كيف تعمل منصة صيدليتي؟
-                        </h2>
-                        <p className="text-slate-500 text-sm sm:text-base m-0">
-                            رحلة علاجية رقمية متكاملة في 3 خطوات سريعة وآمنة
-                        </p>
-                    </Reveal>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                        {HOW_IT_WORKS.map((item, idx) => {
-                            const Icon = item.icon;
-                            return (
-                                <Reveal key={item.step} delay={idx * 130}>
-                                    <div className="relative bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center group h-full">
-                                        <span className="absolute top-5 left-5 text-3xl font-black text-emerald-500/15 group-hover:text-emerald-500/30 transition-colors font-mono">
-                                            {item.step}
-                                        </span>
-                                        <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-[#0f6848] to-[#10ac84] text-white flex items-center justify-center shadow-lg shadow-[#0f6848]/20 group-hover:scale-110 transition-transform">
-                                            <Icon className="w-7 h-7" />
-                                        </div>
-                                        <h3 className="text-lg font-extrabold font-almarai text-slate-900 mb-2.5">
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-sm text-slate-500 leading-relaxed m-0">
-                                            {item.desc}
-                                        </p>
-                                    </div>
-                                </Reveal>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* Live Featured Doctors */}
+            {/* Featured Doctors */}
             {featuredDoctors.length > 0 && (
-                <section className="py-20 bg-white">
+                <section className="py-16 bg-transparent border-t border-emerald-900/5">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+                        <Reveal className="flex items-center justify-between gap-4 mb-10">
                             <div>
-                                <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full inline-block mb-3">
-                                    نخبة الأطباء
-                                </span>
-                                <h2 className="text-2xl sm:text-3xl font-extrabold font-almarai text-slate-900 m-0">
-                                    احجز موعدك مع أفضل الاستشاريين
+                                <h2 className="text-xl sm:text-2xl font-extrabold font-almarai text-slate-900 m-0">
+                                    نخبة الأطباء والاستشاريين
                                 </h2>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-1 m-0">
+                                    احجز موعد عيادتك بسهولة مع أطباء معتمدين
+                                </p>
                             </div>
                             <Link
                                 to="/doctors"
-                                className="btn-outline-main px-5 py-2.5 rounded-xl text-xs font-extrabold inline-flex items-center gap-2 self-start sm:self-auto"
+                                className="btn-outline-main px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shrink-0"
                             >
-                                <span>عرض كل الأطباء</span>
-                                <ArrowLeft className="w-4 h-4" />
+                                <span>عرض الكل</span>
+                                <ArrowLeft className="w-3.5 h-3.5" />
                             </Link>
                         </Reveal>
 
@@ -764,212 +309,86 @@ const Home = () => {
                 </section>
             )}
 
-            {/* Features Section */}
-            <section className="py-20 bg-slate-50" id="features">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Reveal className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full uppercase tracking-wider mb-3 inline-block">
-                            لماذا صيدليتي؟
-                        </span>
-                        <h2 className="text-3xl md:text-4xl font-extrabold font-almarai text-slate-900 mb-4">
-                            مميزات منصة صيدليتي
-                        </h2>
-                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                            نظام تقني متطور يجمع بين سهولة الاستخدام للمرضى، والكفاءة الاحترافية لإدارة الصيدليات والعيادات
-                        </p>
-                    </Reveal>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {FEATURES.map((feature, idx) => {
-                            const Icon = feature.icon;
-                            return (
-                                <Reveal key={idx} delay={(idx % 3) * 100}>
-                                    <div className="h-full p-7 rounded-3xl bg-white border border-slate-100 hover:border-[#0f6848]/25 hover:shadow-xl transition-all duration-300 group hover:-translate-y-1.5">
-                                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 shadow-sm flex items-center justify-center text-[#0f6848] mb-6 group-hover:scale-110 group-hover:bg-[#0f6848] group-hover:text-white transition-all duration-300">
-                                            <Icon className="w-7 h-7" />
-                                        </div>
-                                        <h3 className="text-xl font-bold font-almarai text-slate-800 mb-3 group-hover:text-[#0f6848] transition-colors">
-                                            {feature.title}
-                                        </h3>
-                                        <p className="text-slate-500 text-sm leading-relaxed m-0">
-                                            {feature.desc}
-                                        </p>
-                                    </div>
-                                </Reveal>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* Verified Patient Testimonials */}
-            <section className="py-20 bg-white border-b border-slate-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Reveal className="text-center max-w-2xl mx-auto mb-14">
-                        <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full inline-block mb-3">
-                            ثقة آلاف المرضى
-                        </span>
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-almarai text-slate-900 mb-3">
-                            ماذا يقول عملاؤنا عن صيدليتي؟
-                        </h2>
-                        <p className="text-slate-500 text-sm sm:text-base m-0">
-                            تجارب حقيقية لعملاء استخدموا المنصة في طلب الأدوية وحجز العيادات والاستشارة الذكية
-                        </p>
-                    </Reveal>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {TESTIMONIALS.map((item, idx) => (
-                            <Reveal key={idx} delay={idx * 100}>
-                                <div className="h-full bg-slate-50/80 hover:bg-white rounded-3xl p-7 border border-slate-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative group">
-                                    <Quote className="w-10 h-10 text-emerald-500/12 absolute top-6 left-6 pointer-events-none group-hover:text-emerald-500/25 transition-colors" />
-                                    <div>
-                                        <div className="flex items-center gap-1 text-amber-400 mb-4">
-                                            {Array.from({ length: item.rating }).map((_, s) => (
-                                                <Star
-                                                    key={s}
-                                                    className="w-4 h-4 fill-amber-400 text-amber-400"
-                                                />
-                                            ))}
-                                        </div>
-                                        <p className="text-sm text-slate-700 leading-relaxed mb-6 font-medium">
-                                            &ldquo;{item.text}&rdquo;
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-3 pt-4 border-t border-slate-200/70">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0f6848] to-[#10ac84] text-white font-extrabold text-xs flex items-center justify-center shrink-0">
-                                            {item.name.replace(/^.\.\s*/, '').charAt(0)}
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-extrabold text-slate-900 font-almarai">
-                                                {item.name}
-                                            </div>
-                                            <div className="text-[11px] font-bold text-emerald-700">
-                                                {item.role}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Reveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Interactive FAQ Accordion */}
-            <section className="py-20 bg-white">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Reveal className="text-center mb-12">
-                        <span className="text-xs font-extrabold text-[#0f6848] bg-emerald-100/80 px-4 py-1.5 rounded-full inline-block mb-3">
+            {/* Simple FAQ Section */}
+            <section className="py-16 bg-white/30 backdrop-blur-[2px] border-t border-white/60">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Reveal className="text-center mb-10">
+                        <h2 className="text-xl sm:text-2xl font-extrabold font-almarai text-slate-900 mb-1.5">
                             الأسئلة الشائعة
-                        </span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold font-almarai text-slate-900 mb-2">
-                            إجابات سريعة لأهم استفساراتك
                         </h2>
-                        <p className="text-slate-500 text-sm m-0">
-                            كل ما تحتاج معرفته حول طلب الأدوية وحجز العيادات والاستشارة الذكية
+                        <p className="text-slate-500 text-xs sm:text-sm m-0">
+                            إجابات مختصرة لأهم الاستفسارات
                         </p>
                     </Reveal>
 
-                    <div className="space-y-3.5">
+                    <div className="space-y-3">
                         {FAQS.map((faq, idx) => {
                             const isOpen = openFaq === idx;
                             return (
-                                <Reveal key={idx} delay={idx * 70}>
-                                    <div
-                                        className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-                                            isOpen
-                                                ? 'border-emerald-300 bg-emerald-50/30 shadow-md shadow-emerald-900/5'
-                                                : 'border-slate-200/80 bg-white hover:border-emerald-200'
-                                        }`}
+                                <div
+                                    key={idx}
+                                    className={`rounded-2xl border transition-all duration-200 overflow-hidden shadow-xs ${
+                                        isOpen
+                                            ? 'border-emerald-300 bg-white/95'
+                                            : 'border-white/80 bg-white/90 hover:border-emerald-200'
+                                    }`}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => setOpenFaq(isOpen ? -1 : idx)}
+                                        className="w-full px-5 py-4 text-right flex items-center justify-between gap-4 cursor-pointer"
                                     >
-                                        <button
-                                            type="button"
-                                            onClick={() => setOpenFaq(isOpen ? -1 : idx)}
-                                            className="w-full px-6 py-4 text-right flex items-center justify-between gap-4 cursor-pointer"
-                                        >
-                                            <span className="font-extrabold text-sm sm:text-base text-slate-800 font-almarai">
-                                                {faq.q}
-                                            </span>
-                                            <span
-                                                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
-                                                    isOpen
-                                                        ? 'bg-[#0f6848] text-white rotate-180'
-                                                        : 'bg-slate-100 text-slate-600'
-                                                }`}
-                                            >
-                                                <ChevronDown className="w-4 h-4" />
-                                            </span>
-                                        </button>
+                                        <span className="font-bold text-sm text-slate-800 font-almarai">
+                                            {faq.q}
+                                        </span>
+                                        <ChevronDown
+                                            className={`w-4 h-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                                                isOpen ? 'rotate-180 text-[#0f6848]' : ''
+                                            }`}
+                                        />
+                                    </button>
 
-                                        {isOpen && (
-                                            <div className="px-6 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-emerald-100/80 pt-3 animate-fadeIn">
-                                                {faq.a}
-                                            </div>
-                                        )}
-                                    </div>
-                                </Reveal>
+                                    {isOpen && (
+                                        <div className="px-5 pb-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-emerald-100/70 pt-3 animate-fadeIn">
+                                            {faq.a}
+                                        </div>
+                                    )}
+                                </div>
                             );
                         })}
                     </div>
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-16 bg-slate-50 px-4 sm:px-6 lg:px-8">
-                <Reveal direction="scale" className="max-w-6xl mx-auto">
-                    <div className="hero-mesh rounded-3xl py-16 px-6 sm:px-12 text-center relative overflow-hidden text-white shadow-2xl">
-                        <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
-                        <div className="max-w-3xl mx-auto relative z-10">
-                            <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/25 shadow-inner animate-float">
-                                <HeartPulse className="w-8 h-8 text-emerald-300" />
-                            </div>
-                            <h2 className="text-3xl md:text-5xl font-extrabold font-almarai mb-5 text-white drop-shadow-sm">
-                                {user
-                                    ? `أهلاً بك يا ${user.name} في صيدليتي`
-                                    : 'ابدأ في استخدام منصة صيدليتي اليوم'}
+            {/* Clean Guest CTA Banner (shown only when not logged in) */}
+            {!user && (
+                <section className="py-12 bg-transparent px-4 sm:px-6 lg:px-8 border-t border-emerald-900/5">
+                    <div className="max-w-5xl mx-auto hero-mesh rounded-3xl py-12 px-6 sm:px-10 text-center relative overflow-hidden text-white shadow-lg">
+                        <div className="max-w-xl mx-auto relative z-10">
+                            <h2 className="text-2xl sm:text-3xl font-extrabold font-almarai mb-3 text-white">
+                                أنشئ حسابك المجاني في صيدليتي
                             </h2>
-                            <p className="text-base md:text-lg text-emerald-50/90 mb-9 max-w-2xl mx-auto leading-relaxed">
-                                انضم الآن لآلاف المرضى والأطباء واستمتع بتجربة رعاية صحية رقمية استثنائية وسريعة.
+                            <p className="text-sm text-emerald-50/90 mb-6 leading-relaxed">
+                                احفظ بيانات التوصيل وتابع طلباتك وحجوزاتك الطبية من مكان واحد.
                             </p>
-
-                            <div className="flex flex-wrap items-center justify-center gap-4">
-                                {user ? (
-                                    <>
-                                        <Link
-                                            to="/appointments"
-                                            className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-9 py-3.5 text-base rounded-full shadow-2xl transition-all inline-flex items-center gap-2"
-                                        >
-                                            <Calendar className="w-5 h-5 text-emerald-600" />
-                                            <span>احجز موعد كشف الآن</span>
-                                        </Link>
-                                        <Link
-                                            to="/orders/track"
-                                            className="bg-white/10 backdrop-blur-md border-2 border-white/80 hover:bg-white hover:text-[#0f6848] text-white font-bold px-9 py-3.5 text-base rounded-full transition-all active:scale-95 shadow-lg"
-                                        >
-                                            متابعة طلباتك
-                                        </Link>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Link
-                                            to="/register"
-                                            className="bg-white text-[#0f6848] hover:bg-emerald-50 hover:scale-105 active:scale-95 font-extrabold px-9 py-3.5 text-base rounded-full shadow-2xl transition-all"
-                                        >
-                                            سجّل حسابك الآن مجاناً
-                                        </Link>
-                                        <Link
-                                            to="/login"
-                                            className="bg-white/10 backdrop-blur-md border-2 border-white/80 hover:bg-white hover:text-[#0f6848] text-white font-bold px-9 py-3.5 text-base rounded-full transition-all active:scale-95 shadow-lg"
-                                        >
-                                            تسجيل الدخول
-                                        </Link>
-                                    </>
-                                )}
+                            <div className="flex flex-wrap items-center justify-center gap-3">
+                                <Link
+                                    to="/register"
+                                    className="bg-white text-[#0f6848] hover:bg-emerald-50 font-extrabold px-7 py-3 text-sm rounded-xl shadow-md transition-all"
+                                >
+                                    حساب جديد مجاناً
+                                </Link>
+                                <Link
+                                    to="/login"
+                                    className="bg-white/10 hover:bg-white/20 border border-white/40 text-white font-bold px-7 py-3 text-sm rounded-xl transition-all"
+                                >
+                                    تسجيل الدخول
+                                </Link>
                             </div>
                         </div>
                     </div>
-                </Reveal>
-            </section>
+                </section>
+            )}
 
             <MedicineQuickView
                 medicine={quickViewMed}

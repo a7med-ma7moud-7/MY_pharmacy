@@ -61,7 +61,7 @@ const MedicineDetail = () => {
 
     if (loading) {
         return (
-            <div className="py-12 bg-slate-50 min-h-screen">
+            <div className="py-12 bg-transparent min-h-screen">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="h-80 skeleton-shimmer rounded-2xl w-full"></div>
@@ -90,7 +90,7 @@ const MedicineDetail = () => {
     }
 
     return (
-        <div className="py-10 bg-slate-50 min-h-screen">
+        <div className="py-10 bg-transparent min-h-screen">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Link
                     to="/medicines"

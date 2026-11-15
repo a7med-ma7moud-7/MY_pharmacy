@@ -6,9 +6,6 @@ import {
     MapPin,
     ChevronLeft,
     Heart,
-    ShieldCheck,
-    Clock,
-    Sparkles,
     Send,
     CheckCircle2,
     HeartPulse,
@@ -35,39 +32,6 @@ const Footer = () => {
             <div className="absolute bottom-0 right-10 w-80 h-80 bg-teal-500/8 rounded-full blur-3xl pointer-events-none"></div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                {/* Top Feature Strip */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-12 mb-12 border-b border-white/10">
-                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-emerald-500/35 transition-colors">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
-                            <ShieldCheck className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h5 className="font-bold text-sm text-white">أدوية مرخصة 100%</h5>
-                            <p className="text-xs text-slate-400 mt-0.5">موثوقة ومسجلة بوزارة الصحة</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-teal-500/35 transition-colors">
-                        <div className="w-12 h-12 rounded-2xl bg-teal-500/15 text-teal-400 flex items-center justify-center shrink-0">
-                            <Clock className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h5 className="font-bold text-sm text-white">خدمة عملاء 24/7</h5>
-                            <p className="text-xs text-slate-400 mt-0.5">واستشارات ذكية في أي وقت</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-cyan-500/35 transition-colors">
-                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h5 className="font-bold text-sm text-white">توصيل منزلي سريع</h5>
-                            <p className="text-xs text-slate-400 mt-0.5">إلى باب منزلك بأمان تام</p>
-                        </div>
-                    </div>
-                </div>
-
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
                     {/* About & Newsletter */}

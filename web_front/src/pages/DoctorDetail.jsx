@@ -136,7 +136,7 @@ const DoctorDetail = () => {
 
     if (loading) {
         return (
-            <div className="py-12 bg-slate-50 min-h-screen">
+            <div className="py-12 bg-transparent min-h-screen">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col items-center">
                         <div className="w-28 h-28 rounded-3xl skeleton-shimmer mb-4"></div>
@@ -167,7 +167,7 @@ const DoctorDetail = () => {
     }
 
     return (
-        <div className="py-10 bg-slate-50 min-h-screen">
+        <div className="py-10 bg-transparent min-h-screen">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Back Link */}
                 <Link
@@ -218,11 +218,10 @@ const DoctorDetail = () => {
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <Star
                                                 key={star}
-                                                className={`w-4 h-4 ${
-                                                    star <= Math.round(averageRating)
+                                                className={`w-4 h-4 ${star <= Math.round(averageRating)
                                                         ? 'fill-amber-400 text-amber-400'
                                                         : 'text-slate-200'
-                                                }`}
+                                                    }`}
                                             />
                                         ))}
                                         <span className="text-sm font-black text-slate-800 mr-1.5">
@@ -412,11 +411,10 @@ const DoctorDetail = () => {
                                                     className="p-1 hover:scale-125 transition-transform cursor-pointer"
                                                 >
                                                     <Star
-                                                        className={`w-7 h-7 transition-colors ${
-                                                            active
+                                                        className={`w-7 h-7 transition-colors ${active
                                                                 ? 'text-amber-400 fill-amber-400'
                                                                 : 'text-slate-200'
-                                                        }`}
+                                                            }`}
                                                     />
                                                 </button>
                                             );
@@ -487,11 +485,10 @@ const DoctorDetail = () => {
                                                     {[1, 2, 3, 4, 5].map((st) => (
                                                         <Star
                                                             key={st}
-                                                            className={`w-3.5 h-3.5 ${
-                                                                st <= r.rating
+                                                            className={`w-3.5 h-3.5 ${st <= r.rating
                                                                     ? 'fill-amber-400 text-amber-400'
                                                                     : 'text-slate-200'
-                                                            }`}
+                                                                }`}
                                                         />
                                                     ))}
                                                 </div>

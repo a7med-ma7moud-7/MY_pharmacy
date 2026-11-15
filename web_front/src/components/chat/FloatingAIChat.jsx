@@ -66,21 +66,17 @@ const FloatingAIChat = () => {
 
     return (
         <>
-            {/* Floating Action Button */}
+            {/* Subtle Compact Floating Action Button */}
             {!isOpen && (
                 <button
                     type="button"
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 left-6 z-40 h-14 px-4 sm:px-5 rounded-full bg-gradient-to-tr from-[#093d2b] via-[#0f6848] to-[#10ac84] text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer animate-pulse-glow"
+                    aria-label="الصيدلي الذكي"
+                    className="fixed bottom-6 left-6 z-40 w-13 h-13 rounded-full bg-[#0f6848] hover:bg-[#0b5239] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center cursor-pointer"
                     title="اسأل الصيدلي الذكي"
                 >
-                    <div className="relative flex items-center justify-center">
-                        <Bot className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-300 rounded-full ring-2 ring-[#0f6848]"></span>
-                    </div>
-                    <span className="hidden sm:inline text-xs font-extrabold tracking-wide">
-                        الصيدلي الذكي
-                    </span>
+                    <Bot className="w-6 h-6" />
+                    <span className="absolute top-0.5 right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></span>
                 </button>
             )}
 

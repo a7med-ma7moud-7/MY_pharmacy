@@ -68,54 +68,131 @@ export const Login = () => {
         <div
             style={{
                 minHeight: '100vh',
-                backgroundColor: '#07111e',
+                background:
+                    'linear-gradient(135deg, #dff1ea 0%, #f2f9f6 38%, #d6ede4 72%, #eef7f3 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '20px',
+                padding: '28px 20px',
                 position: 'relative',
                 overflow: 'hidden',
-                backgroundImage:
-                    'radial-gradient(circle at 20% 25%, rgba(13, 148, 136, 0.22) 0%, transparent 45%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.14) 0%, transparent 45%)',
             }}
         >
-            {/* Floating Aurora Orbs */}
+            {/* Animated Organic Aurora Marbling Blobs ("تشبيحات ضوئية ناعمة") */}
             <div
                 style={{
                     position: 'absolute',
-                    top: '-80px',
-                    right: '-80px',
-                    width: '320px',
-                    height: '320px',
+                    top: '-14%',
+                    right: '-8%',
+                    width: '560px',
+                    height: '560px',
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(20, 184, 166, 0.18), transparent 70%)',
-                    animation: 'breathe 5s ease-in-out infinite',
+                    background:
+                        'radial-gradient(circle, rgba(15, 104, 72, 0.28) 0%, rgba(16, 172, 132, 0.12) 45%, transparent 72%)',
+                    filter: 'blur(36px)',
+                    animation: 'auroraWave1 14s ease-in-out infinite alternate',
                     pointerEvents: 'none',
                 }}
             />
             <div
                 style={{
                     position: 'absolute',
-                    bottom: '-100px',
-                    left: '-60px',
-                    width: '340px',
-                    height: '340px',
+                    bottom: '-18%',
+                    left: '-8%',
+                    width: '620px',
+                    height: '620px',
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.14), transparent 70%)',
-                    animation: 'breathe 6s ease-in-out infinite 1s',
+                    background:
+                        'radial-gradient(circle, rgba(16, 172, 132, 0.28) 0%, rgba(20, 184, 166, 0.12) 48%, transparent 72%)',
+                    filter: 'blur(40px)',
+                    animation: 'auroraWave2 17s ease-in-out infinite alternate',
                     pointerEvents: 'none',
                 }}
             />
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '28%',
+                    left: '18%',
+                    width: '420px',
+                    height: '260px',
+                    borderRadius: '50%',
+                    background:
+                        'radial-gradient(ellipse, rgba(52, 211, 153, 0.22) 0%, rgba(255, 255, 255, 0.4) 55%, transparent 75%)',
+                    filter: 'blur(32px)',
+                    animation: 'auroraWave1 19s ease-in-out infinite alternate-reverse',
+                    pointerEvents: 'none',
+                }}
+            />
+
+            {/* Flowing Diagonal Silk Streaks ("تشبيحات متموجة") */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: '-25%',
+                    background:
+                        'repeating-linear-gradient(125deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.48) 90px, rgba(16, 172, 132, 0.11) 180px, rgba(255, 255, 255, 0) 290px)',
+                    filter: 'blur(14px)',
+                    animation: 'silkRibbonFlow 16s ease-in-out infinite alternate',
+                    pointerEvents: 'none',
+                }}
+            />
+
+            {/* Delicate Curved Wave Veins SVG */}
+            <svg
+                viewBox="0 0 1440 900"
+                preserveAspectRatio="none"
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0.55,
+                    pointerEvents: 'none',
+                }}
+            >
+                <defs>
+                    <linearGradient id="veinGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#0f6848" stopOpacity="0.18" />
+                        <stop offset="50%" stopColor="#10ac84" stopOpacity="0.28" />
+                        <stop offset="100%" stopColor="#0f6848" stopOpacity="0.05" />
+                    </linearGradient>
+                    <linearGradient id="veinGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+                        <stop offset="50%" stopColor="#34d399" stopOpacity="0.22" />
+                        <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
+                    </linearGradient>
+                </defs>
+                <path
+                    d="M-120,180 C260,40 520,340 920,170 C1180,60 1360,210 1560,120"
+                    fill="none"
+                    stroke="url(#veinGrad1)"
+                    strokeWidth="2.5"
+                />
+                <path
+                    d="M-100,720 C300,560 640,840 1040,650 C1260,545 1390,670 1560,610"
+                    fill="none"
+                    stroke="url(#veinGrad1)"
+                    strokeWidth="2"
+                />
+                <path
+                    d="M-80,450 C340,290 720,610 1140,390 C1320,295 1430,380 1540,340"
+                    fill="none"
+                    stroke="url(#veinGrad2)"
+                    strokeWidth="3"
+                />
+            </svg>
 
             <div
                 style={{
                     width: '100%',
                     maxWidth: '860px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                    backdropFilter: 'blur(18px)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+                    backdropFilter: 'blur(16px)',
                     borderRadius: '28px',
-                    boxShadow: '0 28px 70px -14px rgba(0, 0, 0, 0.55)',
-                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    boxShadow:
+                        '0 0 0 8px rgba(255, 255, 255, 0.48), 0 28px 65px -12px rgba(15, 104, 72, 0.22), 0 8px 24px -6px rgba(15, 23, 42, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.85)',
                     animation: 'fadeInScale 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
                     position: 'relative',
                     zIndex: 2,

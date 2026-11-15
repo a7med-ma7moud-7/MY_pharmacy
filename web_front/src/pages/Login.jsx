@@ -58,8 +58,8 @@ export default function Login() {
     };
 
     return (
-        <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center px-4">
-            <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-scaleIn">
+        <div className="py-12 bg-transparent min-h-screen flex items-center justify-center px-4">
+            <div className="relative z-10 max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 bg-white/96 backdrop-blur-md rounded-3xl shadow-2xl ring-8 ring-white/50 border border-white overflow-hidden animate-scaleIn">
                 {/* Visual Brand Showcase Side */}
                 <div className="hidden lg:flex lg:col-span-5 hero-mesh text-white p-10 flex-col justify-between relative overflow-hidden">
                     <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>

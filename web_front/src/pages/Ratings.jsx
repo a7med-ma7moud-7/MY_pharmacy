@@ -75,7 +75,7 @@ export default function Ratings() {
   };
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center px-4">
+    <div className="py-12 bg-transparent min-h-screen flex items-center justify-center px-4">
       <div className="max-w-xl w-full">
         {/* Back Link */}
         <Link

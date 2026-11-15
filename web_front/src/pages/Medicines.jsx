@@ -124,7 +124,7 @@ export const Medicines = () => {
     );
 
     return (
-        <div className="pb-16 bg-slate-50 min-h-screen">
+        <div className="pb-16 bg-transparent min-h-screen">
             {/* Hero Banner */}
             <div className="hero-mesh text-white py-12 mb-8 relative overflow-hidden">
                 <div className="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
