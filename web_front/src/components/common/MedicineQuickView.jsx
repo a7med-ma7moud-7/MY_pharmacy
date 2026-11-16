@@ -4,7 +4,6 @@ import {
     X,
     ShoppingCart,
     Check,
-    Star,
     ShieldCheck,
     Truck,
     Plus,
@@ -85,11 +84,6 @@ export const MedicineQuickView = ({ medicine, onClose, onAddToCart }) => {
                                 <Sparkles className="w-3 h-3" />
                                 {medicine.type || 'مستحضر صيدلاني'}
                             </span>
-                            <div className="flex items-center gap-0.5 text-amber-400">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                    <Star key={s} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                ))}
-                            </div>
                         </div>
 
                         <h3 className="text-xl font-extrabold font-almarai text-slate-900 mb-2 leading-snug">

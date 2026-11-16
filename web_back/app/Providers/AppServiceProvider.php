@@ -42,5 +42,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api-write', function (Request $request) {
             return Limit::perMinute(40)->by($request->ip());
         });
+
+        RateLimiter::for('api-doctor', function (Request $request) {
+            return Limit::perMinute(180)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

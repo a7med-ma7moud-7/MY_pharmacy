@@ -4,18 +4,25 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\AiConfiguration;
+use App\Models\AiRequestLog;
 use App\Models\Doctor;
 use App\Models\Medicien;
+use App\Models\User;
+use App\Services\AI\AIQuestionClassifier;
+use App\Services\AI\AuthorizedPatientDataService;
+use App\Services\AI\MedicalKnowledgeRetriever;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class AIChatService
 {
-    private const SYSTEM_PROMPT = 'أنت المساعد الطبي والصيدلي الذكي لمنصة صيدليتي (MY_pharmacy). أجب باللغة العربية باحترافية ووضوح واختصار في نقاط منظمة، واستعن بقائمة الأدوية والأطباء المتاحة في الصيدلية عند ملاءمتها لسؤال المريض، مع التذكير اللطيف بأن هذه المعلومات الإرشادية لا تغني عن الفحص الطبي المباشر.';
-
-    private const CACHE_TTL_SECONDS = 900; // 15 minutes
+    private const CACHE_TTL_SECONDS = 600;
+    private const HTTP_USER_AGENT = 'SaydaletyHealthcareAssistant/2.0 (https://github.com/a7med-ma7moud-7/MY_pharmacy; support@saydalety.local) GuzzleHttp/7';
 
     private const GEMINI_MODELS = [
         'gemini-2.5-flash',
@@ -30,16 +37,39 @@ class AIChatService
         'meta-llama/llama-3.2-3b-instruct:free',
     ];
 
-    private const STOP_WORDS = [
-        'ما', 'هي', 'هو', 'هل', 'في', 'من', 'عن', 'على', 'إلى', 'الى', 'او', 'أو',
-        'مع', 'عند', 'كل', 'كم', 'كيف', 'متى', 'لماذا', 'ليه', 'ايه', 'إيه', 'اي', 'أي',
-        'عايز', 'عاوز', 'محتاج', 'اريد', 'أريد', 'ممكن', 'لو', 'سمحت', 'علاج', 'دواء',
-        'ادوية', 'أدوية', 'افضل', 'أفضل', 'احسن', 'أحسن', 'طريقة', 'طريقه', 'نصائح',
-        'سعر', 'بكام', 'متوفر', 'موجود', 'عندكم', 'صيدلية', 'صيدليتي', 'اليوم', 'يوميا', 'يومياً',
+    private const GROQ_MODELS = [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
     ];
 
+    private const STOP_WORDS = [
+        'ما', 'هي', 'هو', 'هم', 'هل', 'في', 'من', 'عن', 'على', 'إلى', 'الى', 'او', 'أو',
+        'مع', 'عند', 'عندي', 'اشعر', 'أشعر', 'اعاني', 'أعاني', 'حاسس', 'كل', 'كم', 'كيف',
+        'متى', 'لماذا', 'ليه', 'ايه', 'إيه', 'اي', 'أي', 'عايز', 'عاوز', 'محتاج', 'اريد',
+        'أريد', 'ممكن', 'لو', 'سمحت', 'علاج', 'دواء', 'ادوية', 'أدوية', 'افضل', 'أفضل',
+        'احسن', 'أحسن', 'طريقة', 'طريقه', 'نصائح', 'سعر', 'بكام', 'متوفر', 'موجود', 'عندكم',
+        'صيدلية', 'صيدليتي', 'اليوم', 'يوميا', 'يومياً', 'فوائد', 'اضرار', 'أضرار', 'اعراض',
+        'أعراض', 'اسباب', 'أسباب', 'استخدامات', 'استعمال', 'معلومات', 'تفاصيل', 'شرح', 'اشرح',
+        'كلمني', 'حدثني', 'جسم', 'الجسم', 'انسان', 'الإنسان', 'دكتور', 'طبيب', 'هرمون',
+        'what', 'is', 'are', 'the', 'for', 'used', 'side', 'effects', 'of', 'my', 'in', 'show', 'me',
+    ];
+
+    private readonly AIQuestionClassifier $classifier;
+    private readonly AuthorizedPatientDataService $patientDataService;
+    private readonly MedicalKnowledgeRetriever $knowledgeRetriever;
+
+    public function __construct(
+        ?AIQuestionClassifier $classifier = null,
+        ?AuthorizedPatientDataService $patientDataService = null,
+        ?MedicalKnowledgeRetriever $knowledgeRetriever = null
+    ) {
+        $this->classifier = $classifier ?? app(AIQuestionClassifier::class);
+        $this->patientDataService = $patientDataService ?? app(AuthorizedPatientDataService::class);
+        $this->knowledgeRetriever = $knowledgeRetriever ?? app(MedicalKnowledgeRetriever::class);
+    }
+
     /**
-     * إرسال سؤال المريض إلى نماذج الذكاء الاصطناعي المتاحة، مع محرك صيدلاني ذكي محلي مرتبط بقاعدة البيانات عند غياب مفتاح خارجي فعال
+     * واجهة مختصرة متوافقة مع الاستدعاءات السابقة
      */
     public function ask(string $question): string
     {
@@ -47,155 +77,822 @@ class AIChatService
     }
 
     /**
-     * إرسال سؤال المريض وإرجاع الإجابة مع الروابط والبطاقات القابلة للنقر للأدوية والأطباء المطابقين في النظام
+     * معالجة متكاملة لسؤال المستخدم: تصنيف تلقائي (General / Internal / Combined) + صلاحيات صارمة + مراجع موثقة + سياق محادثة
      *
-     * @return array{answer: string, suggestions: array{medicines: array<int, array<string, mixed>>, doctors: array<int, array<string, mixed>>}}
+     * @param array<int, array{sender: string, text: string, retrieval_mode?: string|null}> $conversationHistory
+     * @return array{
+     *   answer: string,
+     *   language: 'ar'|'en',
+     *   classification: string,
+     *   retrieval_mode: string,
+     *   references: array<int, array<string, mixed>>,
+     *   suggestions: array{medicines: array<int, array<string, mixed>>, doctors: array<int, array<string, mixed>>},
+     *   expert_assistance: array{recommended: bool, reason: string|null, find_doctor_url: string, find_pharmacy_url: string},
+     *   guest_restricted: bool,
+     *   unauthorized_blocked: bool,
+     *   is_emergency: bool,
+     *   response_time_ms: int,
+     *   provider_used: string
+     * }
      */
-    public function askWithContext(string $question): array
-    {
+    public function askWithContext(
+        string $question,
+        ?User $user = null,
+        array $conversationHistory = [],
+        ?int $chatId = null
+    ): array {
+        $startedAt = microtime(true);
         $normalizedQuestion = trim(preg_replace('/\s+/u', ' ', $question) ?? $question);
-        if ($normalizedQuestion === '') {
-            return [
-                'answer' => $this->buildWelcomeGuide(),
-                'suggestions' => ['medicines' => [], 'doctors' => []],
-            ];
+
+        if (!AiConfiguration::getBool('ai_enabled', true)) {
+            $lang = $this->classifier->detectLanguage($normalizedQuestion, $conversationHistory);
+            $msg = $lang === 'en'
+                ? 'The AI Pharmacist assistant is temporarily disabled by platform administration. You can still browse our Doctors and Pharmacy directories directly.'
+                : 'خدمة الصيدلي الذكي متوقفة مؤقتاً من قِبل إدارة المنصة. يمكنك تصفح دليل الأطباء أو صيدلية الأدوية مباشرة.';
+            return $this->finalizeResponse(
+                answer: $msg,
+                language: $lang,
+                classification: 'disabled',
+                retrievalMode: 'fallback',
+                topicCategory: 'system',
+                references: [],
+                suggestions: ['medicines' => [], 'doctors' => []],
+                expertRecommended: true,
+                expertReason: 'service_disabled',
+                guestRestricted: false,
+                unauthorizedBlocked: false,
+                isEmergency: false,
+                providerUsed: 'system',
+                startedAt: $startedAt,
+                user: $user,
+                chatId: $chatId
+            );
         }
 
-        $matchingMedicines = $this->findRelevantMedicines($normalizedQuestion);
-        $matchingDoctors = $this->findRelevantDoctors($normalizedQuestion);
+        if ($normalizedQuestion === '') {
+            return $this->finalizeResponse(
+                answer: $this->buildWelcomeGuide('ar'),
+                language: 'ar',
+                classification: 'general',
+                retrievalMode: 'general',
+                topicCategory: 'greeting',
+                references: [],
+                suggestions: ['medicines' => [], 'doctors' => []],
+                expertRecommended: false,
+                expertReason: null,
+                guestRestricted: false,
+                unauthorizedBlocked: false,
+                isEmergency: false,
+                providerUsed: 'hybrid_engine',
+                startedAt: $startedAt,
+                user: $user,
+                chatId: $chatId,
+                skipLog: true
+            );
+        }
+
+        // 1. التصنيف الذكي التلقائي وفحص الأمان والطوارئ
+        $classified = $this->classifier->classify($normalizedQuestion, $user, $conversationHistory);
+        $lang = $classified['language'];
+        $category = $classified['category'];
+        $topicCategory = $classified['topic_category'];
+
+        // فحص اللغات المدعومة في الإعدادات
+        $supportedLangs = array_map('trim', explode(',', strtolower(AiConfiguration::getString('supported_languages', 'ar,en'))));
+        if (!in_array($lang, $supportedLangs, true)) {
+            $lang = in_array('ar', $supportedLangs, true) ? 'ar' : 'en';
+        }
+
+        // 2. رفض فوري لأي محاولة وصول لبيانات مريض آخر أو اختراق الأوامر (BR-06 / Scenario 6)
+        if ($category === 'unauthorized') {
+            $this->logSecurityAudit($user, (string) $classified['security_reason']);
+            $denialMsg = $lang === 'en'
+                ? '🔒 **Access Denied:** For strict healthcare privacy and security, you are only authorized to access your own account records. I cannot retrieve or display information belonging to any other patient.'
+                : '🔒 **غير مصرح بالوصول:** حفاظاً على سرية البيانات الطبية وخصوصية المرضى، لا يُسمح بالوصول إلا إلى سجلات حسابك الشخصي فقط، ولا يمكن عرض أي بيانات تخص مريضاً أو مستخدماً آخر.';
+
+            return $this->finalizeResponse(
+                answer: $denialMsg,
+                language: $lang,
+                classification: 'unauthorized',
+                retrievalMode: 'restricted',
+                topicCategory: 'security',
+                references: [],
+                suggestions: ['medicines' => [], 'doctors' => []],
+                expertRecommended: false,
+                expertReason: null,
+                guestRestricted: false,
+                unauthorizedBlocked: true,
+                isEmergency: false,
+                providerUsed: 'security_guard',
+                startedAt: $startedAt,
+                user: $user,
+                chatId: $chatId,
+                logStatus: 'blocked',
+                errorType: (string) ($classified['security_reason'] ?? 'unauthorized_access'),
+                errorMessage: 'Blocked unauthorized cross-patient or prompt-injection request.'
+            );
+        }
+
+        // 3. التعامل الفوري مع الحالات الطبية الطارئة عالية الخطورة (Section 5: High-Risk Questions)
+        if ($category === 'emergency') {
+            $emergencyMsg = $this->buildEmergencyResponse($lang, (string) $classified['emergency_type']);
+            return $this->finalizeResponse(
+                answer: $emergencyMsg,
+                language: $lang,
+                classification: 'emergency',
+                retrievalMode: 'emergency',
+                topicCategory: 'emergency',
+                references: [],
+                suggestions: ['medicines' => [], 'doctors' => []],
+                expertRecommended: true,
+                expertReason: 'urgent_medical_attention',
+                guestRestricted: false,
+                unauthorizedBlocked: false,
+                isEmergency: true,
+                providerUsed: 'safety_triage',
+                startedAt: $startedAt,
+                user: $user,
+                chatId: $chatId
+            );
+        }
+
+        // 4. التعامل مع الأسئلة الغامضة جداً بطلب التوضيح اللطيف
+        if ($category === 'ambiguous') {
+            $clarifyMsg = $lang === 'en'
+                ? "Could you please clarify your question so I can assist you accurately?\n• For **general medical information**, mention the medication name, symptom, or health topic.\n• For **your personal records** (logged-in users), specify whether you are asking about your prescriptions, upcoming appointments, or medicine orders."
+                : "يرجى توضيح سؤالك قليلاً حتى أتمكن من مساعدتك بدقة:\n• **للمعلومات الطبية والدوائية العامة:** اذكر اسم الدواء أو العرض الصحي أو سؤالك الطبي.\n• **لسجلات حسابك الشخصي** (للمستخدمين المسجلين): حدد ما إذا كنت تستفسر عن روشتاتك الطبية، مواعيدك القادمة، أو طلبات الأدوية الخاصة بك.";
+
+            return $this->finalizeResponse(
+                answer: $clarifyMsg,
+                language: $lang,
+                classification: 'ambiguous',
+                retrievalMode: 'fallback',
+                topicCategory: 'clarification',
+                references: [],
+                suggestions: ['medicines' => [], 'doctors' => []],
+                expertRecommended: false,
+                expertReason: null,
+                guestRestricted: false,
+                unauthorizedBlocked: false,
+                isEmergency: false,
+                providerUsed: 'hybrid_engine',
+                startedAt: $startedAt,
+                user: $user,
+                chatId: $chatId
+            );
+        }
+
+        // 5. الترحيب
+        if ($this->isGreetingQuestion($normalizedQuestion)) {
+            return $this->finalizeResponse(
+                answer: $this->buildWelcomeGuide($lang, $user !== null),
+                language: $lang,
+                classification: 'general',
+                retrievalMode: 'general',
+                topicCategory: 'greeting',
+                references: [],
+                suggestions: ['medicines' => [], 'doctors' => []],
+                expertRecommended: false,
+                expertReason: null,
+                guestRestricted: false,
+                unauthorizedBlocked: false,
+                isEmergency: false,
+                providerUsed: 'hybrid_engine',
+                startedAt: $startedAt,
+                user: $user,
+                chatId: $chatId
+            );
+        }
+
+        // 6. تطبيق قيود الزوار (Guest Restrictions — BR-01, BR-02, Scenario 2) قبل أي استعلام داخلي!
+        if (in_array($category, ['internal', 'combined'], true)) {
+            if ($user === null) {
+                $guestMsg = $lang === 'en'
+                    ? "🔐 **Login Required for Personal Records:**\nYou are currently using the AI Pharmacist as a **Guest**. Guests cannot access personal prescriptions, appointments, medical history, or private account data.\n\n• **Recommended Next Step:** Please **Sign In** to your Saydalety account to access your authorized medical records, or feel free to ask me any **general medical or medication question** right here."
+                    : "🔐 **يلزم تسجيل الدخول للوصول إلى السجلات الشخصية:**\nأنت تستخدم الصيدلي الذكي حالياً في **وضع الزائر (Guest)**. لا يمكن للزوار الوصول إلى الروشتات الطبية، المواعيد المحجوزة، السجل الطبي، أو بيانات الحساب الخاصة.\n\n• **الخطوة المقترحة:** يرجى **تسجيل الدخول** إلى حسابك في منصة صيدليتي للاطلاع على سجلاتك المصرح بها، أو يمكنك طرح أي **سؤال طبي أو دوائي عام** وسأجيبك فوراً.";
+
+                return $this->finalizeResponse(
+                    answer: $guestMsg,
+                    language: $lang,
+                    classification: $category,
+                    retrievalMode: 'restricted',
+                    topicCategory: $topicCategory,
+                    references: [],
+                    suggestions: ['medicines' => [], 'doctors' => []],
+                    expertRecommended: false,
+                    expertReason: null,
+                    guestRestricted: true,
+                    unauthorizedBlocked: false,
+                    isEmergency: false,
+                    providerUsed: 'auth_guard',
+                    startedAt: $startedAt,
+                    user: null,
+                    chatId: null
+                );
+            }
+
+            if (!AiConfiguration::getBool('internal_data_enabled', true)) {
+                $disabledInternalMsg = $lang === 'en'
+                    ? 'Personal record retrieval is currently disabled in AI settings. Please view your appointments and prescriptions directly from your account pages.'
+                    : 'استرجاع البيانات الشخصية عبر المساعد الذكي متوقف حالياً في إعدادات النظام. يمكنك مراجعة مواعيدك وروشتاتك مباشرةً من صفحات حسابك.';
+
+                return $this->finalizeResponse(
+                    answer: $disabledInternalMsg,
+                    language: $lang,
+                    classification: $category,
+                    retrievalMode: 'fallback',
+                    topicCategory: $topicCategory,
+                    references: [],
+                    suggestions: ['medicines' => [], 'doctors' => []],
+                    expertRecommended: false,
+                    expertReason: null,
+                    guestRestricted: false,
+                    unauthorizedBlocked: false,
+                    isEmergency: false,
+                    providerUsed: 'system',
+                    startedAt: $startedAt,
+                    user: $user,
+                    chatId: $chatId
+                );
+            }
+
+            if ($category === 'combined' && !AiConfiguration::getBool('combined_retrieval_enabled', true)) {
+                $category = 'internal';
+            }
+        }
+
+        // 7. استرجاع البيانات الشخصية المصرح بها (فقط لـ internal أو combined وللمستخدم المسجل حصراً!)
+        $patientData = null;
+        $extractedMedications = [];
+        if (in_array($category, ['internal', 'combined'], true) && $user !== null) {
+            try {
+                $patientData = $this->patientDataService->retrieve($user, $classified['internal_scopes']);
+                $extractedMedications = $patientData['extracted_medications'];
+            } catch (\Throwable $e) {
+                Log::error('AIChatService internal data error: ' . $e->getMessage());
+                $errMsg = $lang === 'en'
+                    ? 'We encountered a temporary issue retrieving your account records. Please try again shortly.'
+                    : 'حدث خطأ مؤقت أثناء استرجاع سجلات حسابك. يرجى المحاولة مرة أخرى بعد لحظات.';
+                return $this->finalizeResponse(
+                    answer: $errMsg,
+                    language: $lang,
+                    classification: $category,
+                    retrievalMode: 'fallback',
+                    topicCategory: $topicCategory,
+                    references: [],
+                    suggestions: ['medicines' => [], 'doctors' => []],
+                    expertRecommended: false,
+                    expertReason: null,
+                    guestRestricted: false,
+                    unauthorizedBlocked: false,
+                    isEmergency: false,
+                    providerUsed: 'hybrid_engine',
+                    startedAt: $startedAt,
+                    user: $user,
+                    chatId: $chatId,
+                    logStatus: 'failed',
+                    errorType: 'internal_data_error',
+                    errorMessage: 'Failed retrieving authorized internal patient records.'
+                );
+            }
+        }
+
+        // 8. البحث في دليل الأدوية والأطباء العام في المنصة عند الملاءمة
+        $searchSeed = trim($normalizedQuestion . ($classified['follow_up_topic'] ? ' ' . $classified['follow_up_topic'] : '') . ($extractedMedications !== [] ? ' ' . implode(' ', $extractedMedications) : ''));
+        $matchingMedicines = $category === 'internal' && !in_array('prescriptions', $classified['internal_scopes'], true)
+            ? collect()
+            : $this->findRelevantMedicines($searchSeed);
+        $matchingDoctors = $this->findRelevantDoctors($searchSeed);
         $suggestions = $this->formatSuggestions($matchingMedicines, $matchingDoctors);
 
-        $cacheKey = 'ai_chat:v2:' . sha1(mb_strtolower($normalizedQuestion, 'UTF-8'));
-        $cachedAnswer = Cache::get($cacheKey);
-        if (is_string($cachedAnswer) && $cachedAnswer !== '') {
-            return [
-                'answer' => $cachedAnswer,
-                'suggestions' => $suggestions,
-            ];
-        }
-
-        $dbContext = $this->formatDatabaseContext($matchingMedicines, $matchingDoctors);
-
+        // 9. استرجاع المعرفة الطبية العامة والمراجع الموثقة (فقط لـ general أو combined)
         $client = new Client([
             'timeout' => 12,
             'connect_timeout' => 5,
             'verify' => $this->resolveSslVerifyOption(),
+            'headers' => ['User-Agent' => self::HTTP_USER_AGENT],
         ]);
 
-        $openrouterKey = config('openrouter.api_key');
-        if ($this->isValidApiKey(is_string($openrouterKey) ? $openrouterKey : null)) {
-            $answer = $this->tryOpenRouter($client, (string) $openrouterKey, $normalizedQuestion, $dbContext);
-            if ($answer !== null) {
-                Cache::put($cacheKey, $answer, self::CACHE_TTL_SECONDS);
-                return [
-                    'answer' => $answer,
-                    'suggestions' => $suggestions,
-                ];
-            }
-        }
-
-        $geminiKeys = array_filter(
-            [config('gemini.api_key'), config('gemini.fallback_key')],
-            fn ($key) => $this->isValidApiKey(is_string($key) ? $key : null)
-        );
-
-        foreach ($geminiKeys as $key) {
-            $answer = $this->tryGemini($client, (string) $key, $normalizedQuestion, $dbContext);
-            if ($answer !== null) {
-                Cache::put($cacheKey, $answer, self::CACHE_TTL_SECONDS);
-                return [
-                    'answer' => $answer,
-                    'suggestions' => $suggestions,
-                ];
-            }
-        }
-
-        return [
-            'answer' => $this->buildSmartLocalAnswer($normalizedQuestion, $matchingMedicines, $matchingDoctors),
-            'suggestions' => $suggestions,
+        $generalKnowledge = [
+            'sections_ar' => [],
+            'sections_en' => [],
+            'references' => [],
+            'has_confident_match' => false,
         ];
+
+        if (in_array($category, ['general', 'combined'], true)) {
+            $knowledgeQuery = $normalizedQuestion;
+            if ($classified['follow_up_topic'] !== null && !str_contains($normalizedQuestion, $classified['follow_up_topic'])) {
+                $knowledgeQuery = $classified['follow_up_topic'] . ' — ' . $normalizedQuestion;
+            }
+            $generalKnowledge = $this->knowledgeRetriever->retrieve(
+                $client,
+                $knowledgeQuery,
+                $lang,
+                $extractedMedications
+            );
+        }
+
+        // 10. توليد الإجابة النهائية (عبر المزود الخارجي النشط إن توفر مفتاح صالح، أو عبر المحرك الإكلينيكي المهيكل ثنائي اللغة)
+        $providerUsed = 'hybrid_engine';
+        $finalAnswer = null;
+
+        $canUseStatelessCache = $category === 'general' && $conversationHistory === [];
+        $cacheKey = 'ai_chat:v5:' . $lang . ':' . sha1(mb_strtolower($normalizedQuestion, 'UTF-8'));
+
+        if ($canUseStatelessCache) {
+            $cachedBundle = Cache::get($cacheKey);
+            if (is_array($cachedBundle) && !empty($cachedBundle['answer'])) {
+                return $this->finalizeResponse(
+                    answer: (string) $cachedBundle['answer'],
+                    language: $lang,
+                    classification: $category,
+                    retrievalMode: $category,
+                    topicCategory: $topicCategory,
+                    references: $cachedBundle['references'] ?? $generalKnowledge['references'],
+                    suggestions: $suggestions,
+                    expertRecommended: (bool) ($cachedBundle['expert_recommended'] ?? false),
+                    expertReason: $cachedBundle['expert_reason'] ?? null,
+                    guestRestricted: false,
+                    unauthorizedBlocked: false,
+                    isEmergency: false,
+                    providerUsed: (string) ($cachedBundle['provider_used'] ?? 'hybrid_engine'),
+                    startedAt: $startedAt,
+                    user: $user,
+                    chatId: $chatId
+                );
+            }
+        }
+
+        $activeProviderPref = strtolower(AiConfiguration::getString('active_provider', 'auto'));
+        if ($activeProviderPref !== 'hybrid_local') {
+            $llmResult = $this->tryConfiguredExternalProviders(
+                $client,
+                $activeProviderPref,
+                $normalizedQuestion,
+                $lang,
+                $category,
+                $patientData,
+                $generalKnowledge,
+                $matchingMedicines,
+                $matchingDoctors,
+                $conversationHistory
+            );
+            if ($llmResult !== null) {
+                $finalAnswer = $llmResult['answer'];
+                $providerUsed = $llmResult['provider'];
+            }
+        }
+
+        $expertRecommended = false;
+        $expertReason = null;
+
+        if ($finalAnswer === null) {
+            $synthesized = $this->synthesizeStructuredAnswer(
+                question: $normalizedQuestion,
+                lang: $lang,
+                category: $category,
+                patientData: $patientData,
+                generalKnowledge: $generalKnowledge,
+                medicines: $matchingMedicines,
+                doctors: $matchingDoctors
+            );
+            $finalAnswer = $synthesized['answer'];
+            $expertRecommended = $synthesized['expert_recommended'];
+            $expertReason = $synthesized['expert_reason'];
+        } else {
+            // Recommend expert assistance on combined/clinical symptom queries as well
+            $expertRecommended = $category === 'combined' || $topicCategory === 'symptoms';
+            $expertReason = $expertRecommended ? 'clinical_consultation' : null;
+        }
+
+        if ($canUseStatelessCache && $finalAnswer !== '') {
+            Cache::put($cacheKey, [
+                'answer' => $finalAnswer,
+                'references' => $generalKnowledge['references'],
+                'expert_recommended' => $expertRecommended,
+                'expert_reason' => $expertReason,
+                'provider_used' => $providerUsed,
+            ], self::CACHE_TTL_SECONDS);
+        }
+
+        return $this->finalizeResponse(
+            answer: $finalAnswer,
+            language: $lang,
+            classification: $category,
+            retrievalMode: $category,
+            topicCategory: $topicCategory,
+            references: $generalKnowledge['references'],
+            suggestions: $suggestions,
+            expertRecommended: $expertRecommended,
+            expertReason: $expertReason,
+            guestRestricted: false,
+            unauthorizedBlocked: false,
+            isEmergency: false,
+            providerUsed: $providerUsed,
+            startedAt: $startedAt,
+            user: $user,
+            chatId: $chatId
+        );
     }
 
     /**
-     * حل مشكلة شهادة SSL (cURL error 60) تلقائياً على بيئة Windows
+     * بناء الإجابة المهيكلة ثنائية اللغة مع الفصل الصارم بين السجلات الشخصية والمعلومات العامة والملاحظات الوقائية
      *
-     * @return bool|string
+     * @param array<string, mixed>|null $patientData
+     * @param array<string, mixed> $generalKnowledge
+     * @return array{answer: string, expert_recommended: bool, expert_reason: string|null}
      */
-    private function resolveSslVerifyOption(): bool|string
-    {
-        foreach ([ini_get('curl.cainfo'), ini_get('openssl.cafile')] as $iniPath) {
-            if (is_string($iniPath) && $iniPath !== '' && is_file($iniPath)) {
-                return $iniPath;
+    private function synthesizeStructuredAnswer(
+        string $question,
+        string $lang,
+        string $category,
+        ?array $patientData,
+        array $generalKnowledge,
+        Collection $medicines,
+        Collection $doctors
+    ): array {
+        $blocks = [];
+        $expertRecommended = false;
+        $expertReason = null;
+
+        // الحالة 1: سؤال شخصي بحت (Internal Patient Data)
+        if ($category === 'internal') {
+            $summary = $lang === 'en'
+                ? (string) ($patientData['summary_en'] ?? '')
+                : (string) ($patientData['summary_ar'] ?? '');
+
+            $hasAny = (bool) ($patientData['has_any_data'] ?? false);
+
+            if ($lang === 'en') {
+                $blocks[] = "🗂️ **Personal Account Information (Authorized Records):**\n"
+                    . ($summary !== '' ? $summary : '• No matching healthcare records are currently available in your account.');
+
+                if (!$hasAny) {
+                    $blocks[] = "💡 **Recommended Next Step:**\n"
+                        . "• This information is not available in your current account records. You can book a doctor consultation or browse our pharmacy directory below if you need medical assistance.";
+                    $expertRecommended = true;
+                    $expertReason = 'missing_internal_records';
+                } else {
+                    $blocks[] = "⚕️ **Note:** Please follow your treating physician's instructions and never alter a prescribed medication regimen without consulting your doctor.";
+                }
+            } else {
+                $blocks[] = "🗂️ **بيانات حسابك الشخصي المصرح بها:**\n"
+                    . ($summary !== '' ? $summary : '• لا تتوفر سجلات طبية مطابقة في حسابك حالياً.');
+
+                if (!$hasAny) {
+                    $blocks[] = "💡 **الخطوة المقترحة:**\n"
+                        . "• هذه المعلومات غير متوفرة حالياً في سجلات حسابك. يمكنك حجز موعد مع طبيب مختص أو تصفح صيدلية المنصة أدناه عند الحاجة.";
+                    $expertRecommended = true;
+                    $expertReason = 'missing_internal_records';
+                } else {
+                    $blocks[] = "⚕️ **ملاحظة طبية:** يُرجى الالتزام بتعليمات طبيبك المعالج وعدم تعديل أو إيقاف أي دواء موصوف دون مراجعته.";
+                }
+            }
+
+            return [
+                'answer' => implode("\n\n", $blocks),
+                'expert_recommended' => $expertRecommended,
+                'expert_reason' => $expertReason,
+            ];
+        }
+
+        // الحالة 2: استرجاع مدمج (Combined: Personal Records + General Medical Knowledge)
+        if ($category === 'combined') {
+            $personalSummary = $lang === 'en'
+                ? (string) ($patientData['summary_en'] ?? '')
+                : (string) ($patientData['summary_ar'] ?? '');
+            $hasAnyPersonal = (bool) ($patientData['has_any_data'] ?? false);
+            $genSections = $lang === 'en' ? $generalKnowledge['sections_en'] : $generalKnowledge['sections_ar'];
+
+            if ($lang === 'en') {
+                $blocks[] = "🗂️ **1. From Your Personal Account Records:**\n"
+                    . ($personalSummary !== '' ? $personalSummary : '• No prescriptions or recorded medications were found in your current account records.');
+
+                if ($genSections !== []) {
+                    $blocks[] = "🌐 **2. General Medical & Medication Information:**\n" . implode("\n\n", $genSections);
+                } elseif (!$hasAnyPersonal) {
+                    $blocks[] = "🌐 **2. General Medical Guidance:**\n"
+                        . "• Because there are no recorded prescriptions in your account yet, please share the specific medication name if you would like general pharmacological information and precautions about it.";
+                } else {
+                    $medList = implode(', ', $patientData['extracted_medications'] ?? []);
+                    $blocks[] = "🌐 **2. General Medication Precautions" . ($medList !== '' ? " ({$medList})" : '') . ":**\n"
+                        . "• Take prescribed medications at the exact schedule and dosage recorded by your physician.\n"
+                        . "• Inform your doctor or pharmacist about any allergies, kidney/liver conditions, pregnancy, or other supplements/medications to avoid drug interactions.\n"
+                        . "• Do not start, stop, or change your prescribed treatment independently.";
+                }
+
+                $blocks[] = "⚕️ **Recommended Next Step:**\n"
+                    . "• Personal records above reflect what is stored in your Saydalety account, whereas the medical notes are for general educational reference only. Always discuss specific side effects or dose adjustments with your treating doctor.";
+            } else {
+                $blocks[] = "🗂️ **أولاً — من سجلات حسابك الشخصي:**\n"
+                    . ($personalSummary !== '' ? $personalSummary : '• لا توجد روشتات أو أدوية مسجلة حالياً في حسابك الشخصي.');
+
+                if ($genSections !== []) {
+                    $blocks[] = "🌐 **ثانياً — المعلومات الطبية والدوائية العامة:**\n" . implode("\n\n", $genSections);
+                } elseif (!$hasAnyPersonal) {
+                    $blocks[] = "🌐 **ثانياً — الإرشاد الدوائي العام:**\n"
+                        . "• نظراً لعدم وجود روشتات مسجلة في حسابك حالياً، يمكنك كتابة اسم الدواء الذي تود الاستفسار عنه وسأوضح لك استخداماته واحتياطاته العامة فوراً.";
+                } else {
+                    $medList = implode('، ', $patientData['extracted_medications'] ?? []);
+                    $blocks[] = "🌐 **ثانياً — الاحتياطات الدوائية العامة" . ($medList !== '' ? " ({$medList})" : '') . ":**\n"
+                        . "• التزم بالجرعة والمواعيد المحددة من قِبل طبيبك المعالج في الروشتة المسجلة.\n"
+                        . "• أبلغ الطبيب أو الصيدلي بأي حساسية دوائية أو أدوية ومكملات أخرى تتناولها لتفادي التداخلات الدوائية.\n"
+                        . "• لا تقم بإيقاف العلاج الموصوف أو تعديل جرعته من تلقاء نفسك دون استشارة الطبيب.";
+                }
+
+                $blocks[] = "⚕️ **الخطوة الموصى بها:**\n"
+                    . "• البيانات في القسم الأول مستخرجة من حسابك الشخصي في صيدليتي، بينما المعلومات في القسم الثاني هي إرشادات علمية عامة للتوعية ولا تُعد تشخيصاً أو تعديلاً للوصفة الطبية.";
+            }
+
+            return [
+                'answer' => implode("\n\n", $blocks),
+                'expert_recommended' => true,
+                'expert_reason' => 'combined_medication_review',
+            ];
+        }
+
+        // الحالة 3: سؤال معرفي طبي أو دوائي عام (General Knowledge)
+        $genSections = $lang === 'en' ? $generalKnowledge['sections_en'] : $generalKnowledge['sections_ar'];
+
+        if ($genSections !== []) {
+            foreach ($genSections as $sec) {
+                $blocks[] = $sec;
             }
         }
 
-        $candidateBundles = [
-            'C:/Program Files/Git/usr/ssl/certs/ca-bundle.crt',
-            'C:/Program Files/Git/mingw64/ssl/certs/ca-bundle.crt',
-            'C:/xampp/apache/bin/curl-ca-bundle.crt',
-            'C:/laragon/etc/ssl/cacert.pem',
+        // دمج التطابقات الفعلية من متجر الأدوية ودليل الأطباء في المنصة إن وُجدت
+        if ($medicines->isNotEmpty()) {
+            if ($lang === 'en') {
+                $medLines = ["🏥 **Matching Items in Saydalety Pharmacy:**"];
+                foreach ($medicines as $med) {
+                    $stock = (int) $med->count > 0 ? 'In Stock' : 'Out of Stock';
+                    $medLines[] = "• **{$med->name}** ({$med->type}) — {$med->propose} | **{$med->price} EGP** ({$stock})";
+                }
+                $blocks[] = implode("\n", $medLines);
+            } else {
+                $medLines = ["🏥 **المتوفر في نظام صيدليتي (الأدوية ذات الصلة):**"];
+                foreach ($medicines as $med) {
+                    $stock = (int) $med->count > 0 ? 'متوفر بالمخزون' : 'غير متوفر حالياً';
+                    $medLines[] = "• **{$med->name}** ({$med->type}) — {$med->propose} | السعر: **{$med->price} ج.م** ({$stock})";
+                }
+                $blocks[] = implode("\n", $medLines);
+            }
+        }
+
+        if ($doctors->isNotEmpty()) {
+            if ($lang === 'en') {
+                $docLines = ["👨‍⚕️ **Specialists Available on Saydalety:**"];
+                foreach ($doctors as $doc) {
+                    $docLines[] = "• **Dr. {$doc->name}** — **{$doc->specialty}** | Fee: **{$doc->price} EGP** ({$doc->location})";
+                }
+                $blocks[] = implode("\n", $docLines);
+            } else {
+                $docLines = ["👨‍⚕️ **الأطباء المتاحون للحجز في منصة صيدليتي:**"];
+                foreach ($doctors as $doc) {
+                    $loc = trim(($doc->location ?? '') . ($doc->tow_location ? " - {$doc->tow_location}" : ''));
+                    $docLines[] = "• **د. {$doc->name}** — تخصص **{$doc->specialty}** | الكشف: **{$doc->price} ج.م**" . ($loc !== '' ? " ({$loc})" : '');
+                }
+                $blocks[] = implode("\n", $docLines);
+            }
+        }
+
+        // السيناريو 13: إذا لم تتوفر معلومات موثوقة كافية للإجابة بثقة، صرّح بوضوح بالحدود واقترح استشارة مختص!
+        if ($blocks === []) {
+            if ($lang === 'en') {
+                $limitationAnswer = "ℹ️ **Information Limitation:**\n"
+                    . "I cannot answer your question («{$question}») with sufficient clinical confidence from the currently verified medical references, and I do not guess or fabricate medical facts.\n\n"
+                    . "💡 **Recommended Next Step:**\n"
+                    . "• Try specifying the exact generic/brand medication name or medical term.\n"
+                    . "• For personalized clinical evaluation or pharmacy guidance, please use **Find a Doctor** or **Find a Pharmacy** below.";
+            } else {
+                $limitationAnswer = "ℹ️ **حدود المعرفة المتاحة:**\n"
+                    . "لا أستطيع الإجابة على هذا الاستفسار («{$question}») بدرجة ثقة علمية كافية من المصادر الطبية الموثقة المتاحة حالياً، ويلتزم المساعد بعدم تخمين أو اختلاق أي معلومات طبية.\n\n"
+                    . "💡 **الخطوة الموصى بها:**\n"
+                    . "• يمكنك إعادة صياغة السؤال بذكر **الاسم العلمي أو التجاري الدقيق للدواء** أو الحالة الصحية.\n"
+                    . "• للحصول على تقييم طبي متخصص أو استشارة صيدلانية مباشرة، استخدم أزرار **ابحث عن طبيب** أو **تصفح الصيدلية** أدناه.";
+            }
+
+            return [
+                'answer' => $limitationAnswer,
+                'expert_recommended' => true,
+                'expert_reason' => 'insufficient_confidence',
+            ];
+        }
+
+        if ($lang === 'en') {
+            $blocks[] = "⚕️ **Medical Safety Note:** This information is provided for general health and pharmaceutical education only and does not constitute a medical diagnosis or prescription. Consult a qualified physician or pharmacist before starting, stopping, or changing any medication.";
+        } else {
+            $blocks[] = "⚕️ **تنبيه صيدلاني:** هذه المعلومات مخصصة للتوعية الطبية والصيدلانية العامة ولا تُعد تشخيصاً طبياً مستقلاً أو وصفة علاجية، ولا تغني عن استشارة الطبيب أو الصيدلي المختص.";
+        }
+
+        return [
+            'answer' => implode("\n\n", $blocks),
+            'expert_recommended' => $doctors->isNotEmpty(),
+            'expert_reason' => $doctors->isNotEmpty() ? 'specialist_available' : null,
+        ];
+    }
+
+    private function buildEmergencyResponse(string $lang, string $emergencyType): string
+    {
+        if ($lang === 'en') {
+            return "🚨 **URGENT MEDICAL ATTENTION REQUIRED:**\n"
+                . "The symptoms or situation you described (**" . str_replace('_', ' ', $emergencyType) . "**) may represent a **serious medical emergency**.\n\n"
+                . "• **Immediate Action:** Please contact local **Emergency Services (123)** immediately or go to the nearest hospital emergency department right now.\n"
+                . "• If this involves a suspected medication overdose or poisoning, take the medication packaging with you to the emergency room and do not induce vomiting unless instructed by emergency personnel.\n"
+                . "• *An AI assistant cannot manage medical emergencies — please seek immediate in-person emergency care.*";
+        }
+
+        return "🚨 **تنبيه طوارئ طبي عاجل:**\n"
+            . "الأعراض أو الحالة التي وصفتها قد تشير إلى **حالة طبية طارئة وعالية الخطورة** تتطلب تدخلاً طبياً فورياً ولا ينبغي الانتظار عليها.\n\n"
+            . "• **الإجراء الفوري:** يرجى الاتصال بـ **الإسعاف والطوارئ (123)** فوراً أو التوجه مباشرةً إلى أقرب قسم طوارئ في المستشفى.\n"
+            . "• في حال الاشتباه بجرعة دوائية زائدة أو تسمم دوائي، اصطحب عبوة الدواء معك إلى قسم الطوارئ.\n"
+            . "• *المساعد الذكي لا يمكنه إدارة الحالات الطارئة — سلامتك أولاً، يرجى طلب الرعاية الإسعافية العاجلة الآن.*";
+    }
+
+    private function buildWelcomeGuide(string $lang, bool $isAuthenticated = false): string
+    {
+        if ($lang === 'en') {
+            return "Welcome to the **Saydalety AI Pharmacist Assistant** 🤖!\n\n"
+                . "I can help you in both **Arabic and English** with:\n"
+                . "• 🌐 **General Medical & Drug Knowledge:** Uses, precautions, side effects, interactions, and storage guidelines backed by medical references.\n"
+                . ($isAuthenticated
+                    ? "• 🗂️ **Your Personal Account Records:** Ask about your prescriptions, upcoming appointments, follow-ups, or medicine orders — or combine them with medication explanations."
+                    : "• 🔐 **Personal Account Queries:** Sign in anytime to ask about your own prescriptions, appointments, and recorded medications.");
+        }
+
+        return "مرحباً بك في **المساعد الطبي والصيدلي الذكي لمنصة صيدليتي** 🤖!\n\n"
+            . "يسعدني مساعدتك باللغتين **العربية والإنجليزية** في:\n"
+            . "• 🌐 **المعرفة الطبية والدوائية العامة:** دواعي الاستعمال، الاحتياطات، الأعراض الجانبية، التداخلات الدوائية، والمراجع الطبية الموثقة.\n"
+            . ($isAuthenticated
+                ? "• 🗂️ **سجلات حسابك الشخصي:** اسألني عن روشتاتك الطبية، مواعيدك القادمة، متابعاتك، أو اشرح لك الأدوية المسجلة في وصفتك الطبية."
+                : "• 🔐 **السجلات الطبية الشخصية:** سجل دخولك للاستفسار عن روشتاتك ومواعيدك وطلباتك الخاصة بأمان تام.");
+    }
+
+    /**
+     * محاولة الاتصال بمزودي الذكاء الاصطناعي الخارجيين وفق إعدادات المشرف مع تمرير البيانات المصرح بها فقط
+     *
+     * @param array<string, mixed>|null $patientData
+     * @param array<string, mixed> $generalKnowledge
+     * @param array<int, array{sender: string, text: string}> $history
+     * @return array{answer: string, provider: string}|null
+     */
+    private function tryConfiguredExternalProviders(
+        Client $client,
+        string $activeProviderPref,
+        string $question,
+        string $lang,
+        string $category,
+        ?array $patientData,
+        array $generalKnowledge,
+        Collection $medicines,
+        Collection $doctors,
+        array $history
+    ): ?array {
+        $systemPrompt = $this->buildExternalSystemPrompt($lang, $category, $patientData, $generalKnowledge, $medicines, $doctors);
+        $maxTokens = max(250, min(AiConfiguration::getInt('max_response_tokens', 900), 2048));
+
+        $providersToTry = match ($activeProviderPref) {
+            'openrouter' => ['openrouter'],
+            'groq' => ['groq'],
+            'gemini' => ['gemini'],
+            default => ['openrouter', 'groq', 'gemini'],
+        };
+
+        foreach ($providersToTry as $prov) {
+            if ($prov === 'openrouter') {
+                $key = config('openrouter.api_key');
+                if ($this->isValidApiKey(is_string($key) ? $key : null)) {
+                    $ans = $this->tryOpenAiCompatible($client, 'openrouter', 'https://openrouter.ai/api/v1/chat/completions', self::OPENROUTER_MODELS, (string) $key, $systemPrompt, $question, $history, $maxTokens);
+                    if ($ans !== null) {
+                        return ['answer' => $ans, 'provider' => 'openrouter'];
+                    }
+                }
+            }
+
+            if ($prov === 'groq') {
+                $key = env('GROQ_API_KEY');
+                if ($this->isValidApiKey(is_string($key) ? $key : null)) {
+                    $ans = $this->tryOpenAiCompatible($client, 'groq', 'https://api.groq.com/openai/v1/chat/completions', self::GROQ_MODELS, (string) $key, $systemPrompt, $question, $history, $maxTokens);
+                    if ($ans !== null) {
+                        return ['answer' => $ans, 'provider' => 'groq'];
+                    }
+                }
+            }
+
+            if ($prov === 'gemini') {
+                $geminiKeys = array_filter(
+                    [config('gemini.api_key'), config('gemini.fallback_key')],
+                    fn ($k) => $this->isValidApiKey(is_string($k) ? $k : null)
+                );
+                foreach ($geminiKeys as $gKey) {
+                    $ans = $this->tryGemini($client, (string) $gKey, $systemPrompt, $question, $history, $maxTokens, $category === 'general');
+                    if ($ans !== null) {
+                        return ['answer' => $ans, 'provider' => 'gemini'];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed>|null $patientData
+     * @param array<string, mixed> $generalKnowledge
+     */
+    private function buildExternalSystemPrompt(
+        string $lang,
+        string $category,
+        ?array $patientData,
+        array $generalKnowledge,
+        Collection $medicines,
+        Collection $doctors
+    ): string {
+        $langInstruction = $lang === 'en'
+            ? 'Respond clearly in English.'
+            : 'أجب باللغة العربية الفصحى الواضحة والمنظمة.';
+
+        $lines = [
+            "You are the Saydalety (صيدليتي) AI Pharmacist healthcare assistant. {$langInstruction}",
+            'Safety & Privacy Rules:',
+            '- You are an informational assistant, NOT a replacement for a doctor or pharmacist.',
+            '- Never provide an independent diagnosis or prescribe/start/stop/alter medication regimens.',
+            '- Never invent prescriptions, appointments, diagnoses, medical history, or fake citations.',
+            '- Clearly distinguish between General Medical Information and Authorized Personal Account Information.',
         ];
 
-        foreach ($candidateBundles as $bundle) {
-            if (is_file($bundle)) {
-                return $bundle;
-            }
+        if ($patientData !== null && ($patientData['authorized'] ?? false) === true) {
+            $personalBlock = $lang === 'en' ? ($patientData['summary_en'] ?? '') : ($patientData['summary_ar'] ?? '');
+            $lines[] = "Authorized Personal Records for Current User (retrieval_mode={$category}):\n" . ($personalBlock !== '' ? $personalBlock : 'None recorded.');
         }
 
-        if (app()->environment(['local', 'testing'])) {
-            return false;
+        $genSections = $lang === 'en' ? ($generalKnowledge['sections_en'] ?? []) : ($generalKnowledge['sections_ar'] ?? []);
+        if ($genSections !== []) {
+            $lines[] = "Verified General Medical Reference Notes:\n" . implode("\n", $genSections);
         }
 
-        return true;
+        $storeCtx = $this->formatDatabaseContext($medicines, $doctors);
+        if ($storeCtx !== '') {
+            $lines[] = "Saydalety Platform Directory Matches:\n" . $storeCtx;
+        }
+
+        return implode("\n\n", $lines);
     }
 
-    private function isValidApiKey(?string $key): bool
-    {
-        if (empty($key)) {
-            return false;
-        }
-
-        return !in_array($key, [
-            'your_openrouter_api_key_here',
-            'your_gemini_api_key_here',
-        ], true);
-    }
-
-    private function tryOpenRouter(Client $client, string $apiKey, string $question, string $dbContext): ?string
-    {
-        $deadKeyFlag = 'ai_chat:dead_key:' . sha1('openrouter:' . $apiKey);
+    /**
+     * @param list<string> $models
+     * @param array<int, array{sender: string, text: string}> $history
+     */
+    private function tryOpenAiCompatible(
+        Client $client,
+        string $providerName,
+        string $endpoint,
+        array $models,
+        string $apiKey,
+        string $systemPrompt,
+        string $question,
+        array $history,
+        int $maxTokens
+    ): ?string {
+        $deadKeyFlag = 'ai_chat:dead_key:' . sha1($providerName . ':' . $apiKey);
         if (Cache::get($deadKeyFlag) === true) {
             return null;
         }
 
-        $systemContent = $dbContext !== ''
-            ? self::SYSTEM_PROMPT . "\n\nبيانات متوفرة حالياً في قاعدة بيانات الصيدلية:\n" . $dbContext
-            : self::SYSTEM_PROMPT;
+        $messages = [['role' => 'system', 'content' => $systemPrompt]];
+        foreach (array_slice($history, -6) as $h) {
+            if (!empty($h['text'])) {
+                $messages[] = [
+                    'role' => ($h['sender'] ?? 'user') === 'user' ? 'user' : 'assistant',
+                    'content' => mb_substr((string) $h['text'], 0, 800, 'UTF-8'),
+                ];
+            }
+        }
+        $messages[] = ['role' => 'user', 'content' => $question];
 
-        foreach (self::OPENROUTER_MODELS as $model) {
+        foreach ($models as $model) {
             try {
-                $response = $client->post('https://openrouter.ai/api/v1/chat/completions', [
+                $response = $client->post($endpoint, [
                     'headers' => [
                         'Authorization' => 'Bearer ' . $apiKey,
                         'Content-Type' => 'application/json',
                     ],
                     'json' => [
                         'model' => $model,
-                        'messages' => [
-                            ['role' => 'system', 'content' => $systemContent],
-                            ['role' => 'user', 'content' => $question],
-                        ],
+                        'max_tokens' => $maxTokens,
+                        'messages' => $messages,
                     ],
                 ]);
 
                 $data = json_decode($response->getBody()->getContents(), true);
                 $answer = trim((string) ($data['choices'][0]['message']['content'] ?? ''));
-
                 if ($answer !== '') {
                     return $answer;
                 }
             } catch (\Throwable $e) {
-                Log::warning("AIChatService OpenRouter error ({$model}): " . $e->getMessage());
+                Log::warning("AIChatService {$providerName} error ({$model}): " . $e->getMessage());
+                $this->recordProviderFailureLog($providerName, $e->getMessage());
                 if (in_array((int) $e->getCode(), [401, 403], true)) {
                     Cache::put($deadKeyFlag, true, 600);
                     return null;
@@ -206,46 +903,82 @@ class AIChatService
         return null;
     }
 
-    private function tryGemini(Client $client, string $apiKey, string $question, string $dbContext): ?string
-    {
+    /**
+     * @param array<int, array{sender: string, text: string}> $history
+     */
+    private function tryGemini(
+        Client $client,
+        string $apiKey,
+        string $systemPrompt,
+        string $question,
+        array $history,
+        int $maxTokens,
+        bool $enableSearchGrounding
+    ): ?string {
         $deadKeyFlag = 'ai_chat:dead_key:' . sha1('gemini:' . $apiKey);
         if (Cache::get($deadKeyFlag) === true) {
             return null;
         }
 
-        $systemContent = $dbContext !== ''
-            ? self::SYSTEM_PROMPT . "\n\nبيانات متوفرة حالياً في قاعدة بيانات الصيدلية:\n" . $dbContext
-            : self::SYSTEM_PROMPT;
+        $contents = [];
+        foreach (array_slice($history, -6) as $h) {
+            if (!empty($h['text'])) {
+                $contents[] = [
+                    'role' => ($h['sender'] ?? 'user') === 'user' ? 'user' : 'model',
+                    'parts' => [['text' => mb_substr((string) $h['text'], 0, 800, 'UTF-8')]],
+                ];
+            }
+        }
+        $contents[] = [
+            'role' => 'user',
+            'parts' => [['text' => $question]],
+        ];
 
-        foreach (self::GEMINI_MODELS as $model) {
-            try {
-                $response = $client->post(
-                    "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}",
-                    [
-                        'headers' => ['Content-Type' => 'application/json'],
-                        'json' => [
-                            'systemInstruction' => [
-                                'parts' => [['text' => $systemContent]],
-                            ],
-                            'contents' => [[
-                                'role' => 'user',
-                                'parts' => [['text' => $question]],
-                            ]],
-                        ],
-                    ]
-                );
+        foreach (self::GEMINI_MODELS as $index => $model) {
+            $attempts = ($index === 0 && $enableSearchGrounding) ? [true, false] : [false];
 
-                $data = json_decode($response->getBody()->getContents(), true);
-                $answer = trim((string) ($data['candidates'][0]['content']['parts'][0]['text'] ?? ''));
+            foreach ($attempts as $useSearch) {
+                try {
+                    $payload = [
+                        'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
+                        'contents' => $contents,
+                        'generationConfig' => ['maxOutputTokens' => $maxTokens],
+                    ];
+                    if ($useSearch) {
+                        $payload['tools'] = [['google_search' => new \stdClass()]];
+                    }
 
-                if ($answer !== '') {
-                    return $answer;
-                }
-            } catch (\Throwable $e) {
-                Log::warning("AIChatService Gemini error ({$model}): " . $e->getMessage());
-                if (in_array((int) $e->getCode(), [401, 403], true) || str_contains($e->getMessage(), 'API_KEY_INVALID') || str_contains($e->getMessage(), 'reported as leaked')) {
-                    Cache::put($deadKeyFlag, true, 600);
-                    return null;
+                    $response = $client->post(
+                        "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}",
+                        [
+                            'headers' => ['Content-Type' => 'application/json'],
+                            'json' => $payload,
+                        ]
+                    );
+
+                    $data = json_decode($response->getBody()->getContents(), true);
+                    $parts = $data['candidates'][0]['content']['parts'] ?? [];
+                    $chunks = [];
+                    foreach ($parts as $p) {
+                        if (!empty($p['text']) && is_string($p['text'])) {
+                            $chunks[] = trim($p['text']);
+                        }
+                    }
+                    $answer = trim(implode("\n", $chunks));
+                    if ($answer !== '') {
+                        return $answer;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("AIChatService Gemini error ({$model}): " . $e->getMessage());
+                    if (
+                        in_array((int) $e->getCode(), [401, 403], true)
+                        || str_contains($e->getMessage(), 'API_KEY_INVALID')
+                        || str_contains($e->getMessage(), 'reported as leaked')
+                    ) {
+                        Cache::put($deadKeyFlag, true, 600);
+                        $this->recordProviderFailureLog('gemini', 'Gemini API key rejected (401/403). Fell back to hybrid engine.');
+                        return null;
+                    }
                 }
             }
         }
@@ -254,8 +987,189 @@ class AIChatService
     }
 
     /**
-     * البحث في جدول الأدوية عن الأصناف المرتبطة بسؤال المريض
+     * تسجيل حدث مراقبة مزود خارجي بأمان دون كشف أي مفاتيح سرية أو بيانات مرضى
      */
+    private function recordProviderFailureLog(string $provider, string $rawMessage): void
+    {
+        try {
+            if (!Schema::hasTable('ai_request_logs')) {
+                return;
+            }
+            // Sanitize any query params or keys from URLs
+            $sanitized = preg_replace('/key=[A-Za-z0-9_\-]+/i', 'key=[REDACTED]', $rawMessage) ?? $rawMessage;
+            $sanitized = mb_substr($sanitized, 0, 240, 'UTF-8');
+
+            $recentKey = 'ai_provider_err_logged:' . $provider;
+            if (Cache::get($recentKey) === true) {
+                return;
+            }
+            Cache::put($recentKey, true, 300);
+
+            AiRequestLog::create([
+                'user_id' => null,
+                'is_guest' => true,
+                'ai_chat_id' => null,
+                'language' => 'ar',
+                'classification_category' => 'provider_health',
+                'topic_category' => 'system',
+                'retrieval_mode' => 'fallback',
+                'provider_used' => $provider,
+                'status' => 'failed',
+                'response_time_ms' => 0,
+                'references_count' => 0,
+                'error_type' => 'provider_error',
+                'error_message' => "{$provider} provider error: {$sanitized}",
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable) {
+            // Ignore logging error
+        }
+    }
+
+    private function logSecurityAudit(?User $user, string $reason): void
+    {
+        try {
+            if (Schema::hasTable('medical_audit_logs')) {
+                DB::table('medical_audit_logs')->insert([
+                    'actor_user_id' => $user?->id,
+                    'actor_role' => $user?->role ?? 'guest',
+                    'action' => 'ai_blocked_' . $reason,
+                    'target_type' => 'ai_pharmacist',
+                    'target_id' => null,
+                    'metadata' => json_encode(['reason' => $reason], JSON_UNESCAPED_UNICODE),
+                    'ip_address' => request()?->ip(),
+                    'created_at' => now(),
+                ]);
+            }
+        } catch (\Throwable) {
+            // Safe no-op
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $references
+     * @param array{medicines: array<int, array<string, mixed>>, doctors: array<int, array<string, mixed>>} $suggestions
+     * @return array<string, mixed>
+     */
+    private function finalizeResponse(
+        string $answer,
+        string $language,
+        string $classification,
+        string $retrievalMode,
+        string $topicCategory,
+        array $references,
+        array $suggestions,
+        bool $expertRecommended,
+        ?string $expertReason,
+        bool $guestRestricted,
+        bool $unauthorizedBlocked,
+        bool $isEmergency,
+        string $providerUsed,
+        float $startedAt,
+        ?User $user,
+        ?int $chatId,
+        string $logStatus = 'success',
+        ?string $errorType = null,
+        ?string $errorMessage = null,
+        bool $skipLog = false
+    ): array {
+        $elapsedMs = max(1, (int) round((microtime(true) - $startedAt) * 1000));
+
+        if (!$skipLog) {
+            try {
+                if (Schema::hasTable('ai_request_logs')) {
+                    AiRequestLog::create([
+                        'user_id' => $user?->id,
+                        'is_guest' => $user === null,
+                        'ai_chat_id' => $chatId,
+                        'language' => $language,
+                        'classification_category' => $classification,
+                        'topic_category' => $topicCategory,
+                        'retrieval_mode' => $retrievalMode,
+                        'provider_used' => $providerUsed,
+                        'status' => $logStatus,
+                        'response_time_ms' => $elapsedMs,
+                        'references_count' => count($references),
+                        'error_type' => $errorType,
+                        'error_message' => $errorMessage,
+                        'created_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable) {
+                // Never break response if telemetry fails
+            }
+        }
+
+        return [
+            'answer' => $answer,
+            'language' => $language,
+            'classification' => $classification,
+            'retrieval_mode' => $retrievalMode,
+            'references' => array_values($references),
+            'suggestions' => $suggestions,
+            'expert_assistance' => [
+                'recommended' => $expertRecommended,
+                'reason' => $expertReason,
+                'find_doctor_url' => '/doctors',
+                'find_pharmacy_url' => '/medicines',
+            ],
+            'guest_restricted' => $guestRestricted,
+            'unauthorized_blocked' => $unauthorizedBlocked,
+            'is_emergency' => $isEmergency,
+            'response_time_ms' => $elapsedMs,
+            'provider_used' => $providerUsed,
+        ];
+    }
+
+    /**
+     * @return bool|string
+     */
+    private function resolveSslVerifyOption(): bool|string
+    {
+        foreach ([ini_get('curl.cainfo'), ini_get('openssl.cafile')] as $iniPath) {
+            if (is_string($iniPath) && $iniPath !== '' && is_file($iniPath)) {
+                return $iniPath;
+            }
+        }
+
+        foreach ([
+            'C:/Program Files/Git/usr/ssl/certs/ca-bundle.crt',
+            'C:/Program Files/Git/mingw64/ssl/certs/ca-bundle.crt',
+            'C:/xampp/apache/bin/curl-ca-bundle.crt',
+            'C:/laragon/etc/ssl/cacert.pem',
+        ] as $bundle) {
+            if (is_file($bundle)) {
+                return $bundle;
+            }
+        }
+
+        return app()->environment(['local', 'testing']) ? false : true;
+    }
+
+    private function isValidApiKey(?string $key): bool
+    {
+        if (empty($key)) {
+            return false;
+        }
+        return !in_array($key, [
+            'your_openrouter_api_key_here',
+            'your_gemini_api_key_here',
+            'your_groq_api_key_here',
+        ], true);
+    }
+
+    private function isGreetingQuestion(string $question): bool
+    {
+        $q = $this->normalizeArabic($question);
+        $lower = strtolower(trim($question, '?!. '));
+        if (in_array($lower, ['hi', 'hello', 'hey', 'good morning', 'good evening', 'who are you', 'what can you do'], true)) {
+            return true;
+        }
+        return $this->matchesAny($q, [
+            'السلام عليكم', 'اهلا', 'مرحبا', 'ازيك', 'صباح الخير', 'مساء الخير', 'مين انت', 'بتعمل ايه',
+        ]) && mb_strlen($q, 'UTF-8') <= 28;
+    }
+
     private function findRelevantMedicines(string $question): Collection
     {
         try {
@@ -282,9 +1196,6 @@ class AIChatService
         }
     }
 
-    /**
-     * البحث في جدول الأطباء عن التخصصات أو الأسماء المرتبطة بسؤال المريض
-     */
     private function findRelevantDoctors(string $question): Collection
     {
         try {
@@ -299,7 +1210,6 @@ class AIChatService
             $query = Doctor::query()->activeAndSubscribed();
 
             if ($specialtyHint === null && !$this->mentionsDoctorIntent($question)) {
-                // البحث المباشر باسم الطبيب أو تخصصه حتى بدون كلمة "دكتور"
                 $query->where(function ($q) use ($validKeywords) {
                     foreach ($validKeywords as $kw) {
                         $q->orWhere('name', 'like', "%{$kw}%")
@@ -327,28 +1237,23 @@ class AIChatService
     private function formatDatabaseContext(Collection $medicines, Collection $doctors): string
     {
         $lines = [];
-
         if ($medicines->isNotEmpty()) {
-            $lines[] = 'الأدوية المطابقة في الصيدلية:';
+            $lines[] = 'Matching Medicines in Saydalety Store:';
             foreach ($medicines as $med) {
-                $stock = (int) $med->count > 0 ? "متوفر ({$med->count} عبوة)" : 'غير متوفر حالياً';
-                $lines[] = "- {$med->name} ({$med->type}): {$med->propose} — السعر {$med->price} ج.م — {$stock}";
+                $stock = (int) $med->count > 0 ? "In stock ({$med->count})" : 'Out of stock';
+                $lines[] = "- {$med->name} ({$med->type}): {$med->propose} — {$med->price} EGP — {$stock}";
             }
         }
-
         if ($doctors->isNotEmpty()) {
-            $lines[] = 'الأطباء المتاحون للحجز:';
+            $lines[] = 'Matching Doctors in Saydalety Directory:';
             foreach ($doctors as $doc) {
-                $lines[] = "- د. {$doc->name} (تخصص {$doc->specialty}) — الكشف {$doc->price} ج.م — {$doc->location}";
+                $lines[] = "- Dr. {$doc->name} ({$doc->specialty}) — {$doc->price} EGP — {$doc->location}";
             }
         }
-
         return implode("\n", $lines);
     }
 
     /**
-     * تجهيز بطاقات الأدوية والأطباء القابلة للنقر للانتقال المباشر لصفحاتهم في الموقع
-     *
      * @return array{medicines: array<int, array<string, mixed>>, doctors: array<int, array<string, mixed>>}
      */
     private function formatSuggestions(Collection $medicines, Collection $doctors): array
@@ -373,183 +1278,10 @@ class AIChatService
         ];
     }
 
-    /**
-     * محرك الإرشاد الصيدلاني المحلي الذكي المرتبط بقاعدة البيانات
-     */
-    private function buildSmartLocalAnswer(string $question, Collection $medicines, Collection $doctors): string
-    {
-        $q = $this->normalizeArabic($question);
-        $sections = [];
-
-        // 1. ترحيب أو سؤال عام عن قدرات المساعد
-        if ($this->matchesAny($q, ['السلام عليكم', 'اهلا', 'مرحبا', 'ازيك', 'صباح الخير', 'مساء الخير', 'مين انت', 'بتعمل ايه'])) {
-            return $this->buildWelcomeGuide();
-        }
-
-        // 2. الباراسيتامول / البنادول والجرعات اليومية
-        if ($this->matchesAny($q, ['باراسيتامول', 'بنادول', 'panadol', 'paracetamol', 'ابيمول', 'سيتال'])) {
-            $sections[] = "💊 **إرشادات استخدام الباراسيتامول (Paracetamol / Panadol):**\n"
-                . "• **الجرعة المعتادة للبالغين:** من `500 ملجم` إلى `1000 ملجم` (قرص إلى قرصين تركيز 500 ملجم) كل **6 إلى 8 ساعات** عند الحاجة.\n"
-                . "• **الحد الأقصى الآمن يومياً:** لا تتجاوز **4,000 ملجم (4 جرام)** خلال 24 ساعة للبالغين الأصحاء (أي بحد أقصى 8 أقراص تركيز 500 ملجم).\n"
-                . "• **تنبيهات هامة:** يُعد آمناً على المعدة مقارنة بالمسكنات الأخرى، لكن يجب تجنب تناول أكثر من دواء يحتوي على الباراسيتامول في نفس الوقت (مثل أدوية البرد) وخفض الجرعة لمرضى الكبد.";
-        }
-
-        // 3. المضادات الحيوية والتداخلات الدوائية
-        if ($this->matchesAny($q, ['مضاد حيوي', 'مضادات حيويه', 'المضادات الحيويه', 'اوجمنتين', 'augmentin', 'تفاعلات', 'تداخلات', 'التفاعلات الدوائيه', 'التداخلات الدوائيه'])) {
-            $sections[] = "🛡️ **أهم الإرشادات لتناول المضادات الحيوية وتجنب التداخلات الدوائية:**\n"
-                . "• **إكمال الكورس العلاجي كاملاً:** لا توقف المضاد الحيوي بمجرد تحسن الأعراض لمنع عودة البكتيريا ومقاومتها للعلاج.\n"
-                . "• **الالتزام بالمواعيد الدقيقة:** تناول الجرعة كل 8 أو 12 ساعة بانتظام مع كوب ماء كامل (ويُفضل بعد الأكل لبعض الأنواع مثل أوجمنتين لتقليل اضطراب المعدة).\n"
-                . "• **تجنب التداخلات الشائعة:** افصل بين المضادات الحيوية ومنتجات الألبان أو مكملات الكالسيوم والحديد ومضادات الحموضة بمدة **ساعتين على الأقل** لأنها قد تقلل امتصاص بعض المضادات.\n"
-                . "• **لا تُستخدم للعدوى الفيروسية:** المضادات الحيوية لا تعالج نزلات البرد أو الإنفلونزا الفيروسية إلا إذا وُجدت عدوى بكتيرية يحددها الطبيب.";
-        }
-
-        // 4. الإنسولين وحفظ وتخزين الأدوية
-        if ($this->matchesAny($q, ['انسولين', 'الانسولين', 'تخزين', 'حفظ الادويه', 'حفظ الدواء', 'ثلاجه', 'التلاجه'])) {
-            $sections[] = "❄️ **الطريقة الصحيحة لحفظ الإنسولين والأدوية في المنزل:**\n"
-                . "• **الأقلام والعبوات غير المفتوحة (الجديدة):** تُحفظ في باب أو رف الثلاجة الأوسط عند درجة حرارة **2 إلى 8 مئوية**، مع تجنب وضعها في الفريزر أو ملاصقة جدار التجميد نهائياً.\n"
-                . "• **القلم أو العبوة قيد الاستخدام الحالي:** يمكن حفظها في درجة حرارة الغرفة المعتدلة (**أقل من 25–30 مئوية**) بعيداً عن أشعة الشمس والحرارة المباشرة لمدة تصل إلى **28 يوماً** حسب نوع الإنسولين.\n"
-                . "• **نصيحة عامة لتخزين الأدوية:** تجنب حفظ الأدوية في الحمام أو المطبخ بسبب الرطوبة والحرارة، وتأكد دائماً من صفاء محلول الإنسولين وتاريخ الصلاحية قبل الاستخدام.";
-        }
-
-        // 5. المسكنات وبدائلها لمرضى المعدة
-        if ($this->matchesAny($q, ['مسكن', 'المسكنات', 'بدائل المسكنات', 'كتافلام', 'cataflam', 'بروفين', 'فولتارين', 'التهاب المفاصل', 'اسنان', 'الاسنان'])) {
-            $sections[] = "🩺 **إرشادات المسكنات والبدائل الآمنة لمرضى المعدة:**\n"
-                . "• **الخيار الأول والأكثر أماناً على المعدة:** مادة **الباراسيتامول (مثل بنادول)** هي البديل الآمن الأول لتسكين الألم وخفض الحرارة لمرضى التهاب أو قرحة المعدة.\n"
-                . "• **المسكنات المضادة للالتهاب (NSAIDs مثل كتافلام وبروفين):** فعالة لآلام الأسنان والعظام، لكن يُنصح بتناولها **بعد الأكل مباشرة** وبأقل جرعة فعالة لأقصر مدة، مع تجنبها لمرضى قرحة المعدة النشطة أو القصور الكلوي.\n"
-                . "• **حماية المعدة والبدائل الموضعية:** عند الضرورة القصوى لاستخدام مضادات الالتهاب تحت إشراف طبي، يمكن وصف واقٍ للمعدة، أو الاعتماد على **الجل والكريمات المسكنة الموضعية** لآلام العضلات والمفاصل.";
-        }
-
-        // 6. نزلات البرد والإنفلونزا والرشح والكحة والحرارة
-        if ($this->matchesAny($q, ['برد', 'انفلونزا', 'رشح', 'زكام', 'احتقان', 'كحه', 'سعال', 'سخونيه', 'حراره', 'حمى', 'كونجستال', 'congestal'])) {
-            $sections[] = "🌡️ **التعامل الصيدلاني مع نزلات البرد والرشح وارتفاع الحرارة:**\n"
-                . "• **الراحة والسوائل الدافئة:** الإكثار من شرب الماء والمشروبات الدافئة وفيتامين سي لدعم المناعة وتهدئة الحلق.\n"
-                . "• **تخفيف الأعراض:** يمكن استخدام خافضات الحرارة ومضادات الاحتقان (مثل أقراص البرد المركبة)، مع **الحذر لمرضى الضغط المرتفع** من مضادات الاحتقان الفموية واستبدالها ببخاخ محلول الملح للأنف.\n"
-                . "• **متى تراجع الطبيب فوراً؟** إذا استمرت الحرارة المرتفعة لأكثر من 3 أيام، أو صاحبها ضيق في التنفس أو ألم شديد في الصدر أو الأذن.";
-        }
-
-        // 7. الصداع
-        if ($sections === [] && $this->matchesAny($q, ['صداع', 'الصداع', 'نصفي', 'دماغ', 'راس'])) {
-            $sections[] = "🧠 **نصائح سريعة للتعامل مع الصداع:**\n"
-                . "• **الأسباب الشائعة:** الجفاف وقلة شرب الماء، الإجهاد البصري، قلة النوم، التوتر، أو تغير مواعيد الكافيين.\n"
-                . "• **العلاج الأولي:** شرب كوبين من الماء، الراحة في غرفة هادئة، ويمكن تناول مسكن آمن مثل **الباراسيتامول** بعد التأكد من عدم وجود موانع.\n"
-                . "• **تنبيه طبي:** إذا كان الصداع مفاجئاً وشديداً غير معتاد، أو مصحوباً بزغللة في العين أو قيء أو ارتفاع في ضغط الدم، يُنصح بقياس الضغط ومراجعة الطبيب.";
-        }
-
-        // 8. المعدة والحموضة والارتجاع والقولون
-        if ($this->matchesAny($q, ['معده', 'المعده', 'حموضه', 'الحموضه', 'ارتجاع', 'قرحه', 'قولون', 'انتفاخ', 'مغص', 'انتودين', 'antodine'])) {
-            $sections[] = "🌿 **إرشادات تهدئة الحموضة وارتجاع المريء واضطرابات المعدة:**\n"
-                . "• **عادات غذائية أساسية:** تقسيم الوجبات لكميات صغيرة، تجنب المقليات والأطعمة الحارة والقهوة على معدة فارغة، وعدم الاستلقاء قبل مرور **2–3 ساعات** من تناول الطعام.\n"
-                . "• **الخيارات الدوائية:** مضادات الحموضة الفورية أو مثبطات إفراز الحمض (مثل فاموتيدين / أنتودين أو أوميبرازول) تساعد على تهدئة جدار المعدة بفعالية.\n"
-                . "• **تجنب مهيجات المعدة:** ابتعد عن المسكنات القوية على معدة فارغة والتدخين.";
-        }
-
-        // 9. الفيتامينات والمناعة والإرهاق
-        if ($this->matchesAny($q, ['فيتامين', 'فيتامينات', 'مناعه', 'المناعه', 'اجهاد', 'ارهاق', 'خمول', 'تعب', 'انيميا', 'حديد'])) {
-            $sections[] = "🍊 **دعم المناعة ومقاومة الإجهاد والفيتامينات:**\n"
-                . "• **فيتامين C والزنك:** يساعدان في دعم الجهاز المناعي وتقليل مدة نزلات البرد، ويُفضل تناول الفوار بعد وجبة الإفطار أو الغداء مع كمية كافية من الماء.\n"
-                . "• **الشعور المستمر بالخمول:** في حال استمرار الإرهاق الشديد، يُنصح بإجراء تحليل صورة دم كاملة (CBC) ومخزون الحديد وفيتامين D قبل تناول مكملات بجرعات عالية.";
-        }
-
-        // 10. الضغط والقلب أو السكر
-        if ($this->matchesAny($q, ['ضغط', 'الضغط', 'قلب', 'القلب', 'كوليسترول', 'سكر', 'السكر', 'سكري'])) {
-            $sections[] = "❤️ **إرشادات هامة لمرضى الضغط والقلب والسكري:**\n"
-                . "• **الانتظام الدقيق:** أدوية الضغط والقلب والسكري تُؤخذ يومياً في نفس الموعد ولا يتم إيقافها أو تعديل جرعتها أبداً دون الرجوع للطبيب المعالج حتى لو كانت القياسات طبيعية.\n"
-                . "• **الحذر من الأدوية المتداخلة:** استشر الصيدلي قبل تناول أدوية البرد المحتوية على مضادات احتقان أو المسكنات المضادة للالتهاب أو الفوارات عالية الصوديوم.";
-        }
-
-        // 11. الحمل والرضاعة والأطفال
-        if ($this->matchesAny($q, ['حامل', 'الحمل', 'رضاعه', 'الرضاعه', 'طفل', 'اطفال', 'رضيع'])) {
-            $sections[] = "👶 **تنبيه خاص بالحمل والرضاعة وصحة الأطفال:**\n"
-                . "• **خلال الحمل والرضاعة:** لا تتناولي أي دواء أو مكمل عشبي دون مراجعة الطبيب؛ ويُعد **الباراسيتامول العادي** (بدون كافيين أو إضافات) الخيار الأكثر أماناً عند الضرورة القصوى للألم أو الحرارة.\n"
-                . "• **للأطفال:** تُحسب جرعات خافضات الحرارة والمضادات الحيوية **بدقة حسب وزن الطفل بالكيلوجرام** وليس العمر فقط، باستخدام سرنجة أو معيار مدرج.";
-        }
-
-        // 12. استفسار عن الطلب أو الحجز عبر المنصة
-        if ($this->matchesAny($q, ['تتبع', 'طلب', 'توصيل', 'شحن', 'حجز موعد', 'احجز', 'ازاي اطلب'])) {
-            $sections[] = "📦 **خدمات الطلب والحجز عبر منصة صيدليتي:**\n"
-                . "• **شراء الأدوية:** تصفح صفحة **الأدوية** وأضف ما تحتاجه إلى السلة لإتمام الطلب والتوصيل السريع.\n"
-                . "• **تتبع الطلب:** يمكنك متابعة حالة طلبك لحظياً من صفحة **تتبع طلبك** برقم الطلب ورقم الهاتف.\n"
-                . "• **حجز عيادة:** اختر الطبيب والتخصص المناسب من صفحة **الأطباء** أو **حجز موعد** وحدد اليوم والساعة المتاحة فوراً.";
-        }
-
-        // إضافة نتائج حية من قاعدة بيانات الصيدلية إن وُجدت
-        if ($medicines->isNotEmpty()) {
-            $medLines = ["🏥 **الأدوية ذات الصلة المتوفرة حالياً في صيدليتي:**"];
-            foreach ($medicines as $med) {
-                $stockBadge = (int) $med->count > 0 ? 'متوفر بالمخزون' : 'غير متوفر حالياً';
-                $medLines[] = "• **{$med->name}** ({$med->type}) — {$med->propose} | السعر: **{$med->price} ج.م** ({$stockBadge})";
-            }
-            $sections[] = implode("\n", $medLines);
-        }
-
-        if ($doctors->isNotEmpty()) {
-            $docLines = ["👨‍⚕️ **أطباء معتمدون متاحون لحجز استشارة على المنصة:**"];
-            foreach ($doctors as $doc) {
-                $location = trim(($doc->location ?? '') . ($doc->tow_location ? " - {$doc->tow_location}" : ''));
-                $docLines[] = "• **د. {$doc->name}** — تخصص **{$doc->specialty}** | الكشف: **{$doc->price} ج.م**" . ($location !== '' ? " ({$location})" : '');
-            }
-            $sections[] = implode("\n", $docLines);
-        }
-
-        // إذا كان السؤال مختلفاً ولم يطابق تصنيفاً محدداً، قدم رداً تفاعلياً مخصصاً لسؤال المستخدم بدلاً من جملة مكررة
-        if ($sections === []) {
-            $availableMeds = $this->getSampleAvailableMedicines();
-            $reply = "شكراً لتواصلك مع **الصيدلي الذكي** بخصوص: «{$question}».\n\n"
-                . "لتقديم أدق إرشاد دوائي آمن لحالتك، يمكنك توضيح:\n"
-                . "• **الأعراض الأساسية** ومدتها، أو **اسم الدواء / المادة الفعالة** التي تستفسر عنها.\n"
-                . "• العمر وما إذا كانت هناك أدوية مزمنة (مثل الضغط أو السكري أو حساسية دوائية).\n";
-
-            if ($availableMeds !== '') {
-                $reply .= "\n💊 **من أبرز الأصناف المتوفرة حالياً في صيدليتنا:**\n" . $availableMeds;
-            }
-
-            $reply .= "\n\n⚕️ ملاحظة صيدلانية: هذه الإرشادات للتوعية الطبية العامة ولا تغني عن مراجعة الطبيب المختص عند استمرار الأعراض.";
-            return $reply;
-        }
-
-        $sections[] = "⚕️ ملاحظة صيدلانية: هذه الإرشادات للتوعية الطبية العامة ولا تغني عن استشارة الطبيب المختص في الحالات المزمنة أو الطارئة.";
-
-        return implode("\n\n", $sections);
-    }
-
-    private function buildWelcomeGuide(): string
-    {
-        return "مرحباً بك في **الصيدلي الذكي لمنصة صيدليتي** 🤖!\n\n"
-            . "يسعدني مساعدتك فوراً في أي مما يلي:\n"
-            . "• **الجرعات وطريقة الاستخدام:** (مثل: جرعة الباراسيتامول أو المضادات الحيوية).\n"
-            . "• **الأعراض الشائعة والبدائل الآمنة:** (البرد، الصداع، الحموضة، المسكنات لمرضى المعدة، حفظ الإنسولين).\n"
-            . "• **البحث في مخزون الصيدلية والأطباء:** اسألني عن اسم أي دواء أو تخصص طبي لنعرض لك المتوفر وأسعاره مباشرة.";
-    }
-
-    private function getSampleAvailableMedicines(): string
-    {
-        try {
-            $meds = Medicien::query()
-                ->where('count', '>', 0)
-                ->limit(3)
-                ->get(['name', 'propose', 'price']);
-
-            if ($meds->isEmpty()) {
-                return '';
-            }
-
-            return $meds
-                ->map(fn ($m) => "• **{$m->name}** — {$m->propose} (**{$m->price} ج.م**)")
-                ->implode("\n");
-        } catch (\Throwable) {
-            return '';
-        }
-    }
-
-    /**
-     * توحيد الحروف العربية لتسهيل مطابقة الكلمات المفتاحية مهما اختلفت الهمزات أو التاء المربوطة
-     */
     private function normalizeArabic(string $text): string
     {
         $lower = mb_strtolower($text, 'UTF-8');
-        $search = ['أ', 'إ', 'آ', 'ة', 'ى', 'ؤ', 'ئ', 'ـ'];
-        $replace = ['ا', 'ا', 'ا', 'ه', 'ي', 'و', 'ي', ''];
-        $cleaned = str_replace($search, $replace, $lower);
+        $cleaned = str_replace(['أ', 'إ', 'آ', 'ة', 'ى', 'ؤ', 'ئ', 'ـ'], ['ا', 'ا', 'ا', 'ه', 'ي', 'و', 'ي', ''], $lower);
         $cleaned = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $cleaned) ?? $cleaned;
         return trim(preg_replace('/\s+/u', ' ', $cleaned) ?? $cleaned);
     }
@@ -583,7 +1315,10 @@ class AIChatService
                 continue;
             }
             $withoutAl = preg_replace('/^ال/u', '', $word) ?? $word;
-            if (in_array(mb_strtolower($word, 'UTF-8'), self::STOP_WORDS, true) || in_array(mb_strtolower($withoutAl, 'UTF-8'), self::STOP_WORDS, true)) {
+            if (
+                in_array(mb_strtolower($word, 'UTF-8'), self::STOP_WORDS, true)
+                || in_array(mb_strtolower($withoutAl, 'UTF-8'), self::STOP_WORDS, true)
+            ) {
                 continue;
             }
             $keywords[] = $word;
@@ -602,31 +1337,42 @@ class AIChatService
     private function expandMedicalSearchTerms(string $question, array $keywords): array
     {
         $q = $this->normalizeArabic($question);
-        $terms = $keywords;
+        $lowerEn = strtolower($question);
+
+        $asksSpecificOtherVitamin = ($this->matchesAny($q, ['فيتامين د', 'فيتامين ب', 'فيتامين ك', 'فيتامين ه', 'فيتامين ا'])
+            || str_contains($lowerEn, 'vitamin d') || str_contains($lowerEn, 'vitamin b'))
+            && !$this->matchesAny($q, ['فيتامين سي', 'فيتامين ج'])
+            && !str_contains($lowerEn, 'vitamin c');
+
+        $filteredKeywords = $asksSpecificOtherVitamin
+            ? array_values(array_filter($keywords, fn ($kw) => !in_array($this->normalizeArabic($kw), ['فيتامين', 'vitamin'], true)))
+            : $keywords;
+
+        $terms = $filteredKeywords;
 
         $synonymMap = [
             'باراسيتامول' => ['بنادول', 'Panadol', 'مسكن', 'حرارة'],
+            'paracetamol' => ['Panadol', 'بنادول'],
+            'acetaminophen' => ['Panadol', 'بنادول'],
             'صداع' => ['بنادول', 'صداع', 'مسكن'],
+            'headache' => ['Panadol', 'بنادول', 'صداع'],
             'حراره' => ['بنادول', 'حرارة', 'خافض'],
-            'سخونيه' => ['بنادول', 'حرارة'],
             'برد' => ['كونجستال', 'برد', 'إنفلونزا', 'فيتامين سي'],
             'انفلونزا' => ['كونجستال', 'إنفلونزا', 'برد'],
             'رشح' => ['كونجستال', 'رشح'],
             'مضاد حيوي' => ['أوجمنتين', 'Augmentin', 'مضاد حيوي'],
-            'مضادات حيويه' => ['أوجمنتين', 'Augmentin', 'مضاد حيوي'],
+            'antibiotic' => ['Augmentin', 'أوجمنتين'],
             'مسكن' => ['بنادول', 'كتافلام', 'مسكن'],
             'اسنان' => ['كتافلام', 'مسكن'],
             'عظام' => ['كتافلام', 'التهاب', 'الروماتيزم'],
-            'مفاصل' => ['كتافلام', 'الروماتيزم'],
             'معده' => ['أنتودين', 'Antodine', 'معدة', 'حموضة'],
             'حموضه' => ['أنتودين', 'حموضة', 'ارتجاع'],
-            'ارتجاع' => ['أنتودين', 'ارتجاع'],
-            'فيتامين' => ['فيتامين', 'Vitamin', 'مناعة'],
+            'فيتامين سي' => ['فيتامين سي', 'Vitamin C', 'مناعة'],
             'مناعه' => ['فيتامين سي', 'مناعة'],
         ];
 
         foreach ($synonymMap as $trigger => $mappedTerms) {
-            if ($this->matchesAny($q, [$trigger])) {
+            if ($this->matchesAny($q, [$trigger]) || str_contains($lowerEn, $trigger)) {
                 array_push($terms, ...$mappedTerms);
             }
         }
@@ -637,20 +1383,21 @@ class AIChatService
     private function inferSpecialtyFromQuestion(string $question): ?string
     {
         $q = $this->normalizeArabic($question);
+        $en = strtolower($question);
 
-        if ($this->matchesAny($q, ['قلب', 'ضغط', 'صدر', 'شرايين', 'نبض'])) {
+        if ($this->matchesAny($q, ['قلب', 'ضغط', 'صدر', 'شرايين', 'نبض']) || str_contains($en, 'cardio') || str_contains($en, 'heart')) {
             return 'قلب';
         }
-        if ($this->matchesAny($q, ['عظام', 'مفاصل', 'ظهر', 'ركبه', 'غضروف', 'كسور', 'روماتيزم'])) {
+        if ($this->matchesAny($q, ['عظام', 'مفاصل', 'ظهر', 'ركبه', 'غضروف', 'روماتيزم', 'نقرس']) || str_contains($en, 'orthop') || str_contains($en, 'joint')) {
             return 'عظام';
         }
-        if ($this->matchesAny($q, ['طفل', 'اطفال', 'رضيع', 'تطعيم'])) {
+        if ($this->matchesAny($q, ['طفل', 'اطفال', 'رضيع', 'تطعيم']) || str_contains($en, 'pediatr')) {
             return 'أطفال';
         }
-        if ($this->matchesAny($q, ['عين', 'عيون', 'نظر', 'رمد', 'زغلله'])) {
+        if ($this->matchesAny($q, ['عين', 'عيون', 'نظر', 'رمد']) || str_contains($en, 'eye') || str_contains($en, 'ophthalm')) {
             return 'عيون';
         }
-        if ($this->matchesAny($q, ['باطنه', 'معده', 'قولون', 'حموضه', 'ارتجاع', 'سكر', 'كبد', 'هضمي'])) {
+        if ($this->matchesAny($q, ['باطنه', 'معده', 'قولون', 'حموضه', 'ارتجاع', 'سكر', 'السكري', 'كبد', 'غده درقيه']) || str_contains($en, 'stomach') || str_contains($en, 'diabetes')) {
             return 'باطنة';
         }
 
@@ -660,6 +1407,8 @@ class AIChatService
     private function mentionsDoctorIntent(string $question): bool
     {
         $q = $this->normalizeArabic($question);
-        return $this->matchesAny($q, ['دكتور', 'طبيب', 'اطباء', 'استشاري', 'عياده', 'تخصص', 'كشف']);
+        $en = strtolower($question);
+        return $this->matchesAny($q, ['دكتور', 'طبيب', 'اطباء', 'استشاري', 'عياده', 'تخصص', 'كشف'])
+            || str_contains($en, 'doctor') || str_contains($en, 'specialist');
     }
 }

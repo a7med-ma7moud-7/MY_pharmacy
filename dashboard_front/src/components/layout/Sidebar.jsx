@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { section: 'إدارة الكوادر والمستخدمين', items: [
     { name: 'المستخدمين', path: '/users', icon: Users },
     { name: 'الأطباء والعيادات', path: '/doctors', icon: UserRoundCheck },
+    { name: 'إشراف الحالات والتقييمات', path: '/doctor-moderation', icon: ShieldCheck },
   ]},
   { section: 'المتجر والمخزون', items: [
     { name: 'قائمة الأدوية', path: '/medicines', icon: Pill },
@@ -30,7 +31,7 @@ const NAV_ITEMS = [
   ]},
   { section: 'الخدمات والعمليات', items: [
     { name: 'الحجوزات الطبية', path: '/appointments', icon: CalendarDays },
-    { name: 'شاتس الـ AI', path: '/ai-chats', icon: Bot },
+    { name: 'إدارة الصيدلي الذكي', path: '/ai-chats', icon: Bot },
     { name: 'التقارير والإحصائيات', path: '/reports', icon: BarChart3 },
   ]},
 ];

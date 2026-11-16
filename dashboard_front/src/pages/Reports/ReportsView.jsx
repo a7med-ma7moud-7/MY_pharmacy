@@ -61,6 +61,7 @@ export const ReportsView = () => {
         visitor_stats = [],
         medicine_sales = [],
         doctor_stats = [],
+        doctor_portal_summary = {},
         monthly_revenue = [],
     } = reports || {};
 
@@ -113,6 +114,48 @@ export const ReportsView = () => {
                     <span>تحديث الإحصائيات</span>
                 </button>
             </div>
+
+            {/* Doctor Portal Activity Overview */}
+            {Object.keys(doctor_portal_summary).length > 0 && (
+                <div className="card" style={{ padding: '22px 24px' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 14px' }}>
+                        مؤشرات نشاط بوابة الأطباء والكوادر الطبية
+                    </h3>
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                            gap: '14px',
+                        }}
+                    >
+                        {[
+                            { label: 'أطباء موثقون', val: doctor_portal_summary.verified_doctors ?? 0 },
+                            { label: 'بانتظار التوثيق', val: doctor_portal_summary.pending_verifications ?? 0 },
+                            { label: 'الحالات المنشورة', val: doctor_portal_summary.published_treated_cases ?? 0 },
+                            { label: 'الروشتات الصادرة', val: doctor_portal_summary.total_prescriptions ?? 0 },
+                            { label: 'سجلات المتابعة', val: doctor_portal_summary.total_follow_ups ?? 0 },
+                            { label: 'التقييمات المعتمدة', val: doctor_portal_summary.total_reviews ?? 0 },
+                        ].map((item, i) => (
+                            <div
+                                key={i}
+                                style={{
+                                    padding: '14px',
+                                    borderRadius: 'var(--radius-md)',
+                                    backgroundColor: 'var(--bg-main)',
+                                    border: '1px solid var(--border-color)',
+                                }}
+                            >
+                                <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'block' }}>
+                                    {item.label}
+                                </span>
+                                <strong style={{ fontSize: '1.25rem', color: 'var(--primary-color)' }}>
+                                    {item.val}
+                                </strong>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Top Visual Charts Grid */}
             <div

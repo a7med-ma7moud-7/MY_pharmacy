@@ -8,16 +8,16 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 
 class Appointment extends Model
 {
     use HasFactory, Notifiable;
 
-    /**
-     * الحقول القابلة للتعديل الجماعي
-     */
     protected $fillable = [
+        'user_id',
         'patient_name',
         'email',
         'phone',
@@ -28,16 +28,10 @@ class Appointment extends Model
         'status',
     ];
 
-    /**
-     * التحويلات التلقائية
-     */
     protected $casts = [
         'appointment_date' => 'date:Y-m-d',
     ];
 
-    /**
-     * تنسيق اسم المريض والوقت قبل الحفظ
-     */
     public function setPatientNameAttribute($value): void
     {
         $this->attributes['patient_name'] = trim((string) $value);
@@ -48,17 +42,31 @@ class Appointment extends Model
         $this->attributes['appointment_time'] = trim((string) $value);
     }
 
-    /**
-     * العلاقة مع الطبيب
-     */
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class);
     }
 
-    /**
-     * التحقق من عدم وجود حجز لنفس الطبيب في نفس اليوم والوقت (مع دعم القفل داخل الـ Transaction)
-     */
+    public function patientUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class, 'appointment_id');
+    }
+
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(PatientFollowUp::class, 'appointment_id');
+    }
+
+    public function rating(): HasOne
+    {
+        return $this->hasOne(Rating::class, 'appointment_id');
+    }
+
     public static function isSlotTaken(
         int|string $doctorId,
         string $appointmentDate,
@@ -77,9 +85,6 @@ class Appointment extends Model
         return $query->exists();
     }
 
-    /**
-     * تصفية وبحث الحجوزات
-     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         if (!empty($filters['status'])) {

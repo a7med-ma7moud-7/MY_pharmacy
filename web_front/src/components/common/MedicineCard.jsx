@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Star, Check, Flame, Eye } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, ShieldCheck, Check, Flame, Eye } from 'lucide-react';
 import { MedicineArtwork } from './MedicalMedia';
 
 export const MedicineCard = ({ medicine, onAddToCart, onQuickView, index = 0 }) => {
@@ -82,11 +82,10 @@ export const MedicineCard = ({ medicine, onAddToCart, onQuickView, index = 0 }) 
                         <span className="text-xl font-black text-[#0f6848]">{medicine.price}</span>
                         <span className="text-xs font-bold text-slate-400">ج.م</span>
                     </div>
-                    <div className="flex items-center gap-0.5 text-amber-400">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                            <Star key={s} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        ))}
-                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                        <ShieldCheck className="w-3 h-3" />
+                        <span>مرخص</span>
+                    </span>
                 </div>
 
                 <p className="text-slate-500 text-xs line-clamp-2 min-h-[2.4rem] leading-relaxed mb-4 flex-1">

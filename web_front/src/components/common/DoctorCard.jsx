@@ -4,8 +4,13 @@ import { MapPin, Phone, Calendar, Star, ArrowLeft, CheckCircle, Sparkles } from 
 import { DoctorAvatar, formatDoctorName } from './MedicalMedia';
 
 export const DoctorCard = ({ doctor, index = 0 }) => {
-    const rating = Number(doctor.average_rating || 4.8).toFixed(1);
-    const ratingsCount = doctor.ratings_count || 1;
+    const ratingsCount = Number(doctor.ratings_count ?? 0);
+    const ratingNum = ratingsCount > 0 ? Number(doctor.average_rating ?? 0) : 0;
+    const ratingLabel = ratingsCount > 0 ? ratingNum.toFixed(1) : '0.0';
+    const displayPhone =
+        doctor.number && /^1[0125]\d{8}$/.test(String(doctor.number))
+            ? `0${doctor.number}`
+            : doctor.number;
 
     return (
         <div
@@ -52,21 +57,29 @@ export const DoctorCard = ({ doctor, index = 0 }) => {
                 <p className="text-xs text-emerald-700 font-bold mb-2.5">{doctor.specialty}</p>
 
                 {/* Ratings */}
-                <div className="inline-flex items-center justify-center gap-1.5 bg-amber-50/80 border border-amber-100 rounded-full px-3 py-1 mx-auto text-amber-500 text-sm mb-3">
+                <div
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1 mx-auto text-sm mb-3 border ${
+                        ratingsCount > 0
+                            ? 'bg-amber-50/80 border-amber-100 text-amber-500'
+                            : 'bg-slate-50 border-slate-200/80 text-slate-400'
+                    }`}
+                >
                     <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
                             <Star
                                 key={s}
                                 className={`w-3.5 h-3.5 ${
-                                    s <= Math.round(rating)
+                                    ratingsCount > 0 && s <= Math.round(ratingNum)
                                         ? 'fill-amber-400 text-amber-400'
-                                        : 'text-slate-200'
+                                        : 'text-slate-300'
                                 }`}
                             />
                         ))}
                     </div>
-                    <span className="font-black text-slate-800 text-xs">{rating}</span>
-                    <span className="text-slate-400 text-[11px]">({ratingsCount})</span>
+                    <span className="font-black text-slate-700 text-xs">{ratingLabel}</span>
+                    <span className="text-slate-400 text-[11px]">
+                        ({ratingsCount} {ratingsCount === 0 ? 'تقييم' : ''})
+                    </span>
                 </div>
 
                 {/* Details List */}
@@ -85,12 +98,12 @@ export const DoctorCard = ({ doctor, index = 0 }) => {
                             </span>
                         </span>
                     </div>
-                    {doctor.number && (
+                    {displayPhone && (
                         <div className="flex items-center justify-between">
                             <span className="text-slate-400 font-semibold">الهاتف</span>
                             <span className="font-bold text-slate-700 flex items-center gap-1" dir="ltr">
                                 <Phone className="w-3 h-3 text-emerald-600" />
-                                <span>{doctor.number}</span>
+                                <span>{displayPhone}</span>
                             </span>
                         </div>
                     )}

@@ -8,14 +8,15 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Medicien;
 use App\Models\Order;
+use App\Models\PatientFollowUp;
+use App\Models\Prescription;
+use App\Models\Rating;
+use App\Models\TreatedCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class ReportService
 {
-    /**
-     * جمع كافة تقارير وإحصائيات النظام بشكل متوافق مع SQLite و MySQL
-     */
     public function getAnalyticsData(): array
     {
         return [
@@ -23,10 +24,29 @@ class ReportService
             'medicine_sales' => $this->getMedicineSales(),
             'appointment_stats' => $this->getAppointmentStats(),
             'doctor_stats' => $this->getDoctorStats(),
+            'doctor_portal_summary' => $this->getDoctorPortalSummary(),
             'monthly_revenue' => $this->getMonthlyRevenue(),
             'order_status_stats' => $this->getOrderStatusStats(),
             'low_stock_medicines' => $this->getLowStockMedicines(),
         ];
+    }
+
+    public function getDoctorPortalSummary(): array
+    {
+        try {
+            return [
+                'verified_doctors' => Doctor::where('verification_status', 'verified')->count(),
+                'pending_verifications' => Doctor::where('verification_status', 'pending_verification')->count(),
+                'self_registered_doctors' => Doctor::where('creation_method', 'self_registered')->count(),
+                'admin_created_doctors' => Doctor::where('creation_method', 'admin_created')->count(),
+                'published_treated_cases' => TreatedCase::where('status', 'published')->count(),
+                'total_prescriptions' => Prescription::count(),
+                'total_follow_ups' => PatientFollowUp::count(),
+                'total_reviews' => Rating::visible()->count(),
+            ];
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     public function getVisitorStats()
@@ -53,9 +73,6 @@ class ReportService
         }
     }
 
-    /**
-     * حساب مبيعات وعوائد الأدوية الفعلية (مع استبعاد الطلبات الملغاة وحساب مجموع العبوات الفعلي)
-     */
     public function getMedicineSales()
     {
         return Medicien::select(
@@ -89,18 +106,22 @@ class ReportService
     public function getDoctorStats()
     {
         try {
-            return Doctor::select(
-                'doctors.id',
-                'doctors.name',
-                'doctors.specialty',
-                DB::raw('COUNT(appointments.id) as appointments_count')
-            )
-                ->join('appointments', 'doctors.id', '=', 'appointments.doctor_id')
-                ->where('appointments.status', '!=', 'cancelled')
-                ->groupBy('doctors.id', 'doctors.name', 'doctors.specialty')
+            return Doctor::query()
+                ->withCount([
+                    'appointments as appointments_count' => fn ($q) => $q->where('status', '!=', 'cancelled'),
+                    'publishedTreatedCases as treated_cases_count',
+                    'visibleRatings as ratings_count',
+                    'prescriptions as prescriptions_count',
+                ])
+                ->withAvg(['visibleRatings as ratings_avg'], 'rating')
                 ->orderByDesc('appointments_count')
                 ->limit(10)
-                ->get();
+                ->get(['id', 'name', 'specialty', 'status', 'verification_status', 'creation_method'])
+                ->map(function (Doctor $d) {
+                    $rCount = (int) ($d->ratings_count ?? 0);
+                    $d->average_rating = $rCount > 0 ? round((float) $d->ratings_avg, 1) : 0.0;
+                    return $d;
+                });
         } catch (\Throwable) {
             return [];
         }

@@ -9,14 +9,14 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Medicien;
 use App\Models\Order;
+use App\Models\Prescription;
+use App\Models\Rating;
+use App\Models\TreatedCase;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 
 class AdminDashboardApiController extends Controller
 {
-    /**
-     * إحصائيات ومعلومات لوحة التحكم الرئيسية بأقل عدد من الاستعلامات المجمعة
-     */
     public function index(): JsonResponse
     {
         $orderAggregates = Order::query()
@@ -44,6 +44,10 @@ class AdminDashboardApiController extends Controller
         return $this->successResponse([
             'stats' => [
                 'total_doctors' => Doctor::count(),
+                'pending_doctor_verifications' => Doctor::where('verification_status', 'pending_verification')->count(),
+                'total_treated_cases' => TreatedCase::where('status', 'published')->count(),
+                'total_prescriptions' => Prescription::count(),
+                'reported_reviews' => Rating::whereNotNull('report_reason')->where('report_reason', '!=', '')->count(),
                 'total_medicines' => (int) ($medicineAggregates->total_medicines ?? 0),
                 'low_stock_medicines' => (int) ($medicineAggregates->low_stock_count ?? 0),
                 'total_users' => User::count(),

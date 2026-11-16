@@ -86,7 +86,7 @@ export const adminApi = {
   getDashboard: () => api.get('/dashboard'),
   getReports: () => api.get('/reports'),
 
-  // Doctors
+  // Doctors & Doctor Account Administration
   getDoctors: (params) => api.get('/doctors', { params }),
   getDoctor: (id) => api.get(`/doctors/${id}`),
   createDoctor: (formData) =>
@@ -99,7 +99,20 @@ export const adminApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+  updateDoctorAccountStatus: (id, status) =>
+    api.patch(`/doctors/${id}/account-status`, { status }),
+  verifyDoctor: (id, verificationStatus) =>
+    api.patch(`/doctors/${id}/verify`, { verification_status: verificationStatus }),
+  resetDoctorPassword: (id, data) => api.post(`/doctors/${id}/reset-password`, data),
   deleteDoctor: (id) => api.delete(`/doctors/${id}`),
+
+  // Treated Cases & Reviews Moderation
+  getTreatedCases: (params) => api.get('/treated-cases', { params }),
+  moderateTreatedCase: (id, data) => api.patch(`/treated-cases/${id}/moderation`, data),
+  deleteTreatedCase: (id) => api.delete(`/treated-cases/${id}`),
+  getReviews: (params) => api.get('/reviews', { params }),
+  moderateReview: (id, data) => api.patch(`/reviews/${id}/status`, data),
+  deleteReview: (id) => api.delete(`/reviews/${id}`),
 
   // Medicines
   getMedicines: (params) => api.get('/medicines', { params }),
@@ -137,7 +150,19 @@ export const adminApi = {
   updateUser: (id, data) => api.put(`/users/${id}`, data),
   deleteUser: (id) => api.delete(`/users/${id}`),
 
-  // AI Chats (Read-Only)
+  // AI Pharmacist Management (Analytics, Config, Knowledge Base, Feedback, Monitoring & Privacy-Masked Metadata)
+  getAiAnalytics: () => api.get('/ai/analytics'),
+  getAiConfiguration: () => api.get('/ai/configuration'),
+  updateAiConfiguration: (data) => api.put('/ai/configuration', data),
+  getAiKnowledgeSources: () => api.get('/ai/knowledge-sources'),
+  createAiKnowledgeSource: (data) => api.post('/ai/knowledge-sources', data),
+  updateAiKnowledgeSource: (id, data) => api.put(`/ai/knowledge-sources/${id}`, data),
+  toggleAiKnowledgeSource: (id) => api.patch(`/ai/knowledge-sources/${id}/toggle`),
+  syncAiKnowledgeSource: (id) => api.post(`/ai/knowledge-sources/${id}/sync`),
+  deleteAiKnowledgeSource: (id) => api.delete(`/ai/knowledge-sources/${id}`),
+  getAiFeedback: (params) => api.get('/ai/feedback', { params }),
+  updateAiFeedback: (id, data) => api.patch(`/ai/feedback/${id}`, data),
+  getAiLogs: (params) => api.get('/ai/logs', { params }),
   getAiChats: (params) => api.get('/ai-chats', { params }),
   getAiChat: (id) => api.get(`/ai-chats/${id}`),
 };

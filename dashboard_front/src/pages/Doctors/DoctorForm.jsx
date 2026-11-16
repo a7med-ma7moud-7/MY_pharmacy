@@ -3,7 +3,7 @@ import { Dialog } from '../../components/common/Dialog';
 import { CustomSelect } from '../../components/common/CustomSelect';
 import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
-import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Upload, Image as ImageIcon, ShieldCheck } from 'lucide-react';
 
 export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
   const { showNotification } = useNotification();
@@ -12,10 +12,15 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     specialty: '',
-    price: '',
+    price: '300',
     number: '',
-    location: '',
+    password: '',
+    location: 'القاهرة',
     tow_location: '',
+    clinic_name: '',
+    experience_years: '',
+    qualifications: '',
+    bio: '',
     status: 'active',
     subscription: 'subscribed',
   });
@@ -32,15 +37,22 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
       setFormData({
         name: doctor.name || '',
         specialty: doctor.specialty || '',
-        price: doctor.price || '',
+        price: doctor.price ?? '',
         number: doctor.number || '',
+        password: '',
         location: doctor.location || '',
         tow_location: doctor.tow_location || '',
+        clinic_name: doctor.clinic_name || '',
+        experience_years: doctor.experience_years ?? '',
+        qualifications: doctor.qualifications || '',
+        bio: doctor.bio || '',
         status: doctor.status || 'active',
         subscription: doctor.subscription || 'subscribed',
       });
       if (doctor.image) {
-        setMainImagePreview(resolveImageUrl(doctor.image));
+        setMainImagePreview(resolveImageUrl(doctor));
+      } else {
+        setMainImagePreview('');
       }
       const existingPreviews = {};
       for (let i = 1; i <= 5; i++) {
@@ -54,10 +66,15 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
       setFormData({
         name: '',
         specialty: '',
-        price: '',
+        price: '300',
         number: '',
-        location: '',
+        password: '',
+        location: 'القاهرة',
         tow_location: '',
+        clinic_name: '',
+        experience_years: '',
+        qualifications: '',
+        bio: '',
         status: 'active',
         subscription: 'subscribed',
       });
@@ -98,12 +115,14 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
     setErrors({});
 
     const newErrors = {};
-    if (!formData.name) newErrors.name = 'اسم الطبيب مطلوب';
-    if (!formData.specialty) newErrors.specialty = 'التخصص مطلوب';
+    if (!formData.name.trim()) newErrors.name = 'اسم الطبيب مطلوب';
+    if (!formData.specialty.trim()) newErrors.specialty = 'التخصص الطبي مطلوب';
+    if (!formData.number.trim()) newErrors.number = 'رقم الهاتف مطلوب لتسجيل الدخول';
+    if (!isEdit && (!formData.password || formData.password.length < 8)) {
+      newErrors.password = 'كلمة المرور مطلوبة (8 أحرف على الأقل)';
+    }
     if (!formData.price) newErrors.price = 'سعر الكشف مطلوب';
-    if (!formData.number) newErrors.number = 'رقم الهاتف مطلوب';
-    if (!formData.location) newErrors.location = 'العنوان / المدينة مطلوب';
-    if (!isEdit && !mainImage) newErrors.image = 'الصورة الشخصية مطلوبة';
+    if (!formData.location.trim()) newErrors.location = 'العنوان / المدينة مطلوب';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -113,7 +132,10 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
     setSubmitting(true);
     const postData = new FormData();
     Object.keys(formData).forEach((key) => {
-      postData.append(key, formData[key]);
+      if (key === 'password' && isEdit) return;
+      if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
+        postData.append(key, formData[key]);
+      }
     });
 
     if (mainImage) {
@@ -132,7 +154,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
         showNotification('تم تحديث بيانات الطبيب بنجاح', 'success');
       } else {
         await adminApi.createDoctor(postData);
-        showNotification('تم إضافة الطبيب بنجاح إلى المنظومة', 'success');
+        showNotification('تم إنشاء حساب الطبيب وملفه المهني بنجاح!', 'success');
       }
       onSuccess();
       onClose();
@@ -156,11 +178,32 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? `تعديل بيانات الطبيب: ${doctor?.name}` : 'إضافة طبيب جديد'}
-      maxWidth="750px"
+      title={isEdit ? `تعديل بيانات الطبيب: ${doctor?.name}` : 'إنشاء حساب طبيب جديد (Admin Created)'}
+      maxWidth="780px"
     >
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        {!isEdit && (
+          <div
+            style={{
+              padding: '12px 16px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(16, 172, 132, 0.08)',
+              border: '1px solid rgba(16, 172, 132, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '0.8rem',
+              color: 'var(--text-main)',
+            }}
+          >
+            <ShieldCheck size={18} style={{ color: 'var(--primary-color)', flexShrink: 0 }} />
+            <span>
+              سيتم إنشاء حساب دخول مباشر للطبيب برقم الهاتف وكلمة المرور المحددين أدناه مع توثيق الحساب تلقائياً كإنشاء إداري.
+            </span>
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
           <div>
             <label className="form-label required">اسم الطبيب الكامل</label>
             <input
@@ -173,6 +216,35 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
             />
             {errors.name && <span className="field-error">{errors.name}</span>}
           </div>
+
+          <div>
+            <label className="form-label required">رقم الهاتف (لتسجيل الدخول)</label>
+            <input
+              type="text"
+              name="number"
+              className="form-input"
+              value={formData.number}
+              onChange={handleChange}
+              placeholder="01012345678"
+              dir="ltr"
+            />
+            {errors.number && <span className="field-error">{errors.number}</span>}
+          </div>
+
+          {!isEdit && (
+            <div>
+              <label className="form-label required">كلمة مرور حساب الطبيب</label>
+              <input
+                type="password"
+                name="password"
+                className="form-input"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="8 أحرف أو أرقام على الأقل"
+              />
+              {errors.password && <span className="field-error">{errors.password}</span>}
+            </div>
+          )}
 
           <div>
             <label className="form-label required">التخصص الطبي</label>
@@ -191,29 +263,15 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
             <label className="form-label required">سعر الكشف (ج.م)</label>
             <input
               type="number"
-              step="0.01"
+              step="1"
               min="0"
               name="price"
               className="form-input"
               value={formData.price}
               onChange={handleChange}
-              placeholder="مثال: 250"
+              placeholder="300"
             />
             {errors.price && <span className="field-error">{errors.price}</span>}
-          </div>
-
-          <div>
-            <label className="form-label required">رقم الهاتف / التواصل</label>
-            <input
-              type="text"
-              name="number"
-              className="form-input"
-              value={formData.number}
-              onChange={handleChange}
-              placeholder="مثال: 01012345678"
-              dir="ltr"
-            />
-            {errors.number && <span className="field-error">{errors.number}</span>}
           </div>
 
           <div>
@@ -224,31 +282,44 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
               className="form-input"
               value={formData.location}
               onChange={handleChange}
-              placeholder="مثال: القاهرة - مدينة نصر"
+              placeholder="القاهرة - مدينة نصر"
             />
             {errors.location && <span className="field-error">{errors.location}</span>}
           </div>
 
           <div>
-            <label className="form-label">العنوان الثانوي / تفاصيل العيادة</label>
+            <label className="form-label">اسم العيادة / المركز</label>
             <input
               type="text"
-              name="tow_location"
+              name="clinic_name"
               className="form-input"
-              value={formData.tow_location}
+              value={formData.clinic_name}
               onChange={handleChange}
-              placeholder="مثال: مبنى النخبة الطبي، الطابق الثاني"
+              placeholder="مثال: عيادة الشفاء التخصصية"
             />
           </div>
 
           <div>
-            <label className="form-label required">حالة الطبيب</label>
+            <label className="form-label">سنوات الخبرة المهنية</label>
+            <input
+              type="number"
+              min="0"
+              name="experience_years"
+              className="form-input"
+              value={formData.experience_years}
+              onChange={handleChange}
+              placeholder="مثال: 12"
+            />
+          </div>
+
+          <div>
+            <label className="form-label required">حالة تفعيل الحساب</label>
             <CustomSelect
               value={formData.status}
               onChange={(val) => setFormData((prev) => ({ ...prev, status: val }))}
               options={[
-                { value: 'active', label: 'نشط (متاح للحجز)' },
-                { value: 'inactive', label: 'غير نشط (معطل مؤقتاً)' },
+                { value: 'active', label: 'نشط ومفعل للدخول والحجز' },
+                { value: 'inactive', label: 'معطل مؤقتاً' },
               ]}
             />
           </div>
@@ -266,19 +337,30 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
           </div>
         </div>
 
+        <div>
+          <label className="form-label">المؤهلات العلمية / النبذة المهنية</label>
+          <input
+            type="text"
+            name="qualifications"
+            className="form-input"
+            value={formData.qualifications}
+            onChange={handleChange}
+            placeholder="مثال: دكتوراه الأمراض الباطنة - كلية الطب"
+          />
+        </div>
+
         {/* Main Profile Image Upload */}
-        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-          <label className={`form-label ${!isEdit ? 'required' : ''}`}>الصورة الشخصية الرئيسية للطبيب</label>
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+          <label className="form-label">الصورة الشخصية للطبيب (اختياري)</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px' }}>
             {mainImagePreview ? (
               <div
                 style={{
-                  width: '80px',
-                  height: '80px',
+                  width: '72px',
+                  height: '72px',
                   borderRadius: 'var(--radius-md)',
                   overflow: 'hidden',
                   border: '2px solid var(--primary-color)',
-                  position: 'relative',
                 }}
               >
                 <img
@@ -290,8 +372,8 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
             ) : (
               <div
                 style={{
-                  width: '80px',
-                  height: '80px',
+                  width: '72px',
+                  height: '72px',
                   borderRadius: 'var(--radius-md)',
                   backgroundColor: 'var(--bg-main)',
                   border: '1px dashed var(--border-color)',
@@ -301,7 +383,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
                   color: 'var(--text-muted)',
                 }}
               >
-                <ImageIcon size={28} />
+                <ImageIcon size={24} />
               </div>
             )}
 
@@ -315,28 +397,28 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
                 border: '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
                 cursor: 'pointer',
-                fontSize: '0.85rem',
+                fontSize: '0.82rem',
                 fontWeight: 600,
                 color: 'var(--text-main)',
               }}
             >
-              <Upload size={16} />
-              <span>{mainImagePreview ? 'تغيير الصورة' : 'رفع صورة'}</span>
+              <Upload size={15} />
+              <span>{mainImagePreview ? 'تغيير الصورة' : 'رفع صورة شخصية'}</span>
               <input type="file" accept="image/*" onChange={handleMainImageChange} style={{ display: 'none' }} />
             </label>
           </div>
           {errors.image && <span className="field-error">{errors.image}</span>}
         </div>
 
-        {/* Clinic Gallery Uploads (image-1 to image-5) */}
-        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-          <label className="form-label">صور العيادة والمرفقات (اختياري - حتى 5 صور)</label>
+        {/* Clinic Gallery Uploads */}
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+          <label className="form-label">صور العيادة (اختياري - حتى 5 صور)</label>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-              gap: '12px',
-              marginTop: '10px',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+              gap: '10px',
+              marginTop: '8px',
             }}
           >
             {[1, 2, 3, 4, 5].map((idx) => {
@@ -348,20 +430,19 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
                   style={{
                     border: '1px dashed var(--border-color)',
                     borderRadius: 'var(--radius-md)',
-                    padding: '8px',
+                    padding: '6px',
                     textAlign: 'center',
                     backgroundColor: 'var(--bg-main)',
-                    position: 'relative',
                   }}
                 >
                   {preview ? (
-                    <div style={{ height: '70px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '6px' }}>
+                    <div style={{ height: '60px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '4px' }}>
                       <img src={preview} alt={`صورة ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   ) : (
                     <div
                       style={{
-                        height: '70px',
+                        height: '60px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -369,15 +450,15 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
                         color: 'var(--text-muted)',
                       }}
                     >
-                      <ImageIcon size={20} />
-                      <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>عيادة {idx}</span>
+                      <ImageIcon size={18} />
+                      <span style={{ fontSize: '0.68rem', marginTop: '2px' }}>عيادة {idx}</span>
                     </div>
                   )}
 
                   <label
                     style={{
                       display: 'block',
-                      fontSize: '0.75rem',
+                      fontSize: '0.72rem',
                       color: 'var(--primary-color)',
                       cursor: 'pointer',
                       fontWeight: 600,
@@ -397,23 +478,17 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
           </div>
         </div>
 
-        {/* Form Actions */}
+        {/* Actions */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'flex-end',
             gap: '12px',
             borderTop: '1px solid var(--border-color)',
-            paddingTop: '16px',
-            marginTop: '8px',
+            paddingTop: '14px',
           }}
         >
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-outline"
-            disabled={submitting}
-          >
+          <button type="button" onClick={onClose} className="btn btn-outline" disabled={submitting}>
             إلغاء
           </button>
           <button
@@ -423,7 +498,7 @@ export const DoctorForm = ({ isOpen, onClose, doctor, onSuccess }) => {
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             {submitting && <Loader2 size={16} className="spin-animation" />}
-            <span>{isEdit ? 'حفظ التعديلات' : 'إضافة الطبيب'}</span>
+            <span>{isEdit ? 'حفظ التعديلات' : 'إنشاء حساب الطبيب'}</span>
           </button>
         </div>
       </form>

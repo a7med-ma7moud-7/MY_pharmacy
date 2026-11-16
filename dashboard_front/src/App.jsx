@@ -16,6 +16,7 @@ import { OrderList } from './pages/Orders/OrderList';
 import { ReportsView } from './pages/Reports/ReportsView';
 import { UserList } from './pages/Users/UserList';
 import { AiChatList } from './pages/AiChats/AiChatList';
+import { DoctorModerationView } from './pages/Moderation/DoctorModerationView';
 
 export function App() {
   return (
@@ -31,6 +32,7 @@ export function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/doctors" element={<DoctorList />} />
+              <Route path="/doctor-moderation" element={<DoctorModerationView />} />
               <Route path="/medicines" element={<MedicineList />} />
               <Route path="/appointments" element={<AppointmentList />} />
               <Route path="/orders" element={<OrderList />} />

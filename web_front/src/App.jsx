@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { Compass, Home as HomeIcon } from 'lucide-react';
@@ -11,8 +11,9 @@ import CartModal from './components/cart/CartModal';
 import FloatingAIChat from './components/chat/FloatingAIChat';
 import ScrollToTop from './components/common/ScrollToTop';
 import SilkAmbientBg from './components/common/SilkAmbientBg';
+import DoctorPortalLayout from './components/doctor/DoctorPortalLayout';
 
-// Pages
+// Public & Patient Pages
 import Home from './pages/Home';
 import Doctors from './pages/Doctors';
 import DoctorDetail from './pages/DoctorDetail';
@@ -24,6 +25,18 @@ import AIChat from './pages/AIChat';
 import Ratings from './pages/Ratings';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import PatientChats from './pages/PatientChats';
+
+// Doctor Portal Pages
+import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import DoctorProfile from './pages/doctor/DoctorProfile';
+import DoctorTreatedCases from './pages/doctor/DoctorTreatedCases';
+import DoctorReviews from './pages/doctor/DoctorReviews';
+import DoctorPatients from './pages/doctor/DoctorPatients';
+import DoctorChat from './pages/doctor/DoctorChat';
+import DoctorMedicalRecords from './pages/doctor/DoctorMedicalRecords';
+import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
+import DoctorFollowUps from './pages/doctor/DoctorFollowUps';
 
 function NotFound() {
   return (
@@ -49,6 +62,20 @@ function NotFound() {
   );
 }
 
+function PublicWebsiteShell() {
+  return (
+    <>
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+      <CartModal />
+      <FloatingAIChat />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -57,10 +84,25 @@ export default function App() {
           <ScrollToTop />
           <div className="relative isolate flex flex-col min-h-screen bg-transparent">
             <SilkAmbientBg />
-            <Navbar />
 
-            <main className="flex-1">
-              <Routes>
+            <Routes>
+              {/* Protected Dedicated Doctor Portal */}
+              <Route path="/doctor" element={<DoctorPortalLayout />}>
+                <Route index element={<Navigate to="/doctor/dashboard" replace />} />
+                <Route path="dashboard" element={<DoctorDashboard />} />
+                <Route path="profile" element={<DoctorProfile />} />
+                <Route path="cases" element={<DoctorTreatedCases />} />
+                <Route path="reviews" element={<DoctorReviews />} />
+                <Route path="patients" element={<DoctorPatients />} />
+                <Route path="chat" element={<DoctorChat />} />
+                <Route path="records" element={<DoctorMedicalRecords />} />
+                <Route path="records/:patientKey" element={<DoctorMedicalRecords />} />
+                <Route path="prescriptions" element={<DoctorPrescriptions />} />
+                <Route path="follow-ups" element={<DoctorFollowUps />} />
+              </Route>
+
+              {/* Public Website & Patient Routes */}
+              <Route element={<PublicWebsiteShell />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/doctors" element={<Doctors />} />
                 <Route path="/doctors/:id" element={<DoctorDetail />} />
@@ -69,16 +111,13 @@ export default function App() {
                 <Route path="/appointments" element={<Appointments />} />
                 <Route path="/orders/track" element={<TrackOrder />} />
                 <Route path="/ai-chat" element={<AIChat />} />
+                <Route path="/my-chats" element={<PatientChats />} />
                 <Route path="/ratings" element={<Ratings />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-
-            <Footer />
-            <CartModal />
-            <FloatingAIChat />
+              </Route>
+            </Routes>
           </div>
         </Router>
       </CartProvider>

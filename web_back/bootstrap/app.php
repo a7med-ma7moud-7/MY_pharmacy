@@ -38,9 +38,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\ResolveApiTokenUser::class,
         ]);
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'is_doctor_api' => \App\Http\Middleware\DoctorApiMiddleware::class,
+            'auth_api' => \App\Http\Middleware\AuthenticatedApiMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

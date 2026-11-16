@@ -3,6 +3,8 @@ import { useLocation, Link } from 'react-router-dom';
 import { aiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import AiSuggestionCards from './AiSuggestionCards';
+import AiMessageExtras from './AiMessageExtras';
+import { GUEST_AI_TOKEN_KEY } from '../../pages/AIChat';
 import { Bot, X, Send, Sparkles, RotateCcw, Maximize2 } from 'lucide-react';
 
 const INITIAL_MESSAGE = {
@@ -57,10 +59,19 @@ const FloatingAIChat = () => {
     const [chatId, setChatId] = useState(null);
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
+    const prevUserIdRef = useRef(user?.id ?? null);
 
     useEffect(() => {
-        if (!user) {
+        const curId = user?.id ?? null;
+        if (prevUserIdRef.current !== curId) {
+            const oldToken = sessionStorage.getItem(GUEST_AI_TOKEN_KEY);
+            if (oldToken) {
+                sessionStorage.removeItem(GUEST_AI_TOKEN_KEY);
+                aiService.endGuestSession(oldToken).catch(() => {});
+            }
             setChatId(null);
+            setMessages([INITIAL_MESSAGE]);
+            prevUserIdRef.current = curId;
         }
     }, [user]);
 
@@ -85,27 +96,42 @@ const FloatingAIChat = () => {
         setLoading(true);
 
         try {
-            const res = await aiService.askQuestion(userText, user ? chatId : null);
+            const guestToken = !user ? sessionStorage.getItem(GUEST_AI_TOKEN_KEY) : null;
+            const res = await aiService.askQuestion(userText, user ? chatId : null, guestToken);
+            const data = res.data || {};
+            if (!user && data.guest_session_token) {
+                sessionStorage.setItem(GUEST_AI_TOKEN_KEY, data.guest_session_token);
+            }
             const reply =
-                res.data?.answer ||
-                res.data?.reply ||
+                data.answer ||
+                data.reply ||
                 'عذراً، لم أتمكن من معالجة السؤال حالياً.';
             setMessages((prev) => [
                 ...prev,
                 {
                     sender: 'bot',
                     text: reply,
-                    suggestions: res.data?.suggestions || null,
+                    language: data.language || 'ar',
+                    retrievalMode: data.retrieval_mode || null,
+                    references: data.references || [],
+                    suggestions: data.suggestions || null,
+                    expertAssistance: data.expert_assistance || null,
+                    guestRestricted: Boolean(data.guest_restricted),
+                    isEmergency: Boolean(data.is_emergency),
                 },
             ]);
-            if (user && res.data?.chat_id) {
-                setChatId(res.data.chat_id);
+            if (user && data.chat_id) {
+                setChatId(data.chat_id);
             }
         } catch (err) {
+            if (err.response?.data?.code === 'GUEST_SESSION_EXPIRED') {
+                sessionStorage.removeItem(GUEST_AI_TOKEN_KEY);
+            }
             const errMsg =
                 err.response?.data?.answer ||
+                err.response?.data?.message ||
                 'حدث خطأ في الاتصال بالمساعد الذكي. يرجى المحاولة لاحقاً.';
-            setMessages((prev) => [...prev, { sender: 'bot', text: errMsg }]);
+            setMessages((prev) => [...prev, { sender: 'bot', text: errMsg, isError: true }]);
         } finally {
             setLoading(false);
         }
@@ -197,6 +223,11 @@ const FloatingAIChat = () => {
                                             {renderFormattedText(msg.text)}
                                             <AiSuggestionCards
                                                 suggestions={msg.suggestions}
+                                                compact
+                                                onNavigate={() => setIsOpen(false)}
+                                            />
+                                            <AiMessageExtras
+                                                msg={msg}
                                                 compact
                                                 onNavigate={() => setIsOpen(false)}
                                             />

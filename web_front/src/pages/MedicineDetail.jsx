@@ -13,7 +13,6 @@ import {
     ShieldCheck,
     Plus,
     Minus,
-    Star,
     Truck,
     Banknote,
     Bot,
@@ -136,18 +135,9 @@ const MedicineDetail = () => {
                                     </span>
                                 </div>
 
-                                <h1 className="text-3xl font-extrabold font-almarai text-slate-900 mb-2">
+                                <h1 className="text-3xl font-extrabold font-almarai text-slate-900 mb-3">
                                     {medicine.name}
                                 </h1>
-
-                                <div className="flex items-center gap-1.5 text-amber-400 mb-4">
-                                    {[1, 2, 3, 4, 5].map((s) => (
-                                        <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                    ))}
-                                    <span className="text-slate-400 text-xs font-semibold mr-2">
-                                        (منتج موثوق ومعتمد)
-                                    </span>
-                                </div>
 
                                 <div className="text-3xl font-black text-[#0f6848] mb-5">
                                     {medicine.price}{' '}

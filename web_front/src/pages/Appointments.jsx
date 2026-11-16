@@ -61,7 +61,8 @@ export const Appointments = () => {
     }, []);
 
     const effectiveName = formData.patient_name || user?.name || '';
-    const effectiveEmail = formData.email || user?.email || '';
+    const effectivePhone = formData.phone || user?.phone || '';
+    const effectiveEmail = formData.email || user?.display_email || '';
     const effectiveDoctorId = formData.doctor_id || preselectedDoctorId;
 
     const handleInputChange = (e) => {
@@ -82,6 +83,7 @@ export const Appointments = () => {
             const payload = {
                 ...formData,
                 patient_name: effectiveName,
+                phone: effectivePhone,
                 email: effectiveEmail,
                 doctor_id: effectiveDoctorId,
             };
@@ -161,10 +163,18 @@ export const Appointments = () => {
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-3">
+                            {confirmedAppointment.can_chat && confirmedAppointment.doctor_id && (
+                                <Link
+                                    to={`/my-chats?doctor_id=${confirmedAppointment.doctor_id}`}
+                                    className="btn-main px-7 py-3 rounded-xl font-bold shadow-md"
+                                >
+                                    مراسلة الطبيب الآن
+                                </Link>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => setConfirmedAppointment(null)}
-                                className="btn-main px-8 py-3 rounded-xl font-bold shadow-md cursor-pointer"
+                                className="btn-outline-main px-6 py-3 rounded-xl font-bold cursor-pointer"
                             >
                                 حجز موعد إضافي
                             </button>
@@ -216,7 +226,7 @@ export const Appointments = () => {
                                                     type="tel"
                                                     name="phone"
                                                     required
-                                                    value={formData.phone}
+                                                    value={effectivePhone}
                                                     onChange={handleInputChange}
                                                     placeholder="01xxxxxxxxx"
                                                     className="w-full pr-10 pl-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"

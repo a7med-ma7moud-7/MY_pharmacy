@@ -6,14 +6,20 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
+use App\Models\Rating;
+use App\Models\TreatedCase;
+use App\Models\User;
+use App\Services\DoctorPatientAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DoctorApiController extends Controller
 {
-    /**
-     * قائمة الأطباء مع الفلترة والبحث والترتيب وحساب التقييمات على مستوى SQL
-     */
+    public function __construct(
+        private readonly DoctorPatientAccessService $accessService
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
         $perPage = $this->resolvePerPage($request, default: 9, max: 100);
@@ -21,15 +27,18 @@ class DoctorApiController extends Controller
         $doctors = Doctor::query()
             ->activeAndSubscribed()
             ->filter($request->only(['search', 'specialty', 'location', 'tow_location']))
-            ->withAvg('ratings as ratings_avg', 'rating')
-            ->withCount('ratings')
+            ->withAvg(['visibleRatings as ratings_avg'], 'rating')
+            ->withCount([
+                'visibleRatings as ratings_count',
+                'publishedTreatedCases as treated_cases_count',
+            ])
             ->sortBy($request->query('sort'))
             ->paginate($perPage);
 
-        // إضافة بيانات التقييم ورابط الصورة لكل طبيب بدون استعلامات إضافية
         $doctors->getCollection()->transform(function (Doctor $doctor) {
-            $doctor->average_rating = round((float) ($doctor->ratings_avg ?: 5.0), 1);
-            $doctor->ratings_count = (int) ($doctor->ratings_count ?? 0);
+            $count = (int) ($doctor->ratings_count ?? 0);
+            $doctor->average_rating = $count > 0 ? round((float) $doctor->ratings_avg, 1) : 0.0;
+            $doctor->ratings_count = $count;
             $doctor->image_url = $doctor->image_url;
             return $doctor;
         });
@@ -40,25 +49,63 @@ class DoctorApiController extends Controller
         ]);
     }
 
-    /**
-     * تفاصيل طبيب محدد مع تقييماته ومعرض صور العيادة المعالجة
-     */
     public function show($id): JsonResponse
     {
-        $doctor = Doctor::findOrFail($id);
+        $doctor = Doctor::activeAndSubscribed()->findOrFail($id);
 
-        $ratings = $doctor->ratings()
-            ->with('user:id,name,email,avatar')
+        $ratings = $doctor->visibleRatings()
+            ->with('user:id,name,avatar')
             ->latest()
             ->get();
 
-        $averageRating = round((float) ($ratings->avg('rating') ?: 5.0), 1);
         $ratingsCount = $ratings->count();
+        $averageRating = $ratingsCount > 0 ? round((float) $ratings->avg('rating'), 1) : 0.0;
+
+        $treatedCases = $doctor->publishedTreatedCases()
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->get();
 
         $doctor->setRelation('ratings', $ratings);
         $doctor->average_rating = $averageRating;
         $doctor->ratings_count = $ratingsCount;
         $doctor->appendResolvedImages();
+
+        $viewerEligibility = [
+            'authenticated' => false,
+            'can_chat' => false,
+            'can_review' => false,
+            'eligible_appointments' => [],
+        ];
+
+        if (Auth::check()) {
+            /** @var User $viewer */
+            $viewer = Auth::user();
+            $canChat = $viewer->isUser() && $this->accessService->canPatientChatWithDoctor($viewer, (int) $doctor->id);
+
+            $reviewedApptIds = Rating::query()
+                ->where('doctor_id', $doctor->id)
+                ->where('user_id', $viewer->id)
+                ->whereNotNull('appointment_id')
+                ->pluck('appointment_id')
+                ->all();
+
+            $eligibleReviewAppointments = $viewer->isUser()
+                ? $this->accessService
+                    ->appointmentsBetweenUserAndDoctor($viewer, (int) $doctor->id)
+                    ->where('status', 'completed')
+                    ->when($reviewedApptIds !== [], fn ($q) => $q->whereNotIn('id', $reviewedApptIds))
+                    ->orderByDesc('appointment_date')
+                    ->get(['id', 'appointment_date', 'appointment_time', 'status'])
+                : collect();
+
+            $viewerEligibility = [
+                'authenticated' => true,
+                'can_chat' => $canChat,
+                'can_review' => $eligibleReviewAppointments->isNotEmpty(),
+                'eligible_appointments' => $eligibleReviewAppointments,
+            ];
+        }
 
         return $this->successResponse([
             'data' => [
@@ -66,7 +113,22 @@ class DoctorApiController extends Controller
                 'ratings' => $ratings,
                 'average_rating' => $averageRating,
                 'ratings_count' => $ratingsCount,
+                'treated_cases' => $treatedCases,
+                'viewer_eligibility' => $viewerEligibility,
             ],
+        ]);
+    }
+
+    public function showCase($doctorId, $caseId): JsonResponse
+    {
+        $doctor = Doctor::activeAndSubscribed()->findOrFail($doctorId);
+        $case = TreatedCase::query()
+            ->where('doctor_id', $doctor->id)
+            ->published()
+            ->findOrFail($caseId);
+
+        return $this->successResponse([
+            'data' => $case,
         ]);
     }
 }

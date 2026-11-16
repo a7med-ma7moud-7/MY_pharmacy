@@ -17,12 +17,13 @@ import {
     LayoutDashboard,
     ChevronDown,
     HeartPulse,
+    MessageSquare,
 } from 'lucide-react';
 
 const DASHBOARD_URL = import.meta.env.VITE_DASHBOARD_URL || 'http://localhost:5174';
 
 const Navbar = () => {
-    const { user, logout, isAdmin } = useAuth();
+    const { user, logout, isAdmin, isDoctor } = useAuth();
     const { totalCount, setIsCartOpen } = useCart();
     const location = useLocation();
     const navigate = useNavigate();
@@ -167,8 +168,21 @@ const Navbar = () => {
                                         <div className="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-800 border border-slate-100 z-50 animate-slideDown">
                                             <div className="px-4 py-2.5 border-b border-slate-100">
                                                 <p className="text-xs font-extrabold text-slate-900 truncate m-0">{user.name}</p>
-                                                <p className="text-[11px] text-slate-400 truncate m-0">{user.email}</p>
+                                                <p className="text-[11px] text-slate-400 truncate m-0" dir="ltr">
+                                                    {user.phone || user.display_email || user.email}
+                                                </p>
                                             </div>
+
+                                            {isDoctor && (
+                                                <Link
+                                                    to="/doctor/dashboard"
+                                                    onClick={closeMenus}
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-[#0f6848] bg-emerald-50/70 hover:bg-emerald-100 transition-colors"
+                                                >
+                                                    <Stethoscope className="w-4 h-4 text-[#0f6848]" />
+                                                    <span>بوابة الطبيب</span>
+                                                </Link>
+                                            )}
 
                                             {isAdmin && (
                                                 <a
@@ -181,6 +195,17 @@ const Navbar = () => {
                                                     <LayoutDashboard className="w-4 h-4 text-emerald-600" />
                                                     <span>لوحة تحكم الإدارة</span>
                                                 </a>
+                                            )}
+
+                                            {!isDoctor && (
+                                                <Link
+                                                    to="/my-chats"
+                                                    onClick={closeMenus}
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-[#0f6848] transition-colors"
+                                                >
+                                                    <MessageSquare className="w-4 h-4 text-emerald-600" />
+                                                    <span>محادثاتي مع الأطباء</span>
+                                                </Link>
                                             )}
 
                                             <Link
@@ -268,9 +293,31 @@ const Navbar = () => {
                                     </div>
                                     <div className="overflow-hidden">
                                         <p className="text-xs font-bold text-white truncate m-0">{user.name}</p>
-                                        <p className="text-[11px] text-emerald-200 truncate m-0">{user.email}</p>
+                                        <p className="text-[11px] text-emerald-200 truncate m-0" dir="ltr">
+                                            {user.phone || user.display_email || user.email}
+                                        </p>
                                     </div>
                                 </div>
+
+                                {isDoctor ? (
+                                    <Link
+                                        to="/doctor/dashboard"
+                                        onClick={closeMenus}
+                                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-emerald-200 hover:bg-white/10"
+                                    >
+                                        <Stethoscope className="w-4 h-4" />
+                                        <span>بوابة الطبيب</span>
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to="/my-chats"
+                                        onClick={closeMenus}
+                                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-emerald-200 hover:bg-white/10"
+                                    >
+                                        <MessageSquare className="w-4 h-4" />
+                                        <span>محادثاتي مع الأطباء</span>
+                                    </Link>
+                                )}
 
                                 {isAdmin && (
                                     <a

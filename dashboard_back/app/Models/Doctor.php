@@ -8,6 +8,7 @@ use App\Models\Concerns\ResolvesImageUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,13 +21,12 @@ class Doctor extends Model
     public const FILTER_CACHE_KEY = 'doctors:filter_options';
 
     /**
-     * Memoized schema column checks to avoid repeated PRAGMA table_info queries.
-     *
      * @var array<string, bool>
      */
     private static array $columnExistsCache = [];
 
     protected $fillable = [
+        'user_id',
         'name',
         'image',
         'specialty',
@@ -34,8 +34,19 @@ class Doctor extends Model
         'number',
         'location',
         'tow_location',
+        'bio',
+        'qualifications',
+        'experience_years',
+        'clinic_name',
+        'working_hours',
         'status',
         'subscription',
+        'verification_status',
+        'creation_method',
+    ];
+
+    protected $casts = [
+        'experience_years' => 'integer',
     ];
 
     protected static function booted(): void
@@ -56,16 +67,13 @@ class Doctor extends Model
         return self::getFilterOptions()['specialties']->all();
     }
 
-    /**
-     * استرجاع قوائم الفلاتر (التخصصات، المحافظات، المدن) مع التخزين المؤقت الذكي
-     */
     public static function getFilterOptions(): array
     {
         return Cache::remember(self::FILTER_CACHE_KEY, 300, static function (): array {
             return [
-                'specialties' => self::distinct()->whereNotNull('specialty')->pluck('specialty'),
-                'locations' => self::distinct()->whereNotNull('location')->pluck('location'),
-                'cities' => self::distinct()->whereNotNull('tow_location')->pluck('tow_location'),
+                'specialties' => self::query()->activeAndSubscribed()->distinct()->whereNotNull('specialty')->pluck('specialty'),
+                'locations' => self::query()->activeAndSubscribed()->distinct()->whereNotNull('location')->pluck('location'),
+                'cities' => self::query()->activeAndSubscribed()->distinct()->whereNotNull('tow_location')->pluck('tow_location'),
             ];
         });
     }
@@ -75,12 +83,14 @@ class Doctor extends Model
         $this->attributes['name'] = trim((string) $value);
     }
 
-    /**
-     * تعديل قيمة التخصص قبل الحفظ
-     */
     public function setSpecialtyAttribute($value): void
     {
         $this->attributes['specialty'] = trim((string) $value);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function ratings(): HasMany
@@ -88,23 +98,73 @@ class Doctor extends Model
         return $this->hasMany(Rating::class, 'doctor_id');
     }
 
+    public function visibleRatings(): HasMany
+    {
+        return $this->hasMany(Rating::class, 'doctor_id')
+            ->where(function (Builder $q) {
+                $q->where('status', 'visible')->orWhereNull('status');
+            });
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'doctor_id');
     }
 
-    /**
-     * التحقق من جاهزية الطبيب لاستقبال حجوزات جديدة
-     */
+    public function treatedCases(): HasMany
+    {
+        return $this->hasMany(TreatedCase::class, 'doctor_id');
+    }
+
+    public function publishedTreatedCases(): HasMany
+    {
+        return $this->hasMany(TreatedCase::class, 'doctor_id')->where('status', 'published');
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(DoctorPatientConversation::class, 'doctor_id');
+    }
+
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class, 'doctor_id');
+    }
+
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(PatientFollowUp::class, 'doctor_id');
+    }
+
+    public function isVerified(): bool
+    {
+        return in_array($this->verification_status, ['verified', null, ''], true);
+    }
+
     public function isActiveForBooking(): bool
     {
         $activeStatuses = ['active', 'متاح', 'نشط', null, ''];
-        return in_array($this->status, $activeStatuses, true);
+        if (!in_array($this->status, $activeStatuses, true)) {
+            return false;
+        }
+
+        if (self::hasDoctorColumn('verification_status') && !$this->isVerified()) {
+            return false;
+        }
+
+        if ($this->user_id && $this->user && !$this->user->isActiveAccount()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isEligibleForPortal(): bool
+    {
+        return $this->isVerified() && $this->isActiveForBooking();
     }
 
     /**
-     * استرجاع روابط صور معرض العيادة الإضافية بعد معالجتها
-     *
      * @return list<string>
      */
     public function getGalleryUrls(): array
@@ -119,9 +179,6 @@ class Doctor extends Model
         return array_values(array_unique($urls));
     }
 
-    /**
-     * إرفاق روابط الصور الرئيسية وصور المعرض للكائن قبل تحويله إلى JSON
-     */
     public function appendResolvedImages(): self
     {
         $this->image_url = $this->image_url;
@@ -138,9 +195,6 @@ class Doctor extends Model
         return $this;
     }
 
-    /**
-     * تصفية الأطباء النشطين والمشتركين (دعم القيم العربية والإنجليزية)
-     */
     public function scopeActiveAndSubscribed(Builder $query): Builder
     {
         if (self::hasDoctorColumn('status')) {
@@ -155,12 +209,15 @@ class Doctor extends Model
             });
         }
 
+        if (self::hasDoctorColumn('verification_status')) {
+            $query->where(function (Builder $q) {
+                $q->where('verification_status', 'verified')->orWhereNull('verification_status');
+            });
+        }
+
         return $query;
     }
 
-    /**
-     * البحث والتصفية المرنة للأطباء
-     */
     public function scopeFilter(Builder $query, array $filters, bool $includeContactInSearch = false): Builder
     {
         if (!empty($filters['search'])) {
@@ -199,12 +256,17 @@ class Doctor extends Model
             $query->where('status', $filters['status']);
         }
 
+        if (!empty($filters['verification_status']) && self::hasDoctorColumn('verification_status')) {
+            $query->where('verification_status', $filters['verification_status']);
+        }
+
+        if (!empty($filters['creation_method']) && self::hasDoctorColumn('creation_method')) {
+            $query->where('creation_method', $filters['creation_method']);
+        }
+
         return $query;
     }
 
-    /**
-     * ترتيب الأطباء ديناميكياً حسب الخيار المطلوب
-     */
     public function scopeSortBy(Builder $query, ?string $sort, string $defaultColumn = 'name', string $defaultDirection = 'asc'): Builder
     {
         return match ($sort) {
@@ -216,9 +278,6 @@ class Doctor extends Model
         };
     }
 
-    /**
-     * حفظ الصورة الأساسية والصور الإضافية للطبيب
-     */
     public function syncUploadedImages(Request $request): void
     {
         if ($request->hasFile('image')) {
@@ -238,9 +297,6 @@ class Doctor extends Model
         }
     }
 
-    /**
-     * حذف كافة صور الطبيب المخزنة
-     */
     public function deleteAllStoredImages(): void
     {
         $this->deleteStoredImage($this->image);

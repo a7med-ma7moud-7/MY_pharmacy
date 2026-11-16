@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\v1\Admin\AdminAuthApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminDashboardApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminDoctorApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminMedicienApiController;
+use App\Http\Controllers\Api\v1\Admin\AdminModerationApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminOrderApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminReportsApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminUserApiController;
@@ -46,12 +47,24 @@ Route::prefix('v1/admin')->group(function () {
         // Dashboard Metrics & Recent Feeds
         Route::get('/dashboard', [AdminDashboardApiController::class, 'index']);
 
-        // Doctors Management
+        // Doctors Management & Account Administration
         Route::get('/doctors', [AdminDoctorApiController::class, 'index']);
         Route::post('/doctors', [AdminDoctorApiController::class, 'store']);
         Route::get('/doctors/{id}', [AdminDoctorApiController::class, 'show'])->whereNumber('id');
         Route::match(['post', 'put'], '/doctors/{id}', [AdminDoctorApiController::class, 'update'])->whereNumber('id');
+        Route::patch('/doctors/{id}/account-status', [AdminDoctorApiController::class, 'updateAccountStatus'])->whereNumber('id');
+        Route::patch('/doctors/{id}/verify', [AdminDoctorApiController::class, 'verifyDoctor'])->whereNumber('id');
+        Route::post('/doctors/{id}/reset-password', [AdminDoctorApiController::class, 'resetPassword'])->whereNumber('id');
         Route::delete('/doctors/{id}', [AdminDoctorApiController::class, 'destroy'])->whereNumber('id');
+
+        // Treated Cases & Reviews Post-Publication Moderation
+        Route::get('/treated-cases', [AdminModerationApiController::class, 'treatedCases']);
+        Route::patch('/treated-cases/{id}/moderation', [AdminModerationApiController::class, 'moderateTreatedCase'])->whereNumber('id');
+        Route::delete('/treated-cases/{id}', [AdminModerationApiController::class, 'deleteTreatedCase'])->whereNumber('id');
+
+        Route::get('/reviews', [AdminModerationApiController::class, 'reviews']);
+        Route::patch('/reviews/{id}/status', [AdminModerationApiController::class, 'moderateReview'])->whereNumber('id');
+        Route::delete('/reviews/{id}', [AdminModerationApiController::class, 'deleteReview'])->whereNumber('id');
 
         // Medicines Management
         Route::get('/medicines', [AdminMedicienApiController::class, 'index']);
@@ -76,7 +89,19 @@ Route::prefix('v1/admin')->group(function () {
         // Reports & Analytics
         Route::get('/reports', [AdminReportsApiController::class, 'index']);
 
-        // AI Chats (Read-Only)
+        // AI Pharmacist Management (Analytics, Configuration, Knowledge Sources, Feedback, Monitoring & Privacy-Masked Metadata)
+        Route::get('/ai/analytics', [AdminAiChatApiController::class, 'analytics']);
+        Route::get('/ai/configuration', [AdminAiChatApiController::class, 'getConfiguration']);
+        Route::put('/ai/configuration', [AdminAiChatApiController::class, 'updateConfiguration']);
+        Route::get('/ai/knowledge-sources', [AdminAiChatApiController::class, 'listKnowledgeSources']);
+        Route::post('/ai/knowledge-sources', [AdminAiChatApiController::class, 'storeKnowledgeSource']);
+        Route::put('/ai/knowledge-sources/{id}', [AdminAiChatApiController::class, 'updateKnowledgeSource'])->whereNumber('id');
+        Route::patch('/ai/knowledge-sources/{id}/toggle', [AdminAiChatApiController::class, 'toggleKnowledgeSource'])->whereNumber('id');
+        Route::post('/ai/knowledge-sources/{id}/sync', [AdminAiChatApiController::class, 'syncKnowledgeSource'])->whereNumber('id');
+        Route::delete('/ai/knowledge-sources/{id}', [AdminAiChatApiController::class, 'destroyKnowledgeSource'])->whereNumber('id');
+        Route::get('/ai/feedback', [AdminAiChatApiController::class, 'listFeedback']);
+        Route::patch('/ai/feedback/{id}', [AdminAiChatApiController::class, 'updateFeedbackStatus'])->whereNumber('id');
+        Route::get('/ai/logs', [AdminAiChatApiController::class, 'listLogs']);
         Route::get('/ai-chats', [AdminAiChatApiController::class, 'index']);
         Route::get('/ai-chats/{id}', [AdminAiChatApiController::class, 'show'])->whereNumber('id');
 

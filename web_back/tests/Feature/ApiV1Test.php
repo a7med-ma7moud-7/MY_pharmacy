@@ -236,8 +236,67 @@ class ApiV1Test extends TestCase
         $response->assertStatus(200)
                  ->assertJsonStructure([
                      'success',
-                     'answer'
+                     'answer',
+                     'suggestions' => ['medicines', 'doctors'],
                  ]);
+    }
+
+    public function test_ai_chat_answers_general_medical_question_without_unrelated_store_dump(): void
+    {
+        Medicien::create([
+            'name' => 'فيتامين سي فوار (Vitamin C 1000mg)',
+            'type' => 'فوار',
+            'price' => 65,
+            'count' => 10,
+            'propose' => 'دعم المناعة',
+            'image' => 'vitc.png',
+        ]);
+
+        $response = $this->postJson('/api/v1/ask-ai', [
+            'question' => 'ما هي أعراض نقص فيتامين د وفوائد أوميجا 3؟',
+        ]);
+
+        $response->assertStatus(200)
+                 ->assertJson(['success' => true]);
+
+        $answer = (string) $response->json('answer');
+        $this->assertStringContainsString('فيتامين د', $answer);
+        $this->assertStringContainsString('أوميجا 3', $answer);
+        $this->assertEmpty($response->json('suggestions.medicines'));
+    }
+
+    public function test_ai_chat_combines_general_guidance_with_system_database_matches(): void
+    {
+        Medicien::create([
+            'name' => 'بنادول إكسترا (Panadol Extra)',
+            'type' => 'أقراص',
+            'price' => 45,
+            'count' => 15,
+            'propose' => 'مسكن للألم وخافض للحرارة والصداع',
+            'image' => 'panadol.png',
+        ]);
+
+        Doctor::create([
+            'name' => 'محمود فهمي',
+            'image' => 'doc.png',
+            'specialty' => 'باطنة',
+            'price' => 300,
+            'number' => 1012345678,
+            'location' => 'القاهرة',
+            'tow_location' => 'المعادي',
+            'subscription' => 'subscribed',
+            'status' => 'active',
+        ]);
+
+        $response = $this->postJson('/api/v1/ask-ai', [
+            'question' => 'عندي صداع وحموضة في المعدة ومحتاج دكتور باطنة',
+        ]);
+
+        $response->assertStatus(200)
+                 ->assertJson(['success' => true]);
+
+        $this->assertNotEmpty($response->json('suggestions.medicines'));
+        $this->assertNotEmpty($response->json('suggestions.doctors'));
     }
 
     public function test_auth_login_with_invalid_credentials_returns_401(): void
