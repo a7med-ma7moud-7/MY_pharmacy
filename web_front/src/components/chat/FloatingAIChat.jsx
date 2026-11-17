@@ -2,21 +2,37 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { aiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import AiSuggestionCards from './AiSuggestionCards';
 import AiMessageExtras from './AiMessageExtras';
 import { GUEST_AI_TOKEN_KEY } from '../../pages/AIChat';
 import { Bot, X, Send, Sparkles, RotateCcw, Maximize2 } from 'lucide-react';
 
-const INITIAL_MESSAGE = {
-    sender: 'bot',
-    text: 'أهلاً بك في صيدليتي! أنا مساعدك الطبي الذكي 🤖. كيف يمكنني مساعدتك اليوم بخصوص الأدوية أو الأعراض؟',
+const INITIAL_MESSAGES = {
+    ar: {
+        sender: 'bot',
+        isWelcome: true,
+        text: 'أهلاً بك في صيدليتي! أنا مساعدك الطبي الذكي 🤖. كيف يمكنني مساعدتك اليوم بخصوص الأدوية أو الأعراض؟',
+    },
+    en: {
+        sender: 'bot',
+        isWelcome: true,
+        text: 'Welcome to Saydalety! I am your AI Pharmacist Assistant 🤖. How can I help you today with medications or symptoms?',
+    },
 };
 
-const QUICK_PROMPTS = [
-    'الجرعة الآمنة للباراسيتامول؟',
-    'نصائح لتناول المضادات الحيوية',
-    'بدائل المسكنات لمرضى المعدة',
-];
+const QUICK_PROMPTS_BY_LANG = {
+    ar: [
+        'الجرعة الآمنة للباراسيتامول؟',
+        'نصائح لتناول المضادات الحيوية',
+        'بدائل المسكنات لمرضى المعدة',
+    ],
+    en: [
+        'Safe paracetamol dosage?',
+        'Tips for taking antibiotics',
+        'Painkiller alternatives for sensitive stomach',
+    ],
+};
 
 const renderFormattedText = (text) => {
     if (!text) return null;
@@ -53,13 +69,23 @@ const renderFormattedText = (text) => {
 const FloatingAIChat = () => {
     const location = useLocation();
     const { user } = useAuth();
+    const { lang } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([INITIAL_MESSAGE]);
+    const [messages, setMessages] = useState([INITIAL_MESSAGES[lang] || INITIAL_MESSAGES.ar]);
     const [chatId, setChatId] = useState(null);
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
     const prevUserIdRef = useRef(user?.id ?? null);
+
+    useEffect(() => {
+        setMessages((prev) => {
+            if (prev.length === 1 && prev[0]?.isWelcome) {
+                return [INITIAL_MESSAGES[lang] || INITIAL_MESSAGES.ar];
+            }
+            return prev;
+        });
+    }, [lang]);
 
     useEffect(() => {
         const curId = user?.id ?? null;
@@ -70,10 +96,10 @@ const FloatingAIChat = () => {
                 aiService.endGuestSession(oldToken).catch(() => {});
             }
             setChatId(null);
-            setMessages([INITIAL_MESSAGE]);
+            setMessages([INITIAL_MESSAGES[lang] || INITIAL_MESSAGES.ar]);
             prevUserIdRef.current = curId;
         }
-    }, [user]);
+    }, [user, lang]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -187,7 +213,7 @@ const FloatingAIChat = () => {
                             </Link>
                             <button
                                 type="button"
-                                onClick={() => { setMessages([INITIAL_MESSAGE]); setChatId(null); }}
+                                onClick={() => { setMessages([INITIAL_MESSAGES[lang] || INITIAL_MESSAGES.ar]); setChatId(null); }}
                                 className="p-1.5 hover:bg-white/20 rounded-xl transition-colors text-white/90 hover:text-white cursor-pointer"
                                 title="محادثة جديدة"
                             >
@@ -213,6 +239,7 @@ const FloatingAIChat = () => {
                                     }`}
                             >
                                 <div
+                                    data-no-i18n={msg.isWelcome ? undefined : 'true'}
                                     className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${msg.sender === 'user'
                                         ? 'bg-gradient-to-r from-[#0f6848] to-[#14875e] text-white rounded-tr-none shadow-sm'
                                         : 'bg-white text-slate-800 border border-slate-100 shadow-sm rounded-tl-none'
@@ -241,7 +268,7 @@ const FloatingAIChat = () => {
                             <div className="pt-2 space-y-1.5">
                                 <span className="text-[11px] text-slate-400 font-bold block">اقتراحات سريعة:</span>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {QUICK_PROMPTS.map((q, idx) => (
+                                    {(QUICK_PROMPTS_BY_LANG[lang] || QUICK_PROMPTS_BY_LANG.ar).map((q, idx) => (
                                         <button
                                             key={idx}
                                             type="button"

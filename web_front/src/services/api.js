@@ -31,6 +31,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    const lang = localStorage.getItem('saydalety_lang') || 'ar';
+    config.headers['Accept-Language'] = lang;
     if (!(config.data instanceof FormData) && !config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json';
     }

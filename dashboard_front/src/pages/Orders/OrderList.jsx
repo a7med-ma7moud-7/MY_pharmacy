@@ -127,7 +127,7 @@ export const OrderList = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--surface-card)',
             borderColor: '#10b981',
             color: '#10b981',
             fontWeight: 700,

@@ -18,7 +18,7 @@ export const Pagination = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '12px 16px',
-        background: '#ffffff',
+        background: 'var(--surface-card)',
         fontSize: '0.85rem',
         color: 'var(--slate-600)',
         flexWrap: 'wrap',

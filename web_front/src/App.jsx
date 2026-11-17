@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { Compass, Home as HomeIcon } from 'lucide-react';
 
 // Layout & Modals
@@ -78,49 +80,53 @@ function PublicWebsiteShell() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <Router>
-          <ScrollToTop />
-          <div className="relative isolate flex flex-col min-h-screen bg-transparent">
-            <SilkAmbientBg />
+    <LanguageProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Router>
+              <ScrollToTop />
+              <div className="relative isolate flex flex-col min-h-screen bg-transparent">
+                <SilkAmbientBg />
 
-            <Routes>
-              {/* Protected Dedicated Doctor Portal */}
-              <Route path="/doctor" element={<DoctorPortalLayout />}>
-                <Route index element={<Navigate to="/doctor/dashboard" replace />} />
-                <Route path="dashboard" element={<DoctorDashboard />} />
-                <Route path="profile" element={<DoctorProfile />} />
-                <Route path="cases" element={<DoctorTreatedCases />} />
-                <Route path="reviews" element={<DoctorReviews />} />
-                <Route path="patients" element={<DoctorPatients />} />
-                <Route path="chat" element={<DoctorChat />} />
-                <Route path="records" element={<DoctorMedicalRecords />} />
-                <Route path="records/:patientKey" element={<DoctorMedicalRecords />} />
-                <Route path="prescriptions" element={<DoctorPrescriptions />} />
-                <Route path="follow-ups" element={<DoctorFollowUps />} />
-              </Route>
+                <Routes>
+                  {/* Protected Dedicated Doctor Portal */}
+                  <Route path="/doctor" element={<DoctorPortalLayout />}>
+                    <Route index element={<Navigate to="/doctor/dashboard" replace />} />
+                    <Route path="dashboard" element={<DoctorDashboard />} />
+                    <Route path="profile" element={<DoctorProfile />} />
+                    <Route path="cases" element={<DoctorTreatedCases />} />
+                    <Route path="reviews" element={<DoctorReviews />} />
+                    <Route path="patients" element={<DoctorPatients />} />
+                    <Route path="chat" element={<DoctorChat />} />
+                    <Route path="records" element={<DoctorMedicalRecords />} />
+                    <Route path="records/:patientKey" element={<DoctorMedicalRecords />} />
+                    <Route path="prescriptions" element={<DoctorPrescriptions />} />
+                    <Route path="follow-ups" element={<DoctorFollowUps />} />
+                  </Route>
 
-              {/* Public Website & Patient Routes */}
-              <Route element={<PublicWebsiteShell />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/doctors" element={<Doctors />} />
-                <Route path="/doctors/:id" element={<DoctorDetail />} />
-                <Route path="/medicines" element={<Medicines />} />
-                <Route path="/medicines/:id" element={<MedicineDetail />} />
-                <Route path="/appointments" element={<Appointments />} />
-                <Route path="/orders/track" element={<TrackOrder />} />
-                <Route path="/ai-chat" element={<AIChat />} />
-                <Route path="/my-chats" element={<PatientChats />} />
-                <Route path="/ratings" element={<Ratings />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </div>
-        </Router>
-      </CartProvider>
-    </AuthProvider>
+                  {/* Public Website & Patient Routes */}
+                  <Route element={<PublicWebsiteShell />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/doctors" element={<Doctors />} />
+                    <Route path="/doctors/:id" element={<DoctorDetail />} />
+                    <Route path="/medicines" element={<Medicines />} />
+                    <Route path="/medicines/:id" element={<MedicineDetail />} />
+                    <Route path="/appointments" element={<Appointments />} />
+                    <Route path="/orders/track" element={<TrackOrder />} />
+                    <Route path="/ai-chat" element={<AIChat />} />
+                    <Route path="/my-chats" element={<PatientChats />} />
+                    <Route path="/ratings" element={<Ratings />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </div>
+            </Router>
+          </CartProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }

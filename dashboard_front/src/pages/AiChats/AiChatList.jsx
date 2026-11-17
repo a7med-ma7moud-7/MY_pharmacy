@@ -1004,15 +1004,15 @@ export const AiChatList = () => {
             className="card"
             style={{
               padding: '18px 22px',
-              background: '#ecfdf5',
-              border: '1px solid #a7f3d0',
+              background: 'var(--primary-50)',
+              border: '1px solid var(--primary-200)',
               display: 'flex',
               alignItems: 'flex-start',
               gap: '12px',
             }}
           >
-            <Lock size={22} style={{ color: '#0f6848', flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '0.85rem', color: '#064e3b', lineHeight: 1.6 }}>
+            <Lock size={22} style={{ color: 'var(--primary-600)', flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ fontSize: '0.85rem', color: 'var(--slate-800)', lineHeight: 1.6 }}>
               <strong>سياسة حماية خصوصية المرضى (BR-16 — Least Privilege):</strong> لا يُمنح مشرفو النظام وصولاً تلقائياً إلى نصوص محادثات المرضى الخاصة أو سجلاتهم الطبية والروشتات. يقتصر هذا القسم على مراقبة الأداء الفني، الأخطاء التشغيلية، والبيانات الوصفية المُقنّعة (Masked Metadata) مع تسجيل كافة العمليات في سجل التدقيق الأمني.
             </div>
           </div>

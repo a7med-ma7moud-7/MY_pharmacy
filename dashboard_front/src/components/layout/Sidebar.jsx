@@ -15,6 +15,7 @@ import {
   Bot,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const NAV_ITEMS = [
   { section: 'عام', items: [
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
 
 export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) => {
   const { admin, logout } = useAdminAuth();
+  const { isEn } = useLanguage();
   const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState(null);
 
@@ -47,6 +49,7 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
   };
 
   const isVisible = isOpenMobile || !isMobile;
+  const hiddenSlideTransform = isEn ? 'translateX(-100%)' : 'translateX(100%)';
 
   return (
     <>
@@ -68,7 +71,8 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
       <aside style={{
         position: 'fixed',
         top: 0,
-        right: 0,
+        right: isEn ? 'auto' : 0,
+        left: isEn ? 0 : 'auto',
         bottom: 0,
         width: isCollapsed ? '80px' : 'var(--sidebar-width)',
         background: 'linear-gradient(180deg, #06251b 0%, #091e17 55%, #06140f 100%)',
@@ -77,9 +81,10 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
         display: 'flex',
         flexDirection: 'column',
         transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
+        transform: isVisible ? 'translateX(0)' : hiddenSlideTransform,
         boxShadow: '0 0 45px rgba(4, 34, 24, 0.38)',
-        borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
+        borderLeft: isEn ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+        borderRight: isEn ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
         overflowX: 'hidden',
       }}>
         {/* Brand Header */}
@@ -161,7 +166,8 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
                         background: isActive
                           ? 'linear-gradient(90deg, rgba(13, 148, 136, 0.3), rgba(13, 148, 136, 0.08))'
                           : (hoveredItem === itemKey ? 'rgba(255, 255, 255, 0.05)' : 'transparent'),
-                        borderRight: isActive ? '3px solid var(--primary-500)' : '3px solid transparent',
+                        borderRight: !isEn && isActive ? '3px solid var(--primary-500)' : (!isEn ? '3px solid transparent' : 'none'),
+                        borderLeft: isEn && isActive ? '3px solid var(--primary-500)' : (isEn ? '3px solid transparent' : 'none'),
                         transition: 'all 0.2s ease',
                         textDecoration: 'none',
                         position: 'relative',

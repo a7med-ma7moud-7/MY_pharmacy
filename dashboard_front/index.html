@@ -5,6 +5,27 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم الإدارية | صيدليتي - MY Pharmacy</title>
+
+    <!-- Prevent Flash of Incorrect Theme & Language -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('saydalety_admin_theme');
+          var isDark = saved === 'dark';
+          document.documentElement.classList.toggle('dark', isDark);
+          document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+
+          var savedLang = localStorage.getItem('saydalety_admin_lang');
+          var lang = savedLang === 'en' ? 'en' : 'ar';
+          var dir = lang === 'en' ? 'ltr' : 'rtl';
+          document.documentElement.setAttribute('lang', lang);
+          document.documentElement.setAttribute('dir', dir);
+          document.documentElement.setAttribute('data-lang', lang);
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Google Fonts Arabic: Cairo & Almarai -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

@@ -33,7 +33,7 @@ export const BarChart = ({
         <div
             className="card"
             style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--surface-card)',
                 borderRadius: 'var(--radius-lg)',
                 padding: '24px',
                 boxShadow: 'var(--shadow-sm)',
@@ -66,7 +66,7 @@ export const BarChart = ({
                     paddingTop: '24px',
                     position: 'relative',
                     backgroundImage:
-                        'linear-gradient(to top, rgba(226, 232, 240, 0.55) 1px, transparent 1px)',
+                        'linear-gradient(to top, var(--border-color) 1px, transparent 1px)',
                     backgroundSize: '100% 25%',
                 }}
             >
@@ -183,7 +183,7 @@ export const DonutChart = ({ data = [], title, subtitle, centerLabel = 'الإج
         <div
             className="card"
             style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--surface-card)',
                 borderRadius: 'var(--radius-lg)',
                 padding: '24px',
                 boxShadow: 'var(--shadow-sm)',
@@ -308,7 +308,7 @@ export const DistributionList = ({ data = [], title, subtitle }) => {
         <div
             className="card"
             style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--surface-card)',
                 borderRadius: 'var(--radius-lg)',
                 padding: '24px',
                 boxShadow: 'var(--shadow-sm)',

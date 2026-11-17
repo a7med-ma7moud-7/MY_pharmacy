@@ -3,10 +3,12 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 export const AdminLayout = () => {
   const { isAuthenticated, loading } = useAdminAuth();
+  const { isEn, dir } = useLanguage();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
@@ -34,7 +36,7 @@ export const AdminLayout = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#f8fafc',
+          backgroundColor: 'var(--bg-main)',
           gap: '8px',
         }}
       >
@@ -50,7 +52,7 @@ export const AdminLayout = () => {
   const sidebarWidth = isCollapsed ? '80px' : 'var(--sidebar-width)';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <div dir={dir} style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-main)', transition: 'background-color 0.3s ease' }}>
       {/* Sidebar */}
       <Sidebar
         isCollapsed={isCollapsed}
@@ -65,8 +67,9 @@ export const AdminLayout = () => {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          marginRight: isMobile ? 0 : sidebarWidth,
-          transition: 'margin-right 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          marginRight: isEn || isMobile ? 0 : sidebarWidth,
+          marginLeft: isEn && !isMobile ? sidebarWidth : 0,
+          transition: 'margin 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           minWidth: 0,
         }}
       >

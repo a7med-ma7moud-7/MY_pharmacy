@@ -43,13 +43,15 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: attach token
+// Request interceptor: attach token & language preference
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('admin_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    const lang = localStorage.getItem('saydalety_admin_lang') === 'en' ? 'en' : 'ar';
+    config.headers['Accept-Language'] = lang;
     return config;
   },
   (error) => Promise.reject(error)

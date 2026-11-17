@@ -264,7 +264,7 @@ export const MedicineList = () => {
                             height: '42px',
                             borderRadius: 'var(--radius-md)',
                             overflow: 'hidden',
-                            backgroundColor: '#ffffff',
+                            backgroundColor: 'var(--slate-50)',
                             border: '1px solid var(--border-color)',
                             display: 'flex',
                             alignItems: 'center',

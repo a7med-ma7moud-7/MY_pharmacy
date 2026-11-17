@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, Navigate, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import ThemeToggleButton from '../common/ThemeToggleButton';
+import LanguageToggleButton from '../common/LanguageToggleButton';
 import {
     LayoutDashboard,
     UserCog,
@@ -34,6 +37,7 @@ const PORTAL_NAV = [
 
 export default function DoctorPortalLayout() {
     const { user, isDoctor, loading, logout } = useAuth();
+    const { dir, isEn } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -64,7 +68,7 @@ export default function DoctorPortalLayout() {
         PORTAL_NAV.find((item) => location.pathname.startsWith(item.path))?.name || 'بوابة الطبيب';
 
     return (
-        <div className="min-h-screen flex bg-transparent" dir="rtl">
+        <div className="min-h-screen flex bg-transparent" dir={dir}>
             {/* Mobile Backdrop */}
             {mobileOpen && (
                 <div
@@ -75,8 +79,12 @@ export default function DoctorPortalLayout() {
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:sticky top-0 right-0 z-50 h-screen w-72 shrink-0 bg-gradient-to-b from-[#06251b] via-[#091f17] to-[#05130e] text-white flex flex-col border-l border-white/10 shadow-2xl transition-transform duration-300 ${
-                    mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
+                className={`fixed lg:sticky top-0 ${isEn ? 'left-0 border-r' : 'right-0 border-l'} z-50 h-screen w-72 shrink-0 bg-gradient-to-b from-[#06251b] via-[#091f17] to-[#05130e] text-white flex flex-col border-white/10 shadow-2xl transition-transform duration-300 ${
+                    mobileOpen
+                        ? 'translate-x-0'
+                        : isEn
+                        ? '-translate-x-full lg:translate-x-0'
+                        : 'translate-x-full lg:translate-x-0'
                 }`}
             >
                 {/* Brand Header */}
@@ -207,6 +215,8 @@ export default function DoctorPortalLayout() {
                     </div>
 
                     <div className="flex items-center gap-2.5">
+                        <LanguageToggleButton variant="surface" />
+                        <ThemeToggleButton variant="surface" showLabel />
                         <Link
                             to="/"
                             className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-[#0f6848] bg-white border border-slate-200 hover:border-emerald-300 transition-all"

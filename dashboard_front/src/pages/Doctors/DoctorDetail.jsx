@@ -73,7 +73,7 @@ export const DoctorDetail = ({ isOpen, onClose, doctorId }) => {
                 height: '80px',
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--slate-50)',
                 border: '2px solid var(--primary-color)',
                 flexShrink: 0,
               }}

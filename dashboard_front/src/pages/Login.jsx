@@ -12,13 +12,20 @@ import {
     EyeOff,
     CheckCircle2,
     BarChart3,
+    Moon,
+    Sun,
+    Globe,
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Login = () => {
     const { isAuthenticated, login, loading: authLoading } = useAdminAuth();
     const { showNotification } = useNotification();
+    const { isDark, toggleTheme } = useTheme();
+    const { isEn, dir, toggleLanguage } = useLanguage();
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
@@ -66,18 +73,83 @@ export const Login = () => {
 
     return (
         <div
+            dir={dir}
             style={{
                 minHeight: '100vh',
-                background:
-                    'linear-gradient(135deg, #dff1ea 0%, #f2f9f6 38%, #d6ede4 72%, #eef7f3 100%)',
+                background: isDark
+                    ? 'linear-gradient(135deg, #040d0a 0%, #071611 38%, #091e17 72%, #050f0c 100%)'
+                    : 'linear-gradient(135deg, #dff1ea 0%, #f2f9f6 38%, #d6ede4 72%, #eef7f3 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '28px 20px',
                 position: 'relative',
                 overflow: 'hidden',
+                transition: 'background 0.4s ease',
             }}
         >
+            {/* Theme & Language Floating Controls */}
+            <div
+                style={{
+                    position: 'fixed',
+                    top: '20px',
+                    left: isEn ? 'auto' : '20px',
+                    right: isEn ? '20px' : 'auto',
+                    zIndex: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                }}
+            >
+                <button
+                    type="button"
+                    onClick={toggleLanguage}
+                    data-no-i18n="true"
+                    title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
+                    style={{
+                        padding: '9px 14px',
+                        borderRadius: '999px',
+                        backgroundColor: 'var(--surface-card)',
+                        border: '1px solid var(--border-color)',
+                        color: 'var(--primary-color)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '7px',
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        boxShadow: 'var(--shadow-md)',
+                        cursor: 'pointer',
+                    }}
+                >
+                    <Globe size={16} />
+                    <span>{isEn ? 'عربي' : 'EN'}</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={toggleTheme}
+                    title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
+                    style={{
+                        padding: '9px 14px',
+                        borderRadius: '999px',
+                        backgroundColor: 'var(--surface-card)',
+                        border: '1px solid var(--border-color)',
+                        color: isDark ? '#fbbf24' : '#0f6848',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        boxShadow: 'var(--shadow-md)',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                    <span style={{ color: 'var(--slate-700)' }}>
+                        {isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
+                    </span>
+                </button>
+            </div>
             {/* Animated Organic Aurora Marbling Blobs ("تشبيحات ضوئية ناعمة") */}
             <div
                 style={{
@@ -130,8 +202,9 @@ export const Login = () => {
                 style={{
                     position: 'absolute',
                     inset: '-25%',
-                    background:
-                        'repeating-linear-gradient(125deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.48) 90px, rgba(16, 172, 132, 0.11) 180px, rgba(255, 255, 255, 0) 290px)',
+                    background: isDark
+                        ? 'repeating-linear-gradient(125deg, rgba(16, 185, 129, 0) 0px, rgba(16, 185, 129, 0.04) 90px, rgba(20, 184, 166, 0.025) 180px, rgba(16, 185, 129, 0) 290px)'
+                        : 'repeating-linear-gradient(125deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.48) 90px, rgba(16, 172, 132, 0.11) 180px, rgba(255, 255, 255, 0) 290px)',
                     filter: 'blur(14px)',
                     animation: 'silkRibbonFlow 16s ease-in-out infinite alternate',
                     pointerEvents: 'none',
@@ -187,12 +260,13 @@ export const Login = () => {
                 style={{
                     width: '100%',
                     maxWidth: '860px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+                    backgroundColor: isDark ? 'rgba(13, 28, 23, 0.96)' : 'rgba(255, 255, 255, 0.96)',
                     backdropFilter: 'blur(16px)',
                     borderRadius: '28px',
-                    boxShadow:
-                        '0 0 0 8px rgba(255, 255, 255, 0.48), 0 28px 65px -12px rgba(15, 104, 72, 0.22), 0 8px 24px -6px rgba(15, 23, 42, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.85)',
+                    boxShadow: isDark
+                        ? '0 0 0 8px rgba(16, 185, 129, 0.08), 0 28px 65px -12px rgba(0, 0, 0, 0.65)'
+                        : '0 0 0 8px rgba(255, 255, 255, 0.48), 0 28px 65px -12px rgba(15, 104, 72, 0.22), 0 8px 24px -6px rgba(15, 23, 42, 0.06)',
+                    border: isDark ? '1px solid rgba(52, 211, 153, 0.2)' : '1px solid rgba(255, 255, 255, 0.85)',
                     animation: 'fadeInScale 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
                     position: 'relative',
                     zIndex: 2,
@@ -280,7 +354,7 @@ export const Login = () => {
                 {/* Form Column */}
                 <div style={{ padding: '42px 36px' }}>
                 {/* Brand Header */}
-                <div style={{ textAlign: 'right', marginBottom: '26px' }}>
+                <div style={{ textAlign: isEn ? 'left' : 'right', marginBottom: '26px' }}>
                     <span
                         style={{
                             display: 'inline-flex',
@@ -357,7 +431,8 @@ export const Login = () => {
                             <div
                                 style={{
                                     position: 'absolute',
-                                    right: '13px',
+                                    right: isEn ? 'auto' : '13px',
+                                    left: isEn ? '13px' : 'auto',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     color: 'var(--text-muted)',
@@ -374,7 +449,7 @@ export const Login = () => {
                                 placeholder="admin@example.com"
                                 className="form-input"
                                 style={{
-                                    padding: '11px 42px 11px 14px',
+                                    padding: isEn ? '11px 14px 11px 42px' : '11px 42px 11px 14px',
                                     borderRadius: 'var(--radius-md)',
                                     backgroundColor: 'var(--bg-main)',
                                 }}
@@ -398,7 +473,8 @@ export const Login = () => {
                             <div
                                 style={{
                                     position: 'absolute',
-                                    right: '13px',
+                                    right: isEn ? 'auto' : '13px',
+                                    left: isEn ? '13px' : 'auto',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     color: 'var(--text-muted)',
@@ -426,7 +502,8 @@ export const Login = () => {
                                 aria-label="إظهار أو إخفاء كلمة المرور"
                                 style={{
                                     position: 'absolute',
-                                    left: '12px',
+                                    left: isEn ? 'auto' : '12px',
+                                    right: isEn ? '12px' : 'auto',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     color: 'var(--text-muted)',

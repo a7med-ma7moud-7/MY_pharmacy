@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 // Layout
 import { AdminLayout } from './components/layout/AdminLayout';
@@ -20,33 +22,37 @@ import { DoctorModerationView } from './pages/Moderation/DoctorModerationView';
 
 export function App() {
   return (
-    <BrowserRouter>
-      <AdminAuthProvider>
-        <NotificationProvider>
-          <Routes>
-            {/* Public Auth Route */}
-            <Route path="/login" element={<Login />} />
+    <LanguageProvider>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AdminAuthProvider>
+            <NotificationProvider>
+              <Routes>
+                {/* Public Auth Route */}
+                <Route path="/login" element={<Login />} />
 
-            {/* Protected Admin Routes */}
-            <Route element={<AdminLayout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/doctors" element={<DoctorList />} />
-              <Route path="/doctor-moderation" element={<DoctorModerationView />} />
-              <Route path="/medicines" element={<MedicineList />} />
-              <Route path="/appointments" element={<AppointmentList />} />
-              <Route path="/orders" element={<OrderList />} />
-              <Route path="/reports" element={<ReportsView />} />
-              <Route path="/ai-chats" element={<AiChatList />} />
-              <Route path="/users" element={<UserList />} />
-            </Route>
+                {/* Protected Admin Routes */}
+                <Route element={<AdminLayout />}>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/doctors" element={<DoctorList />} />
+                  <Route path="/doctor-moderation" element={<DoctorModerationView />} />
+                  <Route path="/medicines" element={<MedicineList />} />
+                  <Route path="/appointments" element={<AppointmentList />} />
+                  <Route path="/orders" element={<OrderList />} />
+                  <Route path="/reports" element={<ReportsView />} />
+                  <Route path="/ai-chats" element={<AiChatList />} />
+                  <Route path="/users" element={<UserList />} />
+                </Route>
 
-            {/* Catch-all redirect */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </NotificationProvider>
-      </AdminAuthProvider>
-    </BrowserRouter>
+                {/* Catch-all redirect */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </NotificationProvider>
+          </AdminAuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
 

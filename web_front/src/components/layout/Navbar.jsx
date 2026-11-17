@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
+import ThemeToggleButton from '../common/ThemeToggleButton';
+import LanguageToggleButton from '../common/LanguageToggleButton';
 import {
     ShoppingBag,
     User,
@@ -25,6 +28,7 @@ const DASHBOARD_URL = import.meta.env.VITE_DASHBOARD_URL || 'http://localhost:51
 const Navbar = () => {
     const { user, logout, isAdmin, isDoctor } = useAuth();
     const { totalCount, setIsCartOpen } = useCart();
+    const { isEn } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -80,10 +84,10 @@ const Navbar = () => {
 
     return (
         <header
-            className={`sticky top-0 z-50 transition-all duration-300 ${
+            className={`site-navbar sticky top-0 z-50 transition-all duration-300 ${
                 scrolled
-                    ? 'bg-[#093d2b]/95 backdrop-blur-xl shadow-lg border-b border-white/10'
-                    : 'bg-gradient-to-r from-[#083826] via-[#0f6848] to-[#117a55] shadow-sm'
+                    ? 'bg-[#093d2b]/95 dark:bg-[#051c14]/95 backdrop-blur-xl shadow-lg border-b border-white/10'
+                    : 'bg-gradient-to-r from-[#083826] via-[#0f6848] to-[#117a55] dark:from-[#041d14] dark:via-[#083424] dark:to-[#0b4631] shadow-sm dark:border-b dark:border-emerald-500/15'
             } text-white`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,7 +108,7 @@ const Navbar = () => {
                     </Link>
 
                     {/* Desktop Navigation Links */}
-                    <nav className="hidden lg:flex items-center gap-1">
+                    <nav className={`hidden lg:flex items-center ${isEn ? 'gap-0.5' : 'gap-1'}`}>
                         {navLinks.map((link) => {
                             const Icon = link.icon;
                             const active = isActive(link.path);
@@ -113,21 +117,24 @@ const Navbar = () => {
                                     key={link.path}
                                     to={link.path}
                                     onClick={closeMenus}
-                                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-200 ${
+                                    className={`${isEn ? 'px-2.5 text-[13px]' : 'px-3.5 text-sm'} py-2 rounded-xl font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all duration-200 ${
                                         active
-                                            ? 'bg-white text-[#0f6848] shadow-md font-bold scale-[1.02]'
+                                            ? 'keep-light bg-white text-[#0f6848] shadow-md font-bold scale-[1.02]'
                                             : 'text-white/90 hover:bg-white/15 hover:text-white'
                                     }`}
                                 >
-                                    <Icon className={`w-4 h-4 ${active ? 'text-[#0f6848]' : 'text-emerald-200'}`} />
+                                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'keep-light text-[#0f6848]' : 'text-emerald-200'}`} />
                                     <span>{link.name}</span>
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    {/* Right Side Actions: Cart & Auth */}
-                    <div className="flex items-center gap-2.5">
+                    {/* Right Side Actions: Language, Theme Toggle, Cart & Auth */}
+                    <div className="flex items-center gap-2 shrink-0">
+                        <LanguageToggleButton variant="navbar" />
+                        <ThemeToggleButton variant="navbar" />
+
                         {/* Cart Button */}
                         <button
                             type="button"
@@ -165,7 +172,7 @@ const Navbar = () => {
                                     </button>
 
                                     {userDropdownOpen && (
-                                        <div className="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-800 border border-slate-100 z-50 animate-slideDown">
+                                        <div className={`absolute ${isEn ? 'right-0' : 'left-0'} mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 text-slate-800 border border-slate-100 z-50 animate-slideDown`}>
                                             <div className="px-4 py-2.5 border-b border-slate-100">
                                                 <p className="text-xs font-extrabold text-slate-900 truncate m-0">{user.name}</p>
                                                 <p className="text-[11px] text-slate-400 truncate m-0" dir="ltr">
@@ -229,18 +236,18 @@ const Navbar = () => {
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <Link
                                         to="/login"
                                         onClick={closeMenus}
-                                        className="px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-white/15 border border-white/30 transition-all"
+                                        className="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap text-white hover:bg-white/15 border border-white/30 transition-all"
                                     >
                                         تسجيل الدخول
                                     </Link>
                                     <Link
                                         to="/register"
                                         onClick={closeMenus}
-                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-[#0f6848] hover:bg-emerald-50 shadow-sm transition-all"
+                                        className="keep-light px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-[#0f6848] hover:bg-emerald-50 shadow-sm transition-all"
                                     >
                                         حساب جديد
                                     </Link>
@@ -274,11 +281,11 @@ const Navbar = () => {
                                 onClick={closeMenus}
                                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                                     active
-                                        ? 'bg-white text-[#0f6848] font-bold shadow-sm'
+                                        ? 'keep-light bg-white text-[#0f6848] font-bold shadow-sm'
                                         : 'text-white/90 hover:bg-white/10'
                                 }`}
                             >
-                                <Icon className={`w-4 h-4 ${active ? 'text-[#0f6848]' : 'text-emerald-300'}`} />
+                                <Icon className={`w-4 h-4 ${active ? 'keep-light text-[#0f6848]' : 'text-emerald-300'}`} />
                                 <span>{link.name}</span>
                             </Link>
                         );
@@ -353,7 +360,7 @@ const Navbar = () => {
                                 <Link
                                     to="/register"
                                     onClick={closeMenus}
-                                    className="text-center py-2.5 rounded-xl text-xs font-bold bg-white text-[#0f6848]"
+                                    className="keep-light text-center py-2.5 rounded-xl text-xs font-bold bg-white text-[#0f6848]"
                                 >
                                     إنشاء حساب
                                 </Link>

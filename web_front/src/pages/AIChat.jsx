@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { aiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import AiSuggestionCards from '../components/chat/AiSuggestionCards';
 import AiMessageExtras, { RetrievalModeBadge } from '../components/chat/AiMessageExtras';
 
@@ -141,10 +142,13 @@ const renderFormattedText = (text) => {
 
 export default function AIChat() {
   const { user } = useAuth();
-  const [promptLang, setPromptLang] = useState('ar');
-  const [suggestedPrompts, setSuggestedPrompts] = useState(FALLBACK_PROMPTS_AR);
+  const { lang: globalLang } = useLanguage();
+  const [promptLang, setPromptLang] = useState(globalLang);
+  const [suggestedPrompts, setSuggestedPrompts] = useState(
+    globalLang === 'en' ? FALLBACK_PROMPTS_EN : FALLBACK_PROMPTS_AR
+  );
   const [question, setQuestion] = useState('');
-  const [messages, setMessages] = useState(() => [buildWelcomeMessage('ar', Boolean(user))]);
+  const [messages, setMessages] = useState(() => [buildWelcomeMessage(globalLang, Boolean(user))]);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [chats, setChats] = useState([]);
@@ -157,6 +161,16 @@ export default function AIChat() {
 
   const streamRef = useRef(null);
   const prevUserIdRef = useRef(user?.id ?? null);
+
+  useEffect(() => {
+    setPromptLang(globalLang);
+    setSuggestedPrompts(globalLang === 'en' ? FALLBACK_PROMPTS_EN : FALLBACK_PROMPTS_AR);
+    setMessages((prev) =>
+      prev.length === 1 && prev[0]?.id === 'welcome'
+        ? [buildWelcomeMessage(globalLang, Boolean(user))]
+        : prev
+    );
+  }, [globalLang, user]);
 
   const fetchUserChats = useCallback(async () => {
     if (!user) {
@@ -684,6 +698,7 @@ export default function AIChat() {
                           )}
 
                           <div
+                            data-no-i18n="true"
                             dir={isEnMsg ? 'ltr' : 'rtl'}
                             className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-line shadow-sm ${
                               isEnMsg ? 'text-left' : 'text-right'

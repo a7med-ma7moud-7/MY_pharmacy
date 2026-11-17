@@ -61,7 +61,7 @@ export const MedicineDetail = ({ isOpen, onClose, medicineId }) => {
                 height: '90px',
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--slate-50)',
                 border: '1px solid var(--border-color)',
                 flexShrink: 0,
               }}

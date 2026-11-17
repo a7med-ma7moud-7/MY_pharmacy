@@ -106,7 +106,7 @@ export const StatCard = ({
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--surface-card)',
                 borderRadius: 'var(--radius-lg)',
                 padding: '24px',
                 boxShadow: isHovered ? `var(--shadow-md), 0 8px 28px ${scheme.glow}` : 'var(--shadow-sm)',

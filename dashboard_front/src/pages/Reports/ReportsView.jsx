@@ -45,7 +45,7 @@ export const ReportsView = () => {
                 style={{
                     padding: '40px',
                     textAlign: 'center',
-                    backgroundColor: '#ffffff',
+                    backgroundColor: 'var(--surface-card)',
                     borderRadius: 'var(--radius-lg)',
                 }}
             >

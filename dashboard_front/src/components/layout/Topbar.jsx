@@ -6,32 +6,43 @@ import {
     LogOut,
     Clock,
     Search,
+    Moon,
+    Sun,
+    Globe,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const QUICK_ROUTES = [
-    { label: 'الرئيسية والإحصائيات', path: '/dashboard' },
-    { label: 'إدارة الأطباء', path: '/doctors' },
-    { label: 'إدارة الأدوية والمخزون', path: '/medicines' },
-    { label: 'حجوزات العيادات', path: '/appointments' },
-    { label: 'طلبات الشراء', path: '/orders' },
-    { label: 'التقارير المالية', path: '/reports' },
-    { label: 'إدارة المستخدمين', path: '/users' },
+    { label: 'الرئيسية والإحصائيات', enLabel: 'Overview & Analytics', path: '/dashboard' },
+    { label: 'إدارة الأطباء', enLabel: 'Doctors & Clinics', path: '/doctors' },
+    { label: 'إشراف الحالات والتقييمات', enLabel: 'Cases & Reviews Moderation', path: '/doctor-moderation' },
+    { label: 'إدارة الأدوية والمخزون', enLabel: 'Medicines & Inventory', path: '/medicines' },
+    { label: 'حجوزات العيادات', enLabel: 'Clinic Appointments', path: '/appointments' },
+    { label: 'طلبات الشراء', enLabel: 'Medicine Orders', path: '/orders' },
+    { label: 'إدارة الصيدلي الذكي', enLabel: 'AI Pharmacist Center', path: '/ai-chats' },
+    { label: 'التقارير المالية', enLabel: 'Financial Reports', path: '/reports' },
+    { label: 'إدارة المستخدمين', enLabel: 'Users Management', path: '/users' },
 ];
 
 const PAGE_TITLES = {
     '/dashboard': 'نظرة عامة على المنظومة',
     '/doctors': 'إدارة الأطباء والعيادات',
+    '/doctor-moderation': 'إشراف الحالات والتقييمات',
     '/medicines': 'إدارة الأدوية والمخزون',
     '/appointments': 'إدارة المواعيد والحجوزات',
     '/orders': 'إدارة طلبات الشراء',
+    '/ai-chats': 'مركز إدارة الصيدلي الذكي',
     '/reports': 'التقارير التحليلية والمالية',
     '/users': 'إدارة المستخدمين والصلاحيات',
 };
 
 export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
     const { admin, logout } = useAdminAuth();
+    const { isDark, toggleTheme } = useTheme();
+    const { isEn, toggleLanguage } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
     const [showDropdown, setShowDropdown] = useState(false);
@@ -67,13 +78,13 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                 hour: '2-digit',
                 minute: '2-digit',
             };
-            setCurrentDateTime(now.toLocaleDateString('ar-EG', options));
+            setCurrentDateTime(now.toLocaleDateString(isEn ? 'en-US' : 'ar-EG', options));
         };
 
         updateDateTime();
         const interval = setInterval(updateDateTime, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isEn]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -94,8 +105,11 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
         navigate('/login');
     };
 
-    const filteredRoutes = QUICK_ROUTES.filter((r) =>
-        r.label.toLowerCase().includes(quickQuery.trim().toLowerCase())
+    const qLower = quickQuery.trim().toLowerCase();
+    const filteredRoutes = QUICK_ROUTES.filter(
+        (r) =>
+            r.label.toLowerCase().includes(qLower) ||
+            r.enLabel.toLowerCase().includes(qLower)
     );
 
     const currentTitle = PAGE_TITLES[location.pathname] || 'لوحة التحكم الإدارية';
@@ -106,7 +120,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                 position: 'sticky',
                 top: 0,
                 height: 'var(--topbar-height)',
-                backgroundColor: 'rgba(255, 255, 255, 0.88)',
+                backgroundColor: 'var(--topbar-bg)',
                 backdropFilter: 'blur(14px)',
                 WebkitBackdropFilter: 'blur(14px)',
                 borderBottom: '1px solid var(--slate-200)',
@@ -181,7 +195,8 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         size={15}
                         style={{
                             position: 'absolute',
-                            right: '13px',
+                            right: isEn ? 'auto' : '13px',
+                            left: isEn ? '13px' : 'auto',
                             top: '50%',
                             transform: 'translateY(-50%)',
                             color: 'var(--slate-400)',
@@ -199,25 +214,28 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         placeholder="انتقال سريع لقسم..."
                         style={{
                             width: '100%',
-                            padding: '8px 36px 8px 56px',
+                            padding: isEn ? '8px 56px 8px 36px' : '8px 36px 8px 56px',
                             borderRadius: 'var(--radius-full)',
                             border: '1px solid var(--slate-200)',
                             backgroundColor: 'var(--slate-50)',
+                            color: 'var(--slate-800)',
                             fontSize: '0.8rem',
                             outline: 'none',
                             transition: 'all 0.2s ease',
                         }}
                     />
                     <span
+                        data-no-i18n="true"
                         style={{
                             position: 'absolute',
-                            left: '10px',
+                            left: isEn ? 'auto' : '10px',
+                            right: isEn ? '10px' : 'auto',
                             top: '50%',
                             transform: 'translateY(-50%)',
                             fontSize: '0.66rem',
                             fontWeight: 700,
                             color: 'var(--slate-400)',
-                            backgroundColor: '#ffffff',
+                            backgroundColor: 'var(--surface-card)',
                             border: '1px solid var(--slate-200)',
                             borderRadius: '6px',
                             padding: '1px 6px',
@@ -236,7 +254,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                             top: 'calc(100% + 8px)',
                             right: 0,
                             left: 0,
-                            backgroundColor: '#ffffff',
+                            backgroundColor: 'var(--surface-elevated)',
                             borderRadius: 'var(--radius-md)',
                             border: '1px solid var(--slate-200)',
                             boxShadow: 'var(--shadow-lg)',
@@ -256,7 +274,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                                 }}
                                 style={{
                                     width: '100%',
-                                    textAlign: 'right',
+                                    textAlign: isEn ? 'left' : 'right',
                                     padding: '8px 12px',
                                     borderRadius: 'var(--radius-sm)',
                                     fontSize: '0.82rem',
@@ -272,15 +290,64 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                                     display: 'block',
                                 }}
                             >
-                                {route.label}
+                                {isEn ? route.enLabel : route.label}
                             </button>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* Right side: Clock, Website link & Admin Profile */}
+            {/* Right side: Language Toggle, Theme Toggle, Clock, Website link & Admin Profile */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                    type="button"
+                    onClick={toggleLanguage}
+                    data-no-i18n="true"
+                    aria-label={isEn ? 'Switch to Arabic' : 'Switch to English'}
+                    title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
+                    style={{
+                        height: '38px',
+                        padding: '0 12px',
+                        borderRadius: 'var(--radius-full)',
+                        backgroundColor: 'var(--slate-50)',
+                        border: '1px solid var(--slate-200)',
+                        color: 'var(--primary-600)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        transition: 'all 0.25s ease',
+                        cursor: 'pointer',
+                    }}
+                >
+                    <Globe size={15} />
+                    <span>{isEn ? 'عربي' : 'EN'}</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={toggleTheme}
+                    aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+                    title={isDark ? 'الوضع الفاتح (Light Mode)' : 'الوضع الداكن (Dark Mode)'}
+                    style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: 'var(--radius-full)',
+                        backgroundColor: 'var(--slate-50)',
+                        border: '1px solid var(--slate-200)',
+                        color: isDark ? '#fbbf24' : 'var(--primary-600)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.25s ease',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {isDark ? <Sun size={17} /> : <Moon size={17} />}
+                </button>
+
                 <div
                     className="desktop-only"
                     style={{
@@ -333,7 +400,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '10px',
-                            background: '#ffffff',
+                            background: 'var(--surface-card)',
                             border: '1px solid var(--slate-200)',
                             padding: '5px 12px 5px 10px',
                             borderRadius: 'var(--radius-full)',
@@ -358,7 +425,7 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         >
                             {admin?.name ? admin.name.charAt(0).toUpperCase() : 'A'}
                         </div>
-                        <div className="desktop-only" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
+                        <div className="desktop-only" style={{ textAlign: isEn ? 'left' : 'right', display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--slate-800)', lineHeight: 1.2 }}>
                                 {admin?.name || 'مدير النظام'}
                             </span>
@@ -382,9 +449,10 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                             style={{
                                 position: 'absolute',
                                 top: 'calc(100% + 8px)',
-                                left: 0,
+                                left: isEn ? 'auto' : 0,
+                                right: isEn ? 0 : 'auto',
                                 width: '220px',
-                                backgroundColor: '#ffffff',
+                                backgroundColor: 'var(--surface-elevated)',
                                 borderRadius: 'var(--radius-md)',
                                 boxShadow: 'var(--shadow-xl)',
                                 border: '1px solid var(--slate-200)',

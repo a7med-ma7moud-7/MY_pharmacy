@@ -81,7 +81,7 @@ export const Dashboard = () => {
                 style={{
                     padding: '48px 40px',
                     textAlign: 'center',
-                    backgroundColor: '#ffffff',
+                    backgroundColor: 'var(--surface-card)',
                     borderRadius: 'var(--radius-xl)',
                     border: '1px solid var(--slate-200)',
                     boxShadow: 'var(--shadow-sm)',

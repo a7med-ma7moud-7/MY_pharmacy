@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import {
     Pill,
     Sparkles,
@@ -7,6 +8,17 @@ import {
     Droplets,
     ShieldPlus,
 } from 'lucide-react';
+
+const AR_LETTER_TO_EN = {
+    'ا': 'A', 'أ': 'A', 'إ': 'E', 'آ': 'A',
+    'ب': 'B', 'ت': 'T', 'ث': 'T', 'ج': 'G',
+    'ح': 'H', 'خ': 'K', 'د': 'D', 'ذ': 'Z',
+    'ر': 'R', 'ز': 'Z', 'س': 'S', 'ش': 'S',
+    'ص': 'S', 'ض': 'D', 'ط': 'T', 'ظ': 'Z',
+    'ع': 'A', 'غ': 'G', 'ف': 'F', 'ق': 'Q',
+    'ك': 'K', 'ل': 'L', 'م': 'M', 'ن': 'N',
+    'ه': 'H', 'و': 'W', 'ي': 'Y', 'ى': 'A',
+};
 
 /**
  * Checks whether an image URL/path is missing or points to a non-existent seeded placeholder
@@ -34,45 +46,45 @@ const getMedicineTheme = (medicine = {}) => {
     const text = `${medicine.type || ''} ${medicine.name || ''}`.toLowerCase();
     if (text.includes('فوار') || text.includes('فيتامين') || text.includes('vitamin')) {
         return {
-            bg: 'from-amber-50 via-orange-50/70 to-emerald-50/50',
+            bg: 'from-amber-50 via-orange-50/70 to-emerald-50/50 dark:from-[#1b1910] dark:via-[#141f19] dark:to-[#0d1915]',
             badgeBg: 'from-amber-500 to-orange-500',
-            ring: 'ring-amber-200/70',
-            accentText: 'text-amber-700',
+            ring: 'ring-amber-200/70 dark:ring-amber-500/25',
+            accentText: 'text-amber-700 dark:text-amber-300',
             Icon: Sparkles,
         };
     }
     if (text.includes('شراب') || text.includes('قطرة') || text.includes('معلق')) {
         return {
-            bg: 'from-sky-50 via-cyan-50/70 to-teal-50/50',
+            bg: 'from-sky-50 via-cyan-50/70 to-teal-50/50 dark:from-[#0e1b24] dark:via-[#0d2022] dark:to-[#0c1a17]',
             badgeBg: 'from-sky-500 to-cyan-600',
-            ring: 'ring-sky-200/70',
-            accentText: 'text-sky-700',
+            ring: 'ring-sky-200/70 dark:ring-sky-500/25',
+            accentText: 'text-sky-700 dark:text-sky-300',
             Icon: Droplets,
         };
     }
     if (text.includes('حقن') || text.includes('أمبول') || text.includes('انسولين')) {
         return {
-            bg: 'from-indigo-50 via-blue-50/70 to-emerald-50/40',
+            bg: 'from-indigo-50 via-blue-50/70 to-emerald-50/40 dark:from-[#121629] dark:via-[#0e1b26] dark:to-[#0c1915]',
             badgeBg: 'from-indigo-500 to-blue-600',
-            ring: 'ring-indigo-200/70',
-            accentText: 'text-indigo-700',
+            ring: 'ring-indigo-200/70 dark:ring-indigo-500/25',
+            accentText: 'text-indigo-700 dark:text-indigo-300',
             Icon: Syringe,
         };
     }
     if (text.includes('مضاد') || text.includes('augmentin') || text.includes('أوجمنتين')) {
         return {
-            bg: 'from-teal-50 via-emerald-50/80 to-cyan-50/60',
+            bg: 'from-teal-50 via-emerald-50/80 to-cyan-50/60 dark:from-[#0c221d] dark:via-[#0e201b] dark:to-[#0a1815]',
             badgeBg: 'from-teal-600 to-emerald-600',
-            ring: 'ring-teal-200/70',
-            accentText: 'text-teal-800',
+            ring: 'ring-teal-200/70 dark:ring-teal-500/25',
+            accentText: 'text-teal-800 dark:text-teal-300',
             Icon: ShieldPlus,
         };
     }
     return {
-        bg: 'from-emerald-50/90 via-teal-50/60 to-slate-50',
+        bg: 'from-emerald-50/90 via-teal-50/60 to-slate-50 dark:from-[#0e231c] dark:via-[#0c1d18] dark:to-[#0a1612]',
         badgeBg: 'from-[#0f6848] to-[#10ac84]',
-        ring: 'ring-emerald-200/70',
-        accentText: 'text-[#0f6848]',
+        ring: 'ring-emerald-200/70 dark:ring-emerald-500/25',
+        accentText: 'text-[#0f6848] dark:text-emerald-300',
         Icon: Pill,
     };
 };
@@ -165,6 +177,7 @@ export const MedicineArtwork = ({ medicine = {}, size = 'card', className = '' }
  */
 export const DoctorAvatar = ({ doctor = {}, size = 'md', className = '' }) => {
     const [imgFailed, setImgFailed] = useState(false);
+    const { isEn } = useLanguage();
     const src = doctor?.image_url;
     const useFallback = imgFailed || isPlaceholderImage(src);
 
@@ -181,12 +194,17 @@ export const DoctorAvatar = ({ doctor = {}, size = 'md', className = '' }) => {
     }
 
     const cleanName = String(doctor?.name || '')
-        .replace(/^(د\.|دكتور)\s*/u, '')
+        .replace(/^(د\.|دكتور|Dr\.)\s*/iu, '')
         .trim();
     const parts = cleanName.split(/\s+/).filter(Boolean);
+    const toInit = (ch) => (isEn ? AR_LETTER_TO_EN[ch] || ch.toUpperCase() : ch);
     const initials =
         parts.length >= 2
-            ? `${parts[0][0]} ${parts[1][0]}`
+            ? isEn
+                ? `${toInit(parts[0][0])}${toInit(parts[1][0])}`
+                : `${parts[0][0]} ${parts[1][0]}`
+            : isEn
+            ? toInit(cleanName[0] || 'D')
             : cleanName.slice(0, 2) || 'د';
 
     const sizeStyles = {
