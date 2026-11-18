@@ -3,13 +3,16 @@ import { Dialog } from '../../components/common/Dialog';
 import { CustomSelect } from '../../components/common/CustomSelect';
 import { adminApi, resolveImageUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
-import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
+import { useAdminAuth } from '../../context/AdminAuthContext';
+import { Loader2, Upload, Image as ImageIcon, Store } from 'lucide-react';
 
-export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
+export const MedicineForm = ({ isOpen, onClose, medicine, pharmacies = [], onSuccess }) => {
   const { showNotification } = useNotification();
+  const { isPharmacy, pharmacy } = useAdminAuth();
   const isEdit = Boolean(medicine && medicine.id);
 
   const [formData, setFormData] = useState({
+    pharmacy_id: '',
     name: '',
     propose: '',
     price: '',
@@ -25,6 +28,7 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
   useEffect(() => {
     if (medicine) {
       setFormData({
+        pharmacy_id: medicine.pharmacy_id ? String(medicine.pharmacy_id) : '',
         name: medicine.name || '',
         propose: medicine.propose || '',
         price: medicine.price || '',
@@ -36,6 +40,7 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
       }
     } else {
       setFormData({
+        pharmacy_id: isPharmacy && pharmacy?.id ? String(pharmacy.id) : (pharmacies[0]?.id ? String(pharmacies[0].id) : ''),
         name: '',
         propose: '',
         price: '',
@@ -46,7 +51,7 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
       setImagePreview('');
     }
     setErrors({});
-  }, [medicine, isOpen]);
+  }, [medicine, isOpen, isPharmacy, pharmacy?.id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -125,6 +130,41 @@ export const MedicineForm = ({ isOpen, onClose, medicine, onSuccess }) => {
       maxWidth="600px"
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        {isPharmacy ? (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--primary-50)',
+              border: '1px solid var(--primary-200)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              color: 'var(--primary-700)',
+            }}
+          >
+            <Store size={17} style={{ color: 'var(--primary-600)', flexShrink: 0 }} />
+            <span>المخزون مخصص لصيدليتك: {pharmacy?.name}</span>
+          </div>
+        ) : pharmacies.length > 0 ? (
+          <div>
+            <label className="form-label">الصيدلية المالكة للمخزون</label>
+            <CustomSelect
+              value={formData.pharmacy_id}
+              onChange={(val) => setFormData((prev) => ({ ...prev, pharmacy_id: val }))}
+              options={[
+                { value: '', label: 'بدون تخصيص صيدلية محددة' },
+                ...pharmacies.map((ph) => ({
+                  value: String(ph.id),
+                  label: `${ph.name}${ph.city ? ` (${ph.city})` : ''}`,
+                })),
+              ]}
+            />
+          </div>
+        ) : null}
+
         <div>
           <label className="form-label required">اسم الدواء التجاري / العلمي</label>
           <input

@@ -88,7 +88,18 @@ class OrderService
                 $totalPrice += $lineTotal;
             }
 
+            $distinctPharmacyIds = collect($preparedItems)
+                ->map(static fn (array $entry) => $entry['medicine']->pharmacy_id)
+                ->filter()
+                ->unique()
+                ->values();
+
+            $resolvedPharmacyId = !empty($customerData['pharmacy_id'])
+                ? (int) $customerData['pharmacy_id']
+                : ($distinctPharmacyIds->count() === 1 ? (int) $distinctPharmacyIds->first() : null);
+
             $order = Order::create([
+                'pharmacy_id' => $resolvedPharmacyId,
                 'customer_name' => trim((string) $customerData['customer_name']),
                 'customer_phone' => trim((string) $customerData['customer_phone']),
                 'customer_email' => !empty($customerData['customer_email'])
@@ -108,6 +119,7 @@ class OrderService
                 $orderItemsRows[] = [
                     'order_id' => $order->id,
                     'medicine_id' => $entry['medicine']->id,
+                    'pharmacy_id' => $entry['medicine']->pharmacy_id,
                     'quantity' => $entry['quantity'],
                     'price' => $entry['price'],
                     'total' => $entry['total'],
@@ -136,23 +148,30 @@ class OrderService
      *
      * @throws DomainException في حال عدم كفاية المخزون عند إعادة تفعيل طلب ملغي
      */
-    public function updateOrderStatusWithStockSync(Order $order, string $newStatus): Order
+    public function updateOrderStatusWithStockSync(Order $order, string $newStatus, ?int $onlyPharmacyId = null): Order
     {
-        return DB::transaction(function () use ($order, $newStatus) {
+        return DB::transaction(function () use ($order, $newStatus, $onlyPharmacyId) {
             /** @var Order $lockedOrder */
-            $lockedOrder = Order::with('items')->lockForUpdate()->findOrFail($order->id);
+            $lockedOrder = Order::with('items.medicine')->lockForUpdate()->findOrFail($order->id);
             $previousStatus = (string) $lockedOrder->status;
 
             if ($previousStatus === $newStatus) {
-                return $lockedOrder->load('items.medicine');
+                return $lockedOrder;
             }
 
             $medicineQuantities = [];
             foreach ($lockedOrder->items as $item) {
-                if ($item->medicine_id) {
-                    $medicineQuantities[(int) $item->medicine_id] =
-                        ($medicineQuantities[(int) $item->medicine_id] ?? 0) + (int) $item->quantity;
+                if (!$item->medicine_id) {
+                    continue;
                 }
+                if ($onlyPharmacyId !== null) {
+                    $itemPid = $item->pharmacy_id ?? $item->medicine?->pharmacy_id;
+                    if ($itemPid !== null && (int) $itemPid !== $onlyPharmacyId) {
+                        continue;
+                    }
+                }
+                $medicineQuantities[(int) $item->medicine_id] =
+                    ($medicineQuantities[(int) $item->medicine_id] ?? 0) + (int) $item->quantity;
             }
 
             if (!empty($medicineQuantities)) {

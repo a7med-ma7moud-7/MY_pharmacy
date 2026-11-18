@@ -12,6 +12,7 @@ import {
     AlertCircle,
     Sparkles,
     RefreshCw,
+    Store,
 } from 'lucide-react';
 import { adminApi } from '../services/api';
 import { StatCard } from '../components/dashboard/StatCard';
@@ -199,62 +200,123 @@ export const Dashboard = () => {
                 </div>
 
                 {/* Quick actions buttons in header */}
-                <div style={{ display: 'flex', gap: '10px', zIndex: 1, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1, flexWrap: 'wrap' }}>
                     <button
                         type="button"
                         onClick={fetchDashboardData}
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '8px',
+                            gap: '7px',
                             backgroundColor: 'rgba(255, 255, 255, 0.1)',
                             color: '#ffffff',
-                            padding: '10px 16px',
-                            borderRadius: 'var(--radius-md)',
-                            fontWeight: 600,
-                            fontSize: '0.85rem',
-                            border: '1px solid rgba(255, 255, 255, 0.18)',
+                            padding: '10px 15px',
+                            borderRadius: '12px',
+                            fontWeight: 700,
+                            fontSize: '0.83rem',
+                            border: '1px solid rgba(255, 255, 255, 0.22)',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
                         }}
                     >
                         <RefreshCw size={15} />
                         <span>تحديث</span>
                     </button>
+
                     <Link
-                        to="/medicines"
+                        to="/medicines?action=add"
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            backgroundColor: 'var(--primary-color)',
-                            color: '#ffffff',
+                            backgroundColor: '#ffffff',
+                            color: '#083f2c',
                             padding: '10px 18px',
-                            borderRadius: 'var(--radius-md)',
-                            fontWeight: 700,
+                            borderRadius: '12px',
+                            fontWeight: 800,
                             fontSize: '0.85rem',
                             textDecoration: 'none',
-                            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.35)',
+                            border: '1px solid rgba(255, 255, 255, 0.95)',
+                            boxShadow: '0 8px 20px rgba(4, 24, 17, 0.22)',
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#ecfdf5';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#ffffff';
+                            e.currentTarget.style.transform = 'translateY(0)';
                         }}
                     >
-                        <PlusCircle size={16} />
+                        <PlusCircle size={16} style={{ color: '#0f6848' }} />
                         <span>إضافة دواء</span>
                     </Link>
+
                     <Link
-                        to="/doctors"
+                        to="/pharmacies?action=add"
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.14)',
                             color: '#ffffff',
-                            padding: '10px 18px',
-                            borderRadius: 'var(--radius-md)',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
                             fontWeight: 700,
-                            fontSize: '0.85rem',
+                            fontSize: '0.84rem',
                             textDecoration: 'none',
-                            border: '1px solid rgba(255, 255, 255, 0.18)',
+                            border: '1px solid rgba(255, 255, 255, 0.24)',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.22)';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.14)';
+                            e.currentTarget.style.transform = 'translateY(0)';
                         }}
                     >
-                        <PlusCircle size={16} />
+                        <Store size={15} style={{ color: '#6ee7b7' }} />
+                        <span>إضافة صيدلية</span>
+                    </Link>
+
+                    <Link
+                        to="/doctors?action=add"
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                            color: '#ffffff',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
+                            fontWeight: 700,
+                            fontSize: '0.84rem',
+                            textDecoration: 'none',
+                            border: '1px solid rgba(255, 255, 255, 0.24)',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.22)';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.14)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                    >
+                        <PlusCircle size={16} style={{ color: '#6ee7b7' }} />
                         <span>إضافة طبيب</span>
                     </Link>
                 </div>

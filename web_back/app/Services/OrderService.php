@@ -88,7 +88,18 @@ class OrderService
                 $totalPrice += $lineTotal;
             }
 
+            $distinctPharmacyIds = collect($preparedItems)
+                ->map(static fn (array $entry) => $entry['medicine']->pharmacy_id)
+                ->filter()
+                ->unique()
+                ->values();
+
+            $resolvedPharmacyId = !empty($customerData['pharmacy_id'])
+                ? (int) $customerData['pharmacy_id']
+                : ($distinctPharmacyIds->count() === 1 ? (int) $distinctPharmacyIds->first() : null);
+
             $order = Order::create([
+                'pharmacy_id' => $resolvedPharmacyId,
                 'customer_name' => trim((string) $customerData['customer_name']),
                 'customer_phone' => trim((string) $customerData['customer_phone']),
                 'customer_email' => !empty($customerData['customer_email'])
@@ -108,6 +119,7 @@ class OrderService
                 $orderItemsRows[] = [
                     'order_id' => $order->id,
                     'medicine_id' => $entry['medicine']->id,
+                    'pharmacy_id' => $entry['medicine']->pharmacy_id,
                     'quantity' => $entry['quantity'],
                     'price' => $entry['price'],
                     'total' => $entry['total'],

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAdminAuth } from '../../context/AdminAuthContext';
@@ -9,9 +9,15 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 export const AdminLayout = () => {
   const { isAuthenticated, loading } = useAdminAuth();
   const { isEn, dir } = useLanguage();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+
+  // Smoothly reset scroll position to top when navigating between admin pages
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
 
   // Listen for window resize to detect mobile
   useEffect(() => {

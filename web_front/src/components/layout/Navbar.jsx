@@ -90,25 +90,25 @@ const Navbar = () => {
                     : 'bg-gradient-to-r from-[#083826] via-[#0f6848] to-[#117a55] dark:from-[#041d14] dark:via-[#083424] dark:to-[#0b4631] shadow-sm dark:border-b dark:border-emerald-500/15'
             } text-white`}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-8">
+                <div className="flex items-center justify-between gap-3 xl:gap-6 h-[68px]">
                     {/* Brand Logo */}
                     <Link to="/" onClick={closeMenus} className="flex items-center gap-2.5 group shrink-0">
-                        <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/25 group-hover:scale-105 group-hover:bg-white/20 transition-all shadow-inner">
-                            <HeartPulse className="w-6 h-6 text-emerald-300" />
+                        <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20 group-hover:scale-105 group-hover:bg-white/20 transition-all shadow-inner">
+                            <HeartPulse className="w-5 h-5 text-emerald-300" />
                         </div>
                         <div className="flex flex-col">
                             <span className="font-extrabold text-xl tracking-wide font-almarai leading-none text-white">
                                 صيدليتي
                             </span>
-                            <span className="text-[10px] text-emerald-200 font-semibold tracking-wider mt-0.5">
+                            <span className="text-[10px] text-emerald-200 font-semibold tracking-wider mt-0.5 whitespace-nowrap">
                                 رعاية طبية متكاملة
                             </span>
                         </div>
                     </Link>
 
-                    {/* Desktop Navigation Links */}
-                    <nav className={`hidden lg:flex items-center ${isEn ? 'gap-0.5' : 'gap-1'}`}>
+                    {/* Desktop Navigation Track */}
+                    <nav className="hidden lg:flex items-center bg-black/15 dark:bg-white/[0.04] border border-white/12 rounded-full p-1 gap-0.5 backdrop-blur-sm">
                         {navLinks.map((link) => {
                             const Icon = link.icon;
                             const active = isActive(link.path);
@@ -117,55 +117,61 @@ const Navbar = () => {
                                     key={link.path}
                                     to={link.path}
                                     onClick={closeMenus}
-                                    className={`${isEn ? 'px-2.5 text-[13px]' : 'px-3.5 text-sm'} py-2 rounded-xl font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all duration-200 ${
+                                    className={`${isEn ? 'px-2.5 xl:px-3.5 text-xs xl:text-[13px]' : 'px-3 xl:px-4 text-[13px]'} py-1.5 rounded-full font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all duration-200 ${
                                         active
-                                            ? 'keep-light bg-white text-[#0f6848] shadow-md font-bold scale-[1.02]'
-                                            : 'text-white/90 hover:bg-white/15 hover:text-white'
+                                            ? 'keep-light bg-white text-[#0f6848] shadow-sm font-extrabold'
+                                            : 'text-white/90 hover:bg-white/12 hover:text-white'
                                     }`}
                                 >
-                                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'keep-light text-[#0f6848]' : 'text-emerald-200'}`} />
+                                    <Icon className={`hidden xl:block w-3.5 h-3.5 shrink-0 ${active ? 'keep-light text-[#0f6848]' : 'text-emerald-200/90'}`} />
                                     <span>{link.name}</span>
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    {/* Right Side Actions: Language, Theme Toggle, Cart & Auth */}
-                    <div className="flex items-center gap-2 shrink-0">
-                        <LanguageToggleButton variant="navbar" />
-                        <ThemeToggleButton variant="navbar" />
+                    {/* End Actions: Unified [Lang | Theme] Capsule, Cart, Divider & Auth */}
+                    <div className="flex items-center gap-2 xl:gap-2.5 shrink-0">
+                        <div className="hidden sm:inline-flex items-center h-9 rounded-full bg-black/15 border border-white/15 p-0.5 backdrop-blur-sm">
+                            <LanguageToggleButton variant="capsule" />
+                            <span className="w-px h-3.5 bg-white/15" aria-hidden="true" />
+                            <ThemeToggleButton variant="capsule" />
+                        </div>
 
                         {/* Cart Button */}
                         <button
                             type="button"
                             onClick={() => setIsCartOpen(true)}
                             aria-label="سلة المشتريات"
-                            className="relative px-3 py-2 bg-white/15 hover:bg-white/25 rounded-xl transition-all border border-white/20 flex items-center gap-2 cursor-pointer active:scale-95"
+                            title="سلة المشتريات"
+                            className="relative h-9 px-3 bg-white/12 hover:bg-white/22 rounded-full transition-all border border-white/18 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
-                            <ShoppingBag className="w-5 h-5 text-white" />
-                            <span className="hidden sm:inline text-xs font-bold text-white">السلة</span>
+                            <ShoppingBag className="w-4 h-4 text-white" />
+                            <span className="hidden 2xl:inline text-xs font-bold text-white whitespace-nowrap">السلة</span>
                             {totalCount > 0 && (
-                                <span className="bg-rose-500 text-white text-[11px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center shadow-sm animate-scaleIn">
+                                <span className="bg-rose-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm animate-scaleIn">
                                     {totalCount}
                                 </span>
                             )}
                         </button>
 
+                        <span className="hidden lg:block w-px h-5 bg-white/15 mx-0.5" aria-hidden="true" />
+
                         {/* User Menu (Desktop) */}
-                        <div className="hidden lg:flex items-center gap-2">
+                        <div className="hidden lg:flex items-center gap-1.5">
                             {user ? (
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         type="button"
                                         onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                                        className="flex items-center gap-2 bg-white/15 hover:bg-white/25 px-3.5 py-2 rounded-xl text-sm font-semibold border border-white/20 transition-all cursor-pointer"
+                                        className="flex items-center gap-2 h-9 bg-white/12 hover:bg-white/22 px-3 rounded-full text-xs font-bold border border-white/18 transition-all cursor-pointer"
                                     >
                                         <div className="w-6 h-6 rounded-full bg-emerald-300 text-[#093d2b] font-black text-xs flex items-center justify-center">
                                             {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
                                         </div>
-                                        <span className="max-w-[110px] truncate">{user.name}</span>
+                                        <span className="max-w-[100px] truncate">{user.name}</span>
                                         <ChevronDown
-                                            className={`w-4 h-4 transition-transform duration-200 ${
+                                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
                                                 userDropdownOpen ? 'rotate-180' : ''
                                             }`}
                                         />
@@ -236,18 +242,18 @@ const Navbar = () => {
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0">
                                     <Link
                                         to="/login"
                                         onClick={closeMenus}
-                                        className="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap text-white hover:bg-white/15 border border-white/30 transition-all"
+                                        className="h-9 px-3.5 rounded-full text-xs font-bold whitespace-nowrap text-white/95 hover:text-white hover:bg-white/12 inline-flex items-center transition-all"
                                     >
                                         تسجيل الدخول
                                     </Link>
                                     <Link
                                         to="/register"
                                         onClick={closeMenus}
-                                        className="keep-light px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-[#0f6848] hover:bg-emerald-50 shadow-sm transition-all"
+                                        className="keep-light h-9 px-4 rounded-full text-xs font-extrabold whitespace-nowrap bg-white text-[#0f6848] hover:bg-emerald-50 shadow-sm inline-flex items-center transition-all"
                                     >
                                         حساب جديد
                                     </Link>
@@ -259,10 +265,10 @@ const Navbar = () => {
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="lg:hidden p-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white focus:outline-none cursor-pointer"
+                            className="lg:hidden h-9 w-9 rounded-full bg-white/12 hover:bg-white/22 border border-white/18 text-white flex items-center justify-center focus:outline-none cursor-pointer"
                             aria-label="القائمة الرئيسية"
                         >
-                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
@@ -271,6 +277,14 @@ const Navbar = () => {
             {/* Mobile Navigation Drawer */}
             {mobileMenuOpen && (
                 <div className="lg:hidden bg-[#093d2b]/98 backdrop-blur-xl border-t border-white/10 px-4 pt-3 pb-5 space-y-1.5 animate-slideDown shadow-inner">
+                    <div className="sm:hidden flex items-center justify-between px-3 py-2 mb-2 rounded-xl bg-white/8 border border-white/10">
+                        <span className="text-xs font-bold text-emerald-200">اللغة والمظهر</span>
+                        <div className="inline-flex items-center h-9 rounded-full bg-black/20 border border-white/15 p-0.5">
+                            <LanguageToggleButton variant="capsule" />
+                            <span className="w-px h-3.5 bg-white/15" aria-hidden="true" />
+                            <ThemeToggleButton variant="capsule" />
+                        </div>
+                    </div>
                     {navLinks.map((link) => {
                         const Icon = link.icon;
                         const active = isActive(link.path);

@@ -33,15 +33,26 @@ class AdminAuthApiController extends Controller
             : User::whereIn('phone', PhoneNormalizer::variants($rawIdentifier))->first();
 
         if ($user && Hash::check((string) $request->input('password'), $user->password)) {
-            if (!$user->isAdmin()) {
+            if (!$user->isAdmin() && !$user->isPharmacy()) {
                 return $this->errorResponse(
-                    'غير مصرح لك بالدخول إلى لوحة التحكم الإدارية. الحساب ليس مسؤولاً.',
+                    'غير مصرح لك بالدخول إلى لوحة التحكم. الدخول متاح للسوبر أدمن وحسابات الصيدليات المعتمدة فقط.',
                     403
                 );
             }
 
             if (!$user->isActiveAccount()) {
-                return $this->errorResponse('حساب المسؤول غير مفعل حالياً.', 403);
+                return $this->errorResponse('هذا الحساب غير مفعل حالياً. يرجى التواصل مع الإدارة العليا.', 403);
+            }
+
+            if ($user->isPharmacy()) {
+                $pharmacy = $user->pharmacy()->first();
+                if (!$pharmacy || !$pharmacy->is_active) {
+                    return $this->errorResponse(
+                        'حساب الصيدلية غير مفعل حالياً. يرجى التواصل مع الإدارة العليا.',
+                        403
+                    );
+                }
+                $user->setRelation('pharmacy', $pharmacy);
             }
 
             Auth::login($user, $request->boolean('remember'));
@@ -51,7 +62,9 @@ class AdminAuthApiController extends Controller
             }
 
             return $this->successResponse([
-                'message' => 'تم تسجيل دخول المسؤول بنجاح',
+                'message' => $user->isPharmacy()
+                    ? 'تم تسجيل الدخول إلى لوحة الصيدلية بنجاح'
+                    : 'تم تسجيل دخول المسؤول بنجاح',
                 'token' => $user->generateAdminToken(),
                 'user' => $user->toPublicArray(includeCreatedAt: true),
             ]);
@@ -70,6 +83,10 @@ class AdminAuthApiController extends Controller
 
         if (!$user) {
             return $this->errorResponse('غير مسجل الدخول', 401);
+        }
+
+        if ($user->isPharmacy()) {
+            $user->loadMissing('pharmacy');
         }
 
         $unreadNotifications = $user->unreadNotifications ? $user->unreadNotifications->count() : 0;

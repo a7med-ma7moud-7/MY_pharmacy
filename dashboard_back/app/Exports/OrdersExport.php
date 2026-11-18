@@ -11,15 +11,23 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class OrdersExport implements FromQuery, WithHeadings, WithMapping
 {
+    public function __construct(
+        private readonly ?int $pharmacyId = null
+    ) {}
+
     public function query()
     {
-        return Order::withCount('items')->orderBy('created_at', 'desc');
+        return Order::with('pharmacy:id,name')
+            ->withCount('items')
+            ->when($this->pharmacyId !== null, fn ($q) => $q->forPharmacy($this->pharmacyId))
+            ->orderBy('created_at', 'desc');
     }
 
     public function headings(): array
     {
         return [
             'رقم الطلب',
+            'الصيدلية',
             'اسم العميل',
             'رقم الهاتف',
             'البريد الإلكتروني',
@@ -36,6 +44,7 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
     {
         return [
             $order->id,
+            $order->pharmacy?->name ?? 'المنصة الرئيسية',
             $order->customer_name,
             $order->customer_phone,
             $order->customer_email ?? '—',

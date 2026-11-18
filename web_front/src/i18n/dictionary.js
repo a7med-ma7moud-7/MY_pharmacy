@@ -36,6 +36,7 @@ export const WEB_EXACT_DICTIONARY = {
   'محادثاتي مع الأطباء': 'My Doctor Chats',
   'متابعة طلباتي': 'Track My Orders',
   'القائمة الرئيسية': 'Main Menu',
+  'اللغة والمظهر': 'Language & Appearance',
   'الوضع الداكن': 'Dark Mode',
   'الوضع الفاتح': 'Light Mode',
   'الوضع الداكن (Dark Mode)': 'Dark Mode',

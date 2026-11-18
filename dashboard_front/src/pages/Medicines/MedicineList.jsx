@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -9,6 +10,10 @@ import {
   RefreshCw,
   AlertTriangle,
   Loader2,
+  Store,
+  Pill,
+  Layers,
+  MapPin,
 } from 'lucide-react';
 import { adminApi, resolveImageUrl } from '../../services/api';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -19,13 +24,25 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { Dialog } from '../../components/common/Dialog';
 import { SearchInput } from '../../components/common/SearchInput';
 import { CustomSelect } from '../../components/common/CustomSelect';
+import { StatCard } from '../../components/dashboard/StatCard';
 import { useNotification } from '../../context/NotificationContext';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import { MedicineForm } from './MedicineForm';
 import { MedicineDetail } from './MedicineDetail';
 
 export const MedicineList = () => {
   const { showNotification } = useNotification();
+  const { isPharmacy, isSuperAdmin, pharmacy } = useAdminAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [medicines, setMedicines] = useState([]);
+  const [pharmacies, setPharmacies] = useState([]);
+  const [inventoryMeta, setInventoryMeta] = useState({
+    total_medicines: 0,
+    total_units: 0,
+    healthy_stock_count: 0,
+    low_stock_count: 0,
+    out_of_stock_count: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -34,6 +51,7 @@ export const MedicineList = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [pharmacyFilter, setPharmacyFilter] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Modals
@@ -48,6 +66,19 @@ export const MedicineList = () => {
   const [newStockCount, setNewStockCount] = useState('');
   const [updatingStock, setUpdatingStock] = useState(false);
 
+  useEffect(() => {
+    if (isSuperAdmin) {
+      adminApi
+        .getPharmaciesList()
+        .then((res) => {
+          if (res.data?.success) {
+            setPharmacies(res.data.data || []);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isSuperAdmin]);
+
   const fetchMedicines = async (page = 1) => {
     setLoading(true);
     try {
@@ -56,6 +87,7 @@ export const MedicineList = () => {
         per_page: 10,
         search: debouncedSearch || undefined,
         type: typeFilter || undefined,
+        pharmacy_id: !isPharmacy && pharmacyFilter ? pharmacyFilter : undefined,
       };
       const res = await adminApi.getMedicines(params);
       if (res.data.success) {
@@ -63,6 +95,9 @@ export const MedicineList = () => {
         setCurrentPage(res.data.current_page || 1);
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
+        if (res.data.meta) {
+          setInventoryMeta(res.data.meta);
+        }
       }
     } catch {
       showNotification('فشل تحميل قائمة الأدوية', 'error');
@@ -73,7 +108,17 @@ export const MedicineList = () => {
 
   useEffect(() => {
     fetchMedicines(1);
-  }, [debouncedSearch, typeFilter]);
+  }, [debouncedSearch, typeFilter, pharmacyFilter]);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setSelectedMedicineForEdit(null);
+      setIsFormOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleOpenAdd = () => {
     setSelectedMedicineForEdit(null);
@@ -142,10 +187,30 @@ export const MedicineList = () => {
       >
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 4px' }}>
-            إدارة المخزون والأدوية
+            {isPharmacy ? `مخزون وأدوية ${pharmacy?.name || 'الصيدلية'}` : 'إدارة المخزون والأدوية'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-            إجمالي الأصناف المسجلة: <strong style={{ color: 'var(--primary-color)' }}>{total}</strong> صنف دوائي
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span>
+              إجمالي الأصناف المسجلة: <strong style={{ color: 'var(--primary-color)' }}>{total}</strong> صنف دوائي
+            </span>
+            {isPharmacy && pharmacy?.city && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 10px',
+                  borderRadius: '999px',
+                  backgroundColor: 'var(--primary-50)',
+                  color: 'var(--primary-700)',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                }}
+              >
+                <MapPin size={12} />
+                <span>{pharmacy.city}</span>
+              </span>
+            )}
           </p>
         </div>
 
@@ -155,8 +220,46 @@ export const MedicineList = () => {
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
           <Plus size={18} />
-          <span>إضافة دواء جديد</span>
+          <span>{isPharmacy ? 'إضافة دواء لمخزون صيدليتي' : 'إضافة دواء جديد'}</span>
         </button>
+      </div>
+
+      {/* Inventory KPI Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '14px',
+        }}
+      >
+        <StatCard
+          title={isPharmacy ? 'أصناف صيدليتي' : 'إجمالي الأصناف'}
+          value={inventoryMeta.total_medicines}
+          icon={Pill}
+          color="primary"
+          subtitle="أصناف دوائية مسجلة"
+        />
+        <StatCard
+          title="إجمالي العبوات بالمخزن"
+          value={inventoryMeta.total_units}
+          icon={Layers}
+          color="success"
+          subtitle="عبوات متاحة للبيع"
+        />
+        <StatCard
+          title="مخزون منخفض"
+          value={inventoryMeta.low_stock_count}
+          icon={AlertTriangle}
+          color="warning"
+          subtitle="5 عبوات أو أقل"
+        />
+        <StatCard
+          title="نفدت من المخزن"
+          value={inventoryMeta.out_of_stock_count}
+          icon={PackagePlus}
+          color="danger"
+          subtitle="تحتاج إعادة تزويد"
+        />
       </div>
 
       {/* Quick Type Filter Tabs */}
@@ -200,6 +303,23 @@ export const MedicineList = () => {
             placeholder="البحث باسم الدواء، الاستخدام، أو الشكل..."
           />
         </div>
+
+        {/* Super Admin Pharmacy Filter */}
+        {isSuperAdmin && pharmacies.length > 0 && (
+          <div style={{ minWidth: '210px' }}>
+            <CustomSelect
+              value={pharmacyFilter}
+              onChange={(val) => setPharmacyFilter(val)}
+              options={[
+                { value: '', label: 'جميع الصيدليات' },
+                ...pharmacies.map((ph) => ({
+                  value: String(ph.id),
+                  label: ph.name,
+                })),
+              ]}
+            />
+          </div>
+        )}
 
         {/* Type Filter */}
         <div style={{ minWidth: '185px' }}>
@@ -245,6 +365,7 @@ export const MedicineList = () => {
               <thead>
                 <tr>
                   <th>الصنف الدوائي</th>
+                  {isSuperAdmin && <th>الصيدلية المالكة</th>}
                   <th>دواعي الاستعمال</th>
                   <th>الشكل</th>
                   <th>السعر</th>
@@ -288,6 +409,31 @@ export const MedicineList = () => {
                         </div>
                       </div>
                     </td>
+                    {isSuperAdmin && (
+                      <td>
+                        {med.pharmacy ? (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '4px 10px',
+                              borderRadius: '999px',
+                              backgroundColor: 'var(--primary-50)',
+                              color: 'var(--primary-700)',
+                              fontSize: '0.76rem',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <Store size={13} />
+                            <span>{med.pharmacy.name}</span>
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>عام</span>
+                        )}
+                      </td>
+                    )}
                     <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       <span title={med.propose} style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                         {med.propose || '—'}
@@ -373,6 +519,7 @@ export const MedicineList = () => {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         medicine={selectedMedicineForEdit}
+        pharmacies={pharmacies}
         onSuccess={() => fetchMedicines(currentPage)}
       />
 

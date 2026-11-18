@@ -8,13 +8,14 @@ use App\Http\Controllers\Api\v1\Admin\AdminDoctorApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminMedicienApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminModerationApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminOrderApiController;
+use App\Http\Controllers\Api\v1\Admin\AdminPharmacyApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminReportsApiController;
 use App\Http\Controllers\Api\v1\Admin\AdminUserApiController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Admin REST API Routes for MY_pharmacy Dashboard Backend
+| Admin & Pharmacy Dashboard REST API Routes for MY_pharmacy
 |--------------------------------------------------------------------------
 */
 
@@ -30,22 +31,46 @@ Route::prefix('v1/admin')->group(function () {
         ]);
     });
 
-    // Public Admin Auth Routes
+    // Public Dashboard Auth Routes (Super Admin & Provisioned Pharmacies Only — No Self-Registration)
     Route::prefix('auth')->middleware('throttle:admin-auth')->group(function () {
         Route::post('/login', [AdminAuthApiController::class, 'login']);
     });
 
-    // Protected Admin Routes (Requires Admin Authentication & Role)
-    Route::middleware(['is_admin_api', 'throttle:admin-api'])->group(function () {
-
-        // Authenticated Session
+    // Shared Scoped Dashboard Routes (Accessible to Super Admin & Active Pharmacies, strictly scoped per Pharmacy)
+    Route::middleware(['is_dashboard_staff_api', 'throttle:admin-api'])->group(function () {
         Route::prefix('auth')->group(function () {
             Route::get('/me', [AdminAuthApiController::class, 'me']);
             Route::post('/logout', [AdminAuthApiController::class, 'logout']);
         });
 
-        // Dashboard Metrics & Recent Feeds
+        // Medicines & Pharmacy-Scoped Inventory Management
+        Route::get('/medicines', [AdminMedicienApiController::class, 'index']);
+        Route::post('/medicines', [AdminMedicienApiController::class, 'store']);
+        Route::get('/medicines/{id}', [AdminMedicienApiController::class, 'show'])->whereNumber('id');
+        Route::match(['post', 'put'], '/medicines/{id}', [AdminMedicienApiController::class, 'update'])->whereNumber('id');
+        Route::patch('/medicines/{id}/stock', [AdminMedicienApiController::class, 'updateStock'])->whereNumber('id');
+        Route::delete('/medicines/{id}', [AdminMedicienApiController::class, 'destroy'])->whereNumber('id');
+
+        // Orders Management (Strictly Scoped to Owning Pharmacy when role=pharmacy)
+        Route::get('/orders', [AdminOrderApiController::class, 'index']);
+        Route::get('/orders/{id}', [AdminOrderApiController::class, 'show'])->whereNumber('id');
+        Route::patch('/orders/{id}/status', [AdminOrderApiController::class, 'updateStatus'])->whereNumber('id');
+        Route::get('/orders-export', [AdminOrderApiController::class, 'export']);
+    });
+
+    // Exclusive Super Admin Routes (Strictly role=admin ONLY)
+    Route::middleware(['is_admin_api', 'throttle:admin-api'])->group(function () {
+
+        // Platform Overview Dashboard
         Route::get('/dashboard', [AdminDashboardApiController::class, 'index']);
+
+        // Pharmacies Management (Super Admin Only — Provisioning + Geographic Coordinates lat/long)
+        Route::get('/pharmacies', [AdminPharmacyApiController::class, 'index']);
+        Route::post('/pharmacies', [AdminPharmacyApiController::class, 'store']);
+        Route::get('/pharmacies/{id}', [AdminPharmacyApiController::class, 'show'])->whereNumber('id');
+        Route::match(['post', 'put'], '/pharmacies/{id}', [AdminPharmacyApiController::class, 'update'])->whereNumber('id');
+        Route::patch('/pharmacies/{id}/status', [AdminPharmacyApiController::class, 'updateStatus'])->whereNumber('id');
+        Route::delete('/pharmacies/{id}', [AdminPharmacyApiController::class, 'destroy'])->whereNumber('id');
 
         // Doctors Management & Account Administration
         Route::get('/doctors', [AdminDoctorApiController::class, 'index']);
@@ -66,30 +91,16 @@ Route::prefix('v1/admin')->group(function () {
         Route::patch('/reviews/{id}/status', [AdminModerationApiController::class, 'moderateReview'])->whereNumber('id');
         Route::delete('/reviews/{id}', [AdminModerationApiController::class, 'deleteReview'])->whereNumber('id');
 
-        // Medicines Management
-        Route::get('/medicines', [AdminMedicienApiController::class, 'index']);
-        Route::post('/medicines', [AdminMedicienApiController::class, 'store']);
-        Route::get('/medicines/{id}', [AdminMedicienApiController::class, 'show'])->whereNumber('id');
-        Route::match(['post', 'put'], '/medicines/{id}', [AdminMedicienApiController::class, 'update'])->whereNumber('id');
-        Route::patch('/medicines/{id}/stock', [AdminMedicienApiController::class, 'updateStock'])->whereNumber('id');
-        Route::delete('/medicines/{id}', [AdminMedicienApiController::class, 'destroy'])->whereNumber('id');
-
         // Appointments Management
         Route::get('/appointments', [AdminAppointmentApiController::class, 'index']);
         Route::get('/appointments/{id}', [AdminAppointmentApiController::class, 'show'])->whereNumber('id');
         Route::patch('/appointments/{id}/status', [AdminAppointmentApiController::class, 'updateStatus'])->whereNumber('id');
         Route::delete('/appointments/{id}', [AdminAppointmentApiController::class, 'destroy'])->whereNumber('id');
 
-        // Orders Management
-        Route::get('/orders', [AdminOrderApiController::class, 'index']);
-        Route::get('/orders/{id}', [AdminOrderApiController::class, 'show'])->whereNumber('id');
-        Route::patch('/orders/{id}/status', [AdminOrderApiController::class, 'updateStatus'])->whereNumber('id');
-        Route::get('/orders-export', [AdminOrderApiController::class, 'export']);
-
         // Reports & Analytics
         Route::get('/reports', [AdminReportsApiController::class, 'index']);
 
-        // AI Pharmacist Management (Analytics, Configuration, Knowledge Sources, Feedback, Monitoring & Privacy-Masked Metadata)
+        // AI Pharmacist Management
         Route::get('/ai/analytics', [AdminAiChatApiController::class, 'analytics']);
         Route::get('/ai/configuration', [AdminAiChatApiController::class, 'getConfiguration']);
         Route::put('/ai/configuration', [AdminAiChatApiController::class, 'updateConfiguration']);

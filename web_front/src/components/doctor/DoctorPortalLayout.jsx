@@ -145,7 +145,7 @@ export default function DoctorPortalLayout() {
                 </div>
 
                 {/* Nav Links */}
-                <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                <nav className="portal-sidebar-scroll flex-1 overflow-y-auto px-3 py-3 space-y-1">
                     {PORTAL_NAV.map((item) => {
                         const Icon = item.icon;
                         return (
@@ -215,11 +215,15 @@ export default function DoctorPortalLayout() {
                     </div>
 
                     <div className="flex items-center gap-2.5">
-                        <LanguageToggleButton variant="surface" />
-                        <ThemeToggleButton variant="surface" showLabel />
+                        <div className="inline-flex items-center h-9 rounded-full bg-slate-100/90 dark:bg-[#11231d] border border-slate-200/90 dark:border-emerald-500/20 p-0.5">
+                            <LanguageToggleButton variant="surface-capsule" />
+                            <span className="w-px h-3.5 bg-slate-300/80 dark:bg-emerald-500/25" aria-hidden="true" />
+                            <ThemeToggleButton variant="surface-capsule" />
+                        </div>
+                        <span className="hidden sm:block w-px h-5 bg-slate-200 dark:bg-emerald-500/20" aria-hidden="true" />
                         <Link
                             to="/"
-                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-[#0f6848] bg-white border border-slate-200 hover:border-emerald-300 transition-all"
+                            className="h-9 px-3.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-200 hover:text-[#0f6848] bg-white dark:bg-[#11231d] border border-slate-200 dark:border-emerald-500/20 hover:border-emerald-300 inline-flex items-center transition-all"
                         >
                             الموقع الرئيسي
                         </Link>

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
@@ -22,6 +23,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
+        'pharmacy_id',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -37,11 +39,33 @@ class Order extends Model
     ];
 
     /**
+     * علاقة الطلب بالصيدلية المستقبلة
+     */
+    public function pharmacy(): BelongsTo
+    {
+        return $this->belongsTo(Pharmacy::class, 'pharmacy_id');
+    }
+
+    /**
      * علاقة الطلب بعناصره
      */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * حصر الطلبات الخاصة بصيدلية محددة فقط
+     */
+    public function scopeForPharmacy(Builder $query, int $pharmacyId): Builder
+    {
+        return $query->where(function (Builder $q) use ($pharmacyId) {
+            $q->where('pharmacy_id', $pharmacyId)
+              ->orWhereHas('items', static function (Builder $iq) use ($pharmacyId) {
+                  $iq->where('pharmacy_id', $pharmacyId)
+                     ->orWhereHas('medicine', static fn (Builder $mq) => $mq->where('pharmacy_id', $pharmacyId));
+              });
+        });
     }
 
     /**
@@ -57,6 +81,10 @@ class Order extends Model
      */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
+        if (!empty($filters['pharmacy_id']) && !in_array((string) $filters['pharmacy_id'], ['all', 'الكل'], true)) {
+            $query->forPharmacy((int) $filters['pharmacy_id']);
+        }
+
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }

@@ -14,7 +14,6 @@ import {
     BarChart3,
     Moon,
     Sun,
-    Globe,
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -56,8 +55,14 @@ export const Login = () => {
         try {
             const res = await login(email, password, remember);
             if (res.success) {
-                showNotification('تم تسجيل الدخول بنجاح! أهلاً بك في لوحة الإدارة', 'success');
-                navigate('/dashboard');
+                const isPharm = res.user?.role === 'pharmacy';
+                showNotification(
+                    isPharm
+                        ? 'تم تسجيل الدخول بنجاح! أهلاً بك في لوحة إدارة صيدليتك'
+                        : 'تم تسجيل الدخول بنجاح! أهلاً بك في لوحة الإدارة',
+                    'success'
+                );
+                navigate(isPharm ? '/medicines' : '/dashboard');
             } else {
                 setError(res.message || 'فشل تسجيل الدخول. يرجى التحقق من بياناتك.');
             }
@@ -88,7 +93,7 @@ export const Login = () => {
                 transition: 'background 0.4s ease',
             }}
         >
-            {/* Theme & Language Floating Controls */}
+            {/* Unified Floating [Lang | Theme] Capsule */}
             <div
                 style={{
                     position: 'fixed',
@@ -96,9 +101,14 @@ export const Login = () => {
                     left: isEn ? 'auto' : '20px',
                     right: isEn ? '20px' : 'auto',
                     zIndex: 20,
-                    display: 'flex',
+                    padding: '4px',
+                    borderRadius: '999px',
+                    backgroundColor: 'var(--surface-card)',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: 'var(--shadow-md)',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '10px',
+                    gap: '4px',
                 }}
             >
                 <button
@@ -107,47 +117,48 @@ export const Login = () => {
                     data-no-i18n="true"
                     title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
                     style={{
-                        padding: '9px 14px',
+                        height: '32px',
+                        padding: '0 12px',
                         borderRadius: '999px',
-                        backgroundColor: 'var(--surface-card)',
-                        border: '1px solid var(--border-color)',
                         color: 'var(--primary-color)',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '7px',
-                        fontSize: '0.8rem',
+                        justifyContent: 'center',
+                        fontSize: '0.76rem',
                         fontWeight: 800,
-                        boxShadow: 'var(--shadow-md)',
                         cursor: 'pointer',
                     }}
                 >
-                    <Globe size={16} />
                     <span>{isEn ? 'عربي' : 'EN'}</span>
                 </button>
+
+                <span
+                    aria-hidden="true"
+                    style={{
+                        width: '1px',
+                        height: '16px',
+                        backgroundColor: 'var(--border-color)',
+                    }}
+                />
 
                 <button
                     type="button"
                     onClick={toggleTheme}
                     title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
                     style={{
-                        padding: '9px 14px',
+                        height: '32px',
+                        padding: '0 10px',
                         borderRadius: '999px',
-                        backgroundColor: 'var(--surface-card)',
-                        border: '1px solid var(--border-color)',
                         color: isDark ? '#fbbf24' : '#0f6848',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '0.8rem',
+                        gap: '6px',
+                        fontSize: '0.76rem',
                         fontWeight: 700,
-                        boxShadow: 'var(--shadow-md)',
                         cursor: 'pointer',
                     }}
                 >
-                    {isDark ? <Sun size={16} /> : <Moon size={16} />}
-                    <span style={{ color: 'var(--slate-700)' }}>
-                        {isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
-                    </span>
+                    {isDark ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
             </div>
             {/* Animated Organic Aurora Marbling Blobs ("تشبيحات ضوئية ناعمة") */}
@@ -370,7 +381,7 @@ export const Login = () => {
                         }}
                     >
                         <HeartPulse size={14} />
-                        <span>بوابة المشرفين</span>
+                        <span>بوابة الإدارة والصيدليات المعتمدة</span>
                     </span>
                     <h1
                         style={{
@@ -380,10 +391,10 @@ export const Login = () => {
                             margin: '0 0 6px',
                         }}
                     >
-                        تسجيل الدخول للإدارة
+                        تسجيل الدخول للداشبورد
                     </h1>
                     <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', margin: 0 }}>
-                        أدخل بيانات حساب المشرف للمتابعة إلى لوحة التحكم
+                        متاح للسوبر أدمن وحسابات الصيدليات المعتمدة من الإدارة فقط
                     </p>
                 </div>
 
@@ -425,7 +436,7 @@ export const Login = () => {
                                 marginBottom: '7px',
                             }}
                         >
-                            البريد الإلكتروني
+                            البريد الإلكتروني أو رقم الهاتف
                         </label>
                         <div style={{ position: 'relative' }}>
                             <div
@@ -442,11 +453,12 @@ export const Login = () => {
                                 <Mail size={18} />
                             </div>
                             <input
-                                type="email"
+                                type="text"
                                 required
+                                dir="ltr"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="admin@example.com"
+                                placeholder="admin@pharmacy.com / shifa@pharmacy.com"
                                 className="form-input"
                                 style={{
                                     padding: isEn ? '11px 14px 11px 42px' : '11px 42px 11px 14px',

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
@@ -22,6 +23,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
+        'pharmacy_id',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -36,12 +38,28 @@ class Order extends Model
         'total_price' => 'float',
     ];
 
+    public function pharmacy(): BelongsTo
+    {
+        return $this->belongsTo(Pharmacy::class, 'pharmacy_id');
+    }
+
     /**
      * علاقة الطلب بعناصره
      */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function scopeForPharmacy(Builder $query, int $pharmacyId): Builder
+    {
+        return $query->where(function (Builder $q) use ($pharmacyId) {
+            $q->where('pharmacy_id', $pharmacyId)
+              ->orWhereHas('items', static function (Builder $iq) use ($pharmacyId) {
+                  $iq->where('pharmacy_id', $pharmacyId)
+                     ->orWhereHas('medicine', static fn (Builder $mq) => $mq->where('pharmacy_id', $pharmacyId));
+              });
+        });
     }
 
     /**

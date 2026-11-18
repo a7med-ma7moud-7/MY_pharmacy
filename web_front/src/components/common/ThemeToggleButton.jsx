@@ -5,6 +5,42 @@ import { useTheme } from '../../context/ThemeContext';
 export default function ThemeToggleButton({ variant = 'navbar', showLabel = false }) {
   const { isDark, toggleTheme } = useTheme();
 
+  if (variant === 'capsule') {
+    return (
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+        title={isDark ? 'الوضع الفاتح (Light Mode)' : 'الوضع الداكن (Dark Mode)'}
+        className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-all cursor-pointer active:scale-95"
+      >
+        {isDark ? (
+          <Sun className="w-4 h-4 text-amber-300" />
+        ) : (
+          <Moon className="w-4 h-4 text-emerald-100" />
+        )}
+      </button>
+    );
+  }
+
+  if (variant === 'surface-capsule') {
+    return (
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+        title={isDark ? 'الوضع الفاتح (Light Mode)' : 'الوضع الداكن (Dark Mode)'}
+        className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 dark:text-emerald-300 hover:bg-white dark:hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+      >
+        {isDark ? (
+          <Sun className="w-4 h-4 text-amber-400" />
+        ) : (
+          <Moon className="w-4 h-4 text-[#0f6848]" />
+        )}
+      </button>
+    );
+  }
+
   if (variant === 'surface') {
     return (
       <button

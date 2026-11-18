@@ -8,15 +8,15 @@ import {
     Search,
     Moon,
     Sun,
-    Globe,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const QUICK_ROUTES = [
+const ADMIN_QUICK_ROUTES = [
     { label: 'الرئيسية والإحصائيات', enLabel: 'Overview & Analytics', path: '/dashboard' },
+    { label: 'إدارة الصيدليات', enLabel: 'Pharmacies Management', path: '/pharmacies' },
     { label: 'إدارة الأطباء', enLabel: 'Doctors & Clinics', path: '/doctors' },
     { label: 'إشراف الحالات والتقييمات', enLabel: 'Cases & Reviews Moderation', path: '/doctor-moderation' },
     { label: 'إدارة الأدوية والمخزون', enLabel: 'Medicines & Inventory', path: '/medicines' },
@@ -27,8 +27,14 @@ const QUICK_ROUTES = [
     { label: 'إدارة المستخدمين', enLabel: 'Users Management', path: '/users' },
 ];
 
+const PHARMACY_QUICK_ROUTES = [
+    { label: 'أدويتي والمخزون', enLabel: 'My Medicines & Inventory', path: '/medicines' },
+    { label: 'الطلبات الواردة', enLabel: 'Incoming Orders', path: '/orders' },
+];
+
 const PAGE_TITLES = {
     '/dashboard': 'نظرة عامة على المنظومة',
+    '/pharmacies': 'إدارة الصيدليات المعتمدة',
     '/doctors': 'إدارة الأطباء والعيادات',
     '/doctor-moderation': 'إشراف الحالات والتقييمات',
     '/medicines': 'إدارة الأدوية والمخزون',
@@ -39,8 +45,13 @@ const PAGE_TITLES = {
     '/users': 'إدارة المستخدمين والصلاحيات',
 };
 
+const PHARMACY_PAGE_TITLES = {
+    '/medicines': 'أدويتي ومخزون الصيدلية',
+    '/orders': 'الطلبات الواردة للصيدلية',
+};
+
 export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
-    const { admin, logout } = useAdminAuth();
+    const { admin, logout, isPharmacy, pharmacy } = useAdminAuth();
     const { isDark, toggleTheme } = useTheme();
     const { isEn, toggleLanguage } = useLanguage();
     const navigate = useNavigate();
@@ -105,14 +116,17 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
         navigate('/login');
     };
 
+    const activeRoutes = isPharmacy ? PHARMACY_QUICK_ROUTES : ADMIN_QUICK_ROUTES;
     const qLower = quickQuery.trim().toLowerCase();
-    const filteredRoutes = QUICK_ROUTES.filter(
+    const filteredRoutes = activeRoutes.filter(
         (r) =>
             r.label.toLowerCase().includes(qLower) ||
             r.enLabel.toLowerCase().includes(qLower)
     );
 
-    const currentTitle = PAGE_TITLES[location.pathname] || 'لوحة التحكم الإدارية';
+    const currentTitle = isPharmacy
+        ? PHARMACY_PAGE_TITLES[location.pathname] || pharmacy?.name || 'لوحة إدارة الصيدلية'
+        : PAGE_TITLES[location.pathname] || 'لوحة التحكم الإدارية';
 
     return (
         <header
@@ -297,56 +311,73 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                 )}
             </div>
 
-            {/* Right side: Language Toggle, Theme Toggle, Clock, Website link & Admin Profile */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button
-                    type="button"
-                    onClick={toggleLanguage}
-                    data-no-i18n="true"
-                    aria-label={isEn ? 'Switch to Arabic' : 'Switch to English'}
-                    title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
+            {/* Right side: Unified [Lang | Theme] Capsule, Clock, Website link & Admin Profile */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <div
                     style={{
-                        height: '38px',
-                        padding: '0 12px',
+                        height: '36px',
+                        padding: '2px',
                         borderRadius: 'var(--radius-full)',
                         backgroundColor: 'var(--slate-50)',
                         border: '1px solid var(--slate-200)',
-                        color: 'var(--primary-600)',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        fontSize: '0.78rem',
-                        fontWeight: 800,
-                        transition: 'all 0.25s ease',
-                        cursor: 'pointer',
+                        gap: '2px',
                     }}
                 >
-                    <Globe size={15} />
-                    <span>{isEn ? 'عربي' : 'EN'}</span>
-                </button>
+                    <button
+                        type="button"
+                        onClick={toggleLanguage}
+                        data-no-i18n="true"
+                        aria-label={isEn ? 'Switch to Arabic' : 'Switch to English'}
+                        title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
+                        style={{
+                            height: '30px',
+                            padding: '0 10px',
+                            borderRadius: 'var(--radius-full)',
+                            color: 'var(--primary-600)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.74rem',
+                            fontWeight: 800,
+                            letterSpacing: '0.3px',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <span>{isEn ? 'عربي' : 'EN'}</span>
+                    </button>
 
-                <button
-                    type="button"
-                    onClick={toggleTheme}
-                    aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
-                    title={isDark ? 'الوضع الفاتح (Light Mode)' : 'الوضع الداكن (Dark Mode)'}
-                    style={{
-                        width: '38px',
-                        height: '38px',
-                        borderRadius: 'var(--radius-full)',
-                        backgroundColor: 'var(--slate-50)',
-                        border: '1px solid var(--slate-200)',
-                        color: isDark ? '#fbbf24' : 'var(--primary-600)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.25s ease',
-                        cursor: 'pointer',
-                    }}
-                >
-                    {isDark ? <Sun size={17} /> : <Moon size={17} />}
-                </button>
+                    <span
+                        aria-hidden="true"
+                        style={{
+                            width: '1px',
+                            height: '14px',
+                            backgroundColor: 'var(--slate-200)',
+                        }}
+                    />
+
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+                        title={isDark ? 'الوضع الفاتح (Light Mode)' : 'الوضع الداكن (Dark Mode)'}
+                        style={{
+                            width: '30px',
+                            height: '30px',
+                            borderRadius: 'var(--radius-full)',
+                            color: isDark ? '#fbbf24' : 'var(--primary-600)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {isDark ? <Sun size={15} /> : <Moon size={15} />}
+                    </button>
+                </div>
 
                 <div
                     className="desktop-only"
@@ -354,13 +385,14 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        fontSize: '0.78rem',
+                        fontSize: '0.76rem',
                         fontWeight: 600,
                         color: 'var(--slate-500)',
                         backgroundColor: 'var(--slate-50)',
                         padding: '6px 12px',
                         borderRadius: 'var(--radius-full)',
                         border: '1px solid var(--slate-200)',
+                        whiteSpace: 'nowrap',
                     }}
                 >
                     <Clock size={13} style={{ color: 'var(--primary-600)' }} />
@@ -377,20 +409,31 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        fontSize: '0.8rem',
+                        fontSize: '0.78rem',
                         fontWeight: 700,
                         color: 'var(--primary-600)',
                         backgroundColor: 'rgba(13, 148, 136, 0.08)',
-                        padding: '6px 14px',
+                        padding: '6px 12px',
                         borderRadius: 'var(--radius-full)',
                         textDecoration: 'none',
                         border: '1px solid rgba(13, 148, 136, 0.16)',
                         transition: 'all 0.25s ease',
+                        whiteSpace: 'nowrap',
                     }}
                 >
                     <span>المتجر العام</span>
                     <ExternalLink size={13} />
                 </a>
+
+                <span
+                    className="desktop-only"
+                    aria-hidden="true"
+                    style={{
+                        width: '1px',
+                        height: '22px',
+                        backgroundColor: 'var(--slate-200)',
+                    }}
+                />
 
                 {/* Admin User Profile Dropdown */}
                 <div style={{ position: 'relative' }} ref={dropdownRef}>
@@ -427,10 +470,10 @@ export const Topbar = ({ onToggleCollapse, onToggleMobile }) => {
                         </div>
                         <div className="desktop-only" style={{ textAlign: isEn ? 'left' : 'right', display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--slate-800)', lineHeight: 1.2 }}>
-                                {admin?.name || 'مدير النظام'}
+                                {isPharmacy ? (pharmacy?.name || admin?.name) : (admin?.name || 'مدير النظام')}
                             </span>
                             <span style={{ fontSize: '0.68rem', color: 'var(--primary-600)', fontWeight: 600 }}>
-                                مسؤول رئيسي
+                                {isPharmacy ? 'مسؤول الصيدلية' : 'مسؤول رئيسي'}
                             </span>
                         </div>
                         <ChevronDown

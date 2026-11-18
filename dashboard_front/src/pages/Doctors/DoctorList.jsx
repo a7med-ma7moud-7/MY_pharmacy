@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Eye,
@@ -26,6 +27,7 @@ import { DoctorDetail } from './DoctorDetail';
 
 export const DoctorList = () => {
   const { showNotification } = useNotification();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +87,16 @@ export const DoctorList = () => {
   useEffect(() => {
     fetchDoctors(1);
   }, [debouncedSearch, tabFilter, creationFilter, debouncedSpecialty]);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setSelectedDoctorForEdit(null);
+      setIsFormOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleOpenAdd = () => {
     setSelectedDoctorForEdit(null);

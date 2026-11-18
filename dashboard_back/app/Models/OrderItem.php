@@ -12,10 +12,16 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'medicine_id',
+        'pharmacy_id',
         'quantity',
         'price',
         'total',
     ];
+
+    public function pharmacy()
+    {
+        return $this->belongsTo(Pharmacy::class, 'pharmacy_id');
+    }
     
     /**
      * علاقة عنصر الطلب بالطلب

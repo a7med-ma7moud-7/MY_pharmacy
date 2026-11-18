@@ -5,6 +5,11 @@ import {
   FileSpreadsheet,
   RefreshCw,
   Loader2,
+  ShoppingBag,
+  Clock,
+  Truck,
+  CheckCircle2,
+  Store,
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -14,12 +19,23 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { EmptyState } from '../../components/common/EmptyState';
 import { SearchInput } from '../../components/common/SearchInput';
 import { CustomSelect } from '../../components/common/CustomSelect';
+import { StatCard } from '../../components/dashboard/StatCard';
 import { useNotification } from '../../context/NotificationContext';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import { OrderDetail } from './OrderDetail';
 
 export const OrderList = () => {
   const { showNotification } = useNotification();
+  const { isPharmacy, isSuperAdmin, pharmacy } = useAdminAuth();
   const [orders, setOrders] = useState([]);
+  const [pharmacies, setPharmacies] = useState([]);
+  const [orderMeta, setOrderMeta] = useState({
+    total_orders: 0,
+    pending_orders: 0,
+    processing_orders: 0,
+    completed_orders: 0,
+    cancelled_orders: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -28,11 +44,25 @@ export const OrderList = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [pharmacyFilter, setPharmacyFilter] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Modals
   const [detailOrderId, setDetailOrderId] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      adminApi
+        .getPharmaciesList()
+        .then((res) => {
+          if (res.data?.success) {
+            setPharmacies(res.data.data || []);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isSuperAdmin]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
@@ -42,6 +72,7 @@ export const OrderList = () => {
         per_page: 10,
         search: debouncedSearch || undefined,
         status: statusFilter || undefined,
+        pharmacy_id: !isPharmacy && pharmacyFilter ? pharmacyFilter : undefined,
       };
       const res = await adminApi.getOrders(params);
       if (res.data.success) {
@@ -49,6 +80,9 @@ export const OrderList = () => {
         setCurrentPage(res.data.current_page || 1);
         setLastPage(res.data.last_page || 1);
         setTotal(res.data.total || 0);
+        if (res.data.meta) {
+          setOrderMeta(res.data.meta);
+        }
       }
     } catch {
       showNotification('فشل تحميل قائمة الطلبات', 'error');
@@ -59,7 +93,7 @@ export const OrderList = () => {
 
   useEffect(() => {
     fetchOrders(1);
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, pharmacyFilter]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -111,10 +145,13 @@ export const OrderList = () => {
       >
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 4px' }}>
-            إدارة طلبات الأدوية والمبيعات
+            {isPharmacy ? `الطلبات الواردة لـ ${pharmacy?.name || 'الصيدلية'}` : 'إدارة طلبات الأدوية والمبيعات'}
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-            متابعة فواتير وشحنات المتجر الإلكتروني | إجمالي الطلبات: <strong style={{ color: 'var(--primary-color)' }}>{total}</strong> طلب
+            {isPharmacy
+              ? 'متابعة وتجهيز الطلبات الخاصة بأدوية صيدليتك فقط | إجمالي الطلبات: '
+              : 'متابعة فواتير وشحنات المتجر الإلكتروني | إجمالي الطلبات: '}
+            <strong style={{ color: 'var(--primary-color)' }}>{total}</strong> طلب
           </p>
         </div>
 
@@ -136,6 +173,44 @@ export const OrderList = () => {
           {exporting ? <Loader2 size={16} className="spin-animation" /> : <FileSpreadsheet size={16} />}
           <span>{exporting ? 'جاري تجهيز التقرير...' : 'تصدير إلى Excel'}</span>
         </button>
+      </div>
+
+      {/* Orders KPI Summary Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '14px',
+        }}
+      >
+        <StatCard
+          title={isPharmacy ? 'إجمالي الطلبات الواردة' : 'إجمالي الطلبات'}
+          value={orderMeta.total_orders}
+          icon={ShoppingBag}
+          color="primary"
+          subtitle="طلبات مسجلة"
+        />
+        <StatCard
+          title="قيد الانتظار"
+          value={orderMeta.pending_orders}
+          icon={Clock}
+          color="warning"
+          subtitle="تحتاج مراجعة وتجهيز"
+        />
+        <StatCard
+          title="جاري التجهيز والشحن"
+          value={orderMeta.processing_orders}
+          icon={Truck}
+          color="info"
+          subtitle="قيد التوصيل أو الاستلام"
+        />
+        <StatCard
+          title="الطلبات المكتملة"
+          value={orderMeta.completed_orders}
+          icon={CheckCircle2}
+          color="success"
+          subtitle="تم التسليم بنجاح"
+        />
       </div>
 
       {/* Quick Status Tabs */}
@@ -178,6 +253,23 @@ export const OrderList = () => {
           />
         </div>
 
+        {/* Super Admin Pharmacy Filter */}
+        {isSuperAdmin && pharmacies.length > 0 && (
+          <div style={{ minWidth: '210px' }}>
+            <CustomSelect
+              value={pharmacyFilter}
+              onChange={(val) => setPharmacyFilter(val)}
+              options={[
+                { value: '', label: 'جميع الصيدليات' },
+                ...pharmacies.map((ph) => ({
+                  value: String(ph.id),
+                  label: ph.name,
+                })),
+              ]}
+            />
+          </div>
+        )}
+
         {/* Status Filter */}
         <div style={{ minWidth: '185px' }}>
           <CustomSelect
@@ -218,6 +310,7 @@ export const OrderList = () => {
               <thead>
                 <tr>
                   <th>رقم الطلب</th>
+                  {isSuperAdmin && <th>الصيدلية</th>}
                   <th>العميل</th>
                   <th>الهاتف</th>
                   <th>عدد الأصناف</th>
@@ -236,6 +329,31 @@ export const OrderList = () => {
                   return (
                     <tr key={order.id}>
                       <td style={{ fontWeight: 700 }}>#{order.id}</td>
+                      {isSuperAdmin && (
+                        <td>
+                          {order.pharmacy ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '3px 10px',
+                                borderRadius: '999px',
+                                backgroundColor: 'var(--primary-50)',
+                                color: 'var(--primary-700)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              <Store size={12} />
+                              <span>{order.pharmacy.name}</span>
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>عام</span>
+                          )}
+                        </td>
+                      )}
                       <td>
                         <strong style={{ color: 'var(--text-main)' }}>{customerName}</strong>
                       </td>
@@ -322,6 +440,7 @@ export const OrderList = () => {
         orderId={detailOrderId}
         onStatusChange={(id, st) => {
           setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: st } : o)));
+          fetchOrders(currentPage);
         }}
       />
     </div>

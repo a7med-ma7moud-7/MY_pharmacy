@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Medicien;
 use App\Models\Order;
+use App\Models\Pharmacy;
 use App\Models\Prescription;
 use App\Models\Rating;
 use App\Models\TreatedCase;
@@ -36,7 +37,7 @@ class AdminDashboardApiController extends Controller
             $doc->image_url = $doc->image_url;
         });
 
-        $recentMedicines = Medicien::latest()->take(5)->get()->each(function (Medicien $med) {
+        $recentMedicines = Medicien::with('pharmacy:id,name')->latest()->take(5)->get()->each(function (Medicien $med) {
             $med->image_url = $med->image_url;
             $med->is_in_stock = $med->is_in_stock;
         });
@@ -48,6 +49,8 @@ class AdminDashboardApiController extends Controller
                 'total_treated_cases' => TreatedCase::where('status', 'published')->count(),
                 'total_prescriptions' => Prescription::count(),
                 'reported_reviews' => Rating::whereNotNull('report_reason')->where('report_reason', '!=', '')->count(),
+                'total_pharmacies' => Pharmacy::count(),
+                'active_pharmacies' => Pharmacy::where('is_active', true)->count(),
                 'total_medicines' => (int) ($medicineAggregates->total_medicines ?? 0),
                 'low_stock_medicines' => (int) ($medicineAggregates->low_stock_count ?? 0),
                 'total_users' => User::count(),

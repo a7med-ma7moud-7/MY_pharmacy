@@ -13,11 +13,13 @@ import {
   HeartPulse,
   ShieldCheck,
   Bot,
+  Store,
+  MapPin,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 
-const NAV_ITEMS = [
+const ADMIN_NAV_ITEMS = [
   { section: 'عام', items: [
     { name: 'الرئيسية', path: '/dashboard', icon: LayoutDashboard },
   ]},
@@ -26,7 +28,8 @@ const NAV_ITEMS = [
     { name: 'الأطباء والعيادات', path: '/doctors', icon: UserRoundCheck },
     { name: 'إشراف الحالات والتقييمات', path: '/doctor-moderation', icon: ShieldCheck },
   ]},
-  { section: 'المتجر والمخزون', items: [
+  { section: 'الصيدليات والمخزون', items: [
+    { name: 'إدارة الصيدليات', path: '/pharmacies', icon: Store },
     { name: 'قائمة الأدوية', path: '/medicines', icon: Pill },
     { name: 'طلبات الأدوية', path: '/orders', icon: ShoppingBag },
   ]},
@@ -37,11 +40,19 @@ const NAV_ITEMS = [
   ]},
 ];
 
+const PHARMACY_NAV_ITEMS = [
+  { section: 'إدارة صيدليتي', items: [
+    { name: 'أدويتي والمخزون', path: '/medicines', icon: Pill },
+    { name: 'الطلبات الواردة', path: '/orders', icon: ShoppingBag },
+  ]},
+];
+
 export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) => {
-  const { admin, logout } = useAdminAuth();
+  const { admin, logout, isPharmacy, pharmacy } = useAdminAuth();
   const { isEn } = useLanguage();
   const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState(null);
+  const navGroups = isPharmacy ? PHARMACY_NAV_ITEMS : ADMIN_NAV_ITEMS;
 
   const handleLogout = async () => {
     await logout();
@@ -111,15 +122,15 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
               boxShadow: '0 8px 22px rgba(16, 172, 132, 0.32)',
               transition: 'transform 0.3s ease',
             }}>
-              <HeartPulse size={22} />
+              {isPharmacy ? <Store size={22} /> : <HeartPulse size={22} />}
             </div>
             {!isCollapsed && (
-              <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
-                <h2 style={{ fontSize: '1.18rem', fontWeight: 800, letterSpacing: '-0.2px', margin: 0, color: '#f8fafc', fontFamily: "'Almarai', 'Cairo', sans-serif" }}>
-                  صيدليتي
+              <div style={{ animation: 'fadeIn 0.2s ease-out', minWidth: 0 }}>
+                <h2 style={{ fontSize: isPharmacy ? '0.96rem' : '1.18rem', fontWeight: 800, letterSpacing: '-0.2px', margin: 0, color: '#f8fafc', fontFamily: "'Almarai', 'Cairo', sans-serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '175px' }}>
+                  {isPharmacy ? (pharmacy?.name || admin?.name || 'صيدليتي') : 'صيدليتي'}
                 </h2>
                 <span style={{ fontSize: '0.68rem', color: '#6ee7b7', display: 'block', fontWeight: 700, letterSpacing: '0.3px' }}>
-                  مركز الإدارة الموحد
+                  {isPharmacy ? 'لوحة إدارة الصيدلية' : 'مركز الإدارة الموحد'}
                 </span>
               </div>
             )}
@@ -127,22 +138,22 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
         </div>
 
         {/* Navigation Menu */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
-          {NAV_ITEMS.map((group, gIdx) => (
-            <div key={gIdx} style={{ marginBottom: '20px' }}>
+        <div className="sidebar-scroll" style={{ flex: 1, overflowY: 'auto', padding: '12px 12px' }}>
+          {navGroups.map((group, gIdx) => (
+            <div key={gIdx} style={{ marginBottom: '13px' }}>
               {!isCollapsed && (
                 <div style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.68rem',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.6px',
-                  color: '#475569',
+                  letterSpacing: '0.5px',
+                  color: '#64748b',
                   fontWeight: 700,
-                  padding: '4px 12px 8px 12px',
+                  padding: '2px 12px 6px 12px',
                 }}>
                   {group.section}
                 </div>
               )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {group.items.map((item, idx) => {
                   const Icon = item.icon;
                   const itemKey = `${gIdx}-${idx}`;
@@ -157,10 +168,10 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: isCollapsed ? 'center' : 'flex-start',
-                        gap: '12px',
-                        padding: '10px 14px',
+                        gap: '11px',
+                        padding: '8.5px 13px',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '0.88rem',
+                        fontSize: '0.86rem',
                         fontWeight: isActive ? 700 : 500,
                         color: isActive ? '#ffffff' : (hoveredItem === itemKey ? '#e2e8f0' : '#94a3b8'),
                         background: isActive
@@ -188,7 +199,7 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
           ))}
 
           {/* External Website Link */}
-          <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <a
               href="http://localhost:5173"
               target="_blank"
@@ -197,10 +208,10 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: isCollapsed ? 'center' : 'flex-start',
-                gap: '12px',
-                padding: '10px 14px',
-                borderRadius: '12px',
-                fontSize: '0.84rem',
+                gap: '10px',
+                padding: '8.5px 13px',
+                borderRadius: '11px',
+                fontSize: '0.82rem',
                 fontWeight: 700,
                 color: '#6ee7b7',
                 background: 'rgba(16, 172, 132, 0.1)',
@@ -210,25 +221,35 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
               }}
               title="زيارة الموقع العام"
             >
-              <ExternalLink size={17} />
+              <ExternalLink size={16} />
               {!isCollapsed && <span>معاينة الموقع العام</span>}
             </a>
 
             {!isCollapsed && (
               <div style={{
-                marginTop: '12px',
-                padding: '10px 12px',
-                borderRadius: '12px',
+                marginTop: '8px',
+                padding: '8px 12px',
+                borderRadius: '11px',
                 background: 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid rgba(255, 255, 255, 0.07)',
                 display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.73rem',
+                flexDirection: 'column',
+                gap: '4px',
+                fontSize: '0.72rem',
                 color: '#cbd5e1',
               }}>
-                <ShieldCheck size={15} style={{ color: '#34d399', flexShrink: 0 }} />
-                <span>المنظومة متصلة ومؤمّنة</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={14} style={{ color: '#34d399', flexShrink: 0 }} />
+                  <span>{isPharmacy ? 'مخزون وطلبات معزولة ومؤمّنة' : 'المنظومة متصلة ومؤمّنة'}</span>
+                </div>
+                {isPharmacy && pharmacy?.latitude !== undefined && pharmacy?.longitude !== undefined && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6ee7b7', fontSize: '0.68rem' }} dir="ltr">
+                    <MapPin size={12} style={{ flexShrink: 0 }} />
+                    <span>
+                      {Number(pharmacy.latitude).toFixed(4)}, {Number(pharmacy.longitude).toFixed(4)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -236,7 +257,7 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
 
         {/* Footer Admin Info & Logout */}
         <div style={{
-          padding: '16px 14px',
+          padding: '12px 14px',
           borderTop: '1px solid rgba(255, 255, 255, 0.06)',
           background: 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
           display: 'flex',
@@ -263,9 +284,11 @@ export const Sidebar = ({ isCollapsed, isOpenMobile, isMobile, onCloseMobile }) 
               </div>
               <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f8fafc', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {admin?.name || 'مدير النظام'}
+                  {isPharmacy ? (pharmacy?.name || admin?.name) : (admin?.name || 'مدير النظام')}
                 </p>
-                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>مسؤول معتمد</span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                  {isPharmacy ? 'حساب صيدلية معتمد' : 'مسؤول معتمد'}
+                </span>
               </div>
             </div>
           )}

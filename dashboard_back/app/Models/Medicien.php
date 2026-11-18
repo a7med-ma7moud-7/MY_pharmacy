@@ -8,6 +8,7 @@ use App\Models\Concerns\ResolvesImageUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -20,6 +21,7 @@ class Medicien extends Model
     public const TYPES_CACHE_KEY = 'medicines:available_types';
 
     protected $fillable = [
+        'pharmacy_id',
         'name',
         'image',
         'propose',
@@ -54,6 +56,14 @@ class Medicien extends Model
     }
 
     /**
+     * علاقة الدواء بالصيدلية المالكة للمخزون
+     */
+    public function pharmacy(): BelongsTo
+    {
+        return $this->belongsTo(Pharmacy::class, 'pharmacy_id');
+    }
+
+    /**
      * علاقة الدواء بعناصر الطلبات
      */
     public function orderItems(): HasMany
@@ -66,6 +76,9 @@ class Medicien extends Model
      */
     public function scopeFilter(Builder $query, array $filters, bool $searchByType = false): Builder
     {
+        if (!empty($filters['pharmacy_id']) && !in_array((string) $filters['pharmacy_id'], ['all', 'الكل'], true)) {
+            $query->where('pharmacy_id', (int) $filters['pharmacy_id']);
+        }
         if (!empty($filters['search'])) {
             $search = trim((string) $filters['search']);
             $query->where(function (Builder $q) use ($search, $searchByType) {

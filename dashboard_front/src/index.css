@@ -98,17 +98,22 @@ html.dark {
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-main);
   background-image:
     radial-gradient(circle at 12% 8%, rgba(16, 172, 132, 0.06) 0%, transparent 38%),
     radial-gradient(circle at 90% 85%, rgba(15, 104, 72, 0.05) 0%, transparent 40%);
-  background-attachment: fixed;
   color: var(--slate-800);
   direction: rtl;
   text-align: right;
   line-height: 1.6;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -135,20 +140,68 @@ input, select, textarea {
   font-family: inherit;
 }
 
-/* ===== Custom Scrollbar ===== */
+/* ===== Refined Floating Scrollbars ===== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--slate-300);
+  background-color: rgba(15, 104, 72, 0.22);
   border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--slate-400);
+  background-color: rgba(15, 104, 72, 0.42);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(52, 211, 153, 0.2);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(52, 211, 153, 0.38);
+}
+
+/* Dark Sidebar Ultra-Subtle Auto-Hide Scrollbar (Never shows a bright grey bar) */
+.sidebar-scroll {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar-scroll:hover {
+  scrollbar-color: rgba(110, 231, 183, 0.22) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(110, 231, 183, 0.24);
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(110, 231, 183, 0.42);
 }
 
 /* ===================================
@@ -399,6 +452,8 @@ input, select, textarea {
 .table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   border-radius: var(--radius-lg);
   border: 1px solid var(--slate-200);
   background: var(--surface-card);
@@ -959,6 +1014,7 @@ select option {
 .modal-body {
   padding: 24px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-footer {

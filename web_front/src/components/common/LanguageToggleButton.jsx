@@ -5,6 +5,36 @@ import { useLanguage } from '../../context/LanguageContext';
 export default function LanguageToggleButton({ variant = 'navbar' }) {
   const { isEn, toggleLanguage } = useLanguage();
 
+  if (variant === 'capsule') {
+    return (
+      <button
+        type="button"
+        onClick={toggleLanguage}
+        data-no-i18n="true"
+        aria-label={isEn ? 'Switch to Arabic' : 'Switch to English'}
+        title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
+        className="h-8 px-2.5 rounded-full text-[11px] font-extrabold tracking-wide text-white/95 hover:text-white hover:bg-white/15 transition-all flex items-center justify-center cursor-pointer active:scale-95"
+      >
+        <span>{isEn ? 'عربي' : 'EN'}</span>
+      </button>
+    );
+  }
+
+  if (variant === 'surface-capsule') {
+    return (
+      <button
+        type="button"
+        onClick={toggleLanguage}
+        data-no-i18n="true"
+        aria-label={isEn ? 'Switch to Arabic' : 'Switch to English'}
+        title={isEn ? 'التبديل إلى العربية' : 'Switch to English'}
+        className="h-8 px-2.5 rounded-full text-[11px] font-extrabold tracking-wide text-slate-700 dark:text-emerald-300 hover:bg-white dark:hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer active:scale-95"
+      >
+        <span>{isEn ? 'عربي' : 'EN'}</span>
+      </button>
+    );
+  }
+
   if (variant === 'surface') {
     return (
       <button

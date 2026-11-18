@@ -57,17 +57,15 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: handle 401/403 unauthorized (skip redirect on login endpoint itself)
+// Response interceptor: handle 401 unauthorized or deactivated account 403
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const reqUrl = error.config?.url || '';
     const isAuthLogin = reqUrl.includes('/auth/login');
-    if (
-      !isAuthLogin &&
-      error.response &&
-      (error.response.status === 401 || error.response.status === 403)
-    ) {
+    const status = error.response?.status;
+    const isAuthMe = reqUrl.includes('/auth/me');
+    if (!isAuthLogin && (status === 401 || (status === 403 && isAuthMe))) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
       if (window.location.pathname !== '/login') {
@@ -87,6 +85,24 @@ export const adminApi = {
   // Dashboard & Reports
   getDashboard: () => api.get('/dashboard'),
   getReports: () => api.get('/reports'),
+
+  // Pharmacies Management (Super Admin Only)
+  getPharmacies: (params) => api.get('/pharmacies', { params }),
+  getPharmaciesList: () => api.get('/pharmacies', { params: { all: 1 } }),
+  getPharmacy: (id) => api.get(`/pharmacies/${id}`),
+  createPharmacy: (formData) =>
+    api.post('/pharmacies', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  updatePharmacy: (id, formData) => {
+    formData.append('_method', 'PUT');
+    return api.post(`/pharmacies/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  togglePharmacyStatus: (id, isActive) =>
+    api.patch(`/pharmacies/${id}/status`, isActive !== undefined ? { is_active: isActive } : {}),
+  deletePharmacy: (id) => api.delete(`/pharmacies/${id}`),
 
   // Doctors & Doctor Account Administration
   getDoctors: (params) => api.get('/doctors', { params }),

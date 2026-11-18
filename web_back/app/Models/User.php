@@ -75,6 +75,11 @@ class User extends Authenticatable
         return $this->role === 'doctor';
     }
 
+    public function isPharmacy(): bool
+    {
+        return $this->role === 'pharmacy';
+    }
+
     public function isUser(): bool
     {
         return ($this->role ?? 'user') === 'user';
@@ -88,6 +93,11 @@ class User extends Authenticatable
     public function doctor(): HasOne
     {
         return $this->hasOne(Doctor::class, 'user_id');
+    }
+
+    public function pharmacy(): HasOne
+    {
+        return $this->hasOne(Pharmacy::class, 'user_id');
     }
 
     public function ratings(): HasMany
@@ -197,6 +207,12 @@ class User extends Authenticatable
             $payload['doctor_verification_status'] = $doc?->verification_status;
             $payload['doctor_specialty'] = $doc?->specialty;
             $payload['doctor_image_url'] = $doc?->image_url;
+        }
+
+        if ($this->isPharmacy()) {
+            $pharm = $this->relationLoaded('pharmacy') ? $this->pharmacy : $this->pharmacy()->first();
+            $payload['pharmacy_id'] = $pharm?->id;
+            $payload['pharmacy'] = $pharm?->toSummaryArray();
         }
 
         if ($includeCreatedAt) {

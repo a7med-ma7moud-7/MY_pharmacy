@@ -42,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\AdminMiddleware::class,
             'is_admin_api' => \App\Http\Middleware\AdminApiMiddleware::class,
+            'is_dashboard_staff_api' => \App\Http\Middleware\DashboardStaffApiMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

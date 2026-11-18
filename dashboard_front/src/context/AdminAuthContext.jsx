@@ -62,8 +62,24 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
+  const isSuperAdmin = admin?.role === 'admin';
+  const isPharmacy = admin?.role === 'pharmacy';
+  const pharmacy = admin?.pharmacy || null;
+
   return (
-    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, isAuthenticated: !!token && !!admin }}>
+    <AdminAuthContext.Provider
+      value={{
+        admin,
+        token,
+        loading,
+        login,
+        logout,
+        isAuthenticated: !!token && !!admin,
+        isSuperAdmin,
+        isPharmacy,
+        pharmacy,
+      }}
+    >
       {children}
     </AdminAuthContext.Provider>
   );
